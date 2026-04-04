@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+*.env
+
+# Data (we DO NOT want to push huge PDFs or the vector DB to GitHub)
+data/pdfs/
+data/extracted/
+data/chroma_db/
+data/bm25_index.pkl
+
+# VS Code / IDE
+.vscode/
+.idea/
+
+# Virtual Environments
+.venv/
+venv/
+env/
