@@ -37,11 +37,10 @@ RULES — follow these without exception:
 2. DO NOT use any external knowledge, training data, or assumptions.
 3. If the answer cannot be found in the provided context, respond EXACTLY with:
    "I could not find this information in the provided documents."
-4. Provide step-by-step reasoning for every answer.
-5. CITE the source for every factual statement using the format:
-   (Source: <document_name>, Page: <page_number>)
-6. If multiple sources support a statement, cite all of them.
-7. Be precise and avoid speculation.
+4. Provide a highly detailed, comprehensive explanation. Be exhaustive and extract every single rule, numerical value, waiting period, option, and definition provided in the text.
+5. DO NOT apologize if specific math formulas are missing. Simply provide an extremely rich, detailed, and completely exhaustive summary of the components you DO have.
+6. Tailor the depth and focus to the user's prompt organically. Break down the information clearly using bullet points and structured paragraphs.
+7. DO NOT manually place inline citations (like "[1]") directly in the sentences. Just write the answer in plain English.
 
 CONTEXT:
 {context}
@@ -256,28 +255,29 @@ def answer_query(query: str) -> dict:
     context = _format_context(chunks)
     prompt = SYSTEM_PROMPT.format(context=context, question=query)
 
-    # Generate answer via Gemini
+    # Generate answer via OpenRouter using built-in urllib (no external modules needed)
     try:
-        import google.generativeai as genai
+        import json
+        import urllib.request
 
-        api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+        api_key = os.environ.get("OPENROUTER_API_KEY")
         if not api_key:
             # Try loading from .env file
             try:
                 from dotenv import load_dotenv
                 load_dotenv()
-                api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+                api_key = os.environ.get("OPENROUTER_API_KEY")
             except ImportError:
                 pass
 
         if not api_key:
             logger.error(
-                "No API key found. Set GOOGLE_API_KEY or GEMINI_API_KEY "
+                "No API key found. Set OPENROUTER_API_KEY "
                 "environment variable, or create a .env file."
             )
             return {
                 "query": query,
-                "answer": "[ERROR] No Gemini API key configured.",
+                "answer": "[ERROR] No OpenRouter API key configured.",
                 "sources": [
                     {
                         "source_document": c["source_document"],
@@ -287,15 +287,46 @@ def answer_query(query: str) -> dict:
                 ],
             }
 
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(LLM_MODEL)
-        response = model.generate_content(prompt)
-        answer_text = response.text
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": LLM_MODEL,
+            "messages": [
+                {"role": "user", "content": prompt}
+            ]
+        }
+        
+        import time
+        from urllib.error import HTTPError
+        
+        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
+        
+        # Retry loop for OpenRouter rate limits (429)
+        max_retries = 4
+        for attempt in range(max_retries):
+            try:
+                with urllib.request.urlopen(req) as response:
+                    result = json.loads(response.read().decode("utf-8"))
+                    answer_text = result["choices"][0]["message"]["content"]
+                    break  # Success!
+            except HTTPError as e:
+                if e.code == 429 or e.code == 408:
+                    if attempt < max_retries - 1:
+                        wait = 4 * (attempt + 1)
+                        logger.warning(f"OpenRouter rate limit hit. Retrying in {wait}s...")
+                        time.sleep(wait)
+                    else:
+                        raise e # Final attempt failed
+                else:
+                    raise e # Other HTTP error
 
     except Exception as exc:
         logger.error("LLM generation failed: %s", exc)
         answer_text = (
-            "[SYSTEM WARNING: Google API Quota Exceeded. The 40% retrieval engine successfully found the clauses. Below is the unformatted raw context the LLM would have summarised:]\n\n"
+            f"[SYSTEM WARNING: LLM request failed. Real Error: {str(exc)}]\n\n"
             + "\n".join(f"► {c['text'][:500]}..." for c in chunks)
         )
 

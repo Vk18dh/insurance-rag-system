@@ -16,14 +16,14 @@ BM25_INDEX_PATH = os.path.join(BASE_DIR, "data", "bm25_index.pkl")
 
 # ──────────────────────────── Model Settings ─────────────────────────────
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-LLM_MODEL = "gemini-2.0-flash"
+LLM_MODEL = "gemini-1.5-flash"
 
 # ──────────────────────────── Chunking Parameters ────────────────────────
-CHUNK_SIZE = 1024
-CHUNK_OVERLAP = 128
+CHUNK_SIZE = 4096
+CHUNK_OVERLAP = 512
 
 # ──────────────────────────── Retrieval Parameters ───────────────────────
-TOP_K = 3
+TOP_K = 8
 BM25_WEIGHT = 0.5
 VECTOR_WEIGHT = 0.5
 
