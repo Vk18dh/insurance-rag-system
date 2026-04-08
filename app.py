@@ -19,6 +19,8 @@ from config import (
     CHROMA_DIR,
     EMBEDDING_MODEL,
     LLM_MODEL,
+    OPENROUTER_API_KEY,
+    GOOGLE_API_KEY,
     TOP_K,
     VECTOR_WEIGHT,
     setup_logging,
@@ -255,73 +257,59 @@ def answer_query(query: str) -> dict:
     context = _format_context(chunks)
     prompt = SYSTEM_PROMPT.format(context=context, question=query)
 
-    # Generate answer via OpenRouter using built-in urllib (no external modules needed)
+    # Generate answer via OpenRouter (Primary) or Google Gemini SDK (Secondary)
     try:
         import json
         import urllib.request
-
-        api_key = os.environ.get("OPENROUTER_API_KEY")
-        if not api_key:
-            # Try loading from .env file
-            try:
-                from dotenv import load_dotenv
-                load_dotenv()
-                api_key = os.environ.get("OPENROUTER_API_KEY")
-            except ImportError:
-                pass
-
-        if not api_key:
-            logger.error(
-                "No API key found. Set OPENROUTER_API_KEY "
-                "environment variable, or create a .env file."
-            )
-            return {
-                "query": query,
-                "answer": "[ERROR] No OpenRouter API key configured.",
-                "sources": [
-                    {
-                        "source_document": c["source_document"],
-                        "page_number": c["page_number"],
-                    }
-                    for c in chunks
-                ],
+        
+        # 1. OpenRouter (Primary)
+        if OPENROUTER_API_KEY:
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "http://localhost:3000",
+                "X-Title": "Insurance Auditor"
             }
-
-        url = "https://openrouter.ai/api/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "model": LLM_MODEL,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        }
-        
-        import time
-        from urllib.error import HTTPError
-        
-        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
-        
-        # Retry loop for OpenRouter rate limits (429)
-        max_retries = 4
-        for attempt in range(max_retries):
+            # Correct OpenRouter IDs based on available_models.txt
+            model_map = {
+                "gemma-3-27b-it": "google/gemma-3-27b-it",
+                "gemini-2.0-flash": "google/gemini-2.0-flash-001",
+                "gemini-2.5-flash": "google/gemini-2.5-flash",
+                "gemini-1.5-flash": "google/gemini-flash-1.5"
+            }
+            or_model = model_map.get(LLM_MODEL, f"google/{LLM_MODEL}" if "/" not in LLM_MODEL else LLM_MODEL)
+            
+            payload = {
+                "model": or_model,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+            
             try:
+                req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
                 with urllib.request.urlopen(req) as response:
                     result = json.loads(response.read().decode("utf-8"))
                     answer_text = result["choices"][0]["message"]["content"]
-                    break  # Success!
-            except HTTPError as e:
-                if e.code == 429 or e.code == 408:
-                    if attempt < max_retries - 1:
-                        wait = 4 * (attempt + 1)
-                        logger.warning(f"OpenRouter rate limit hit. Retrying in {wait}s...")
-                        time.sleep(wait)
-                    else:
-                        raise e # Final attempt failed
-                else:
-                    raise e # Other HTTP error
+                    # If success, skip fallback
+                    sources = [{"source_document": c["source_document"], "page_number": c["page_number"], "section_title": c["section_title"]} for c in chunks]
+                    return {"query": query, "answer": answer_text, "sources": sources}
+            except Exception as e:
+                logger.error("OpenRouter failed: %s", e)
+                # Fall through to Google SDK
+
+        # 2. Google Gemini SDK (Secondary)
+        if GOOGLE_API_KEY:
+            import google.generativeai as genai
+            genai.configure(api_key=GOOGLE_API_KEY)
+            
+            # Use exact model names from list_models
+            native_model = f"models/{LLM_MODEL}" if "gemma" in LLM_MODEL.lower() and not LLM_MODEL.startswith("models/") else LLM_MODEL
+            model = genai.GenerativeModel(native_model)
+            
+            response = model.generate_content(prompt)
+            answer_text = response.text
+        else:
+            raise Exception("No working API key or service responded.")
 
     except Exception as exc:
         logger.error("LLM generation failed: %s", exc)

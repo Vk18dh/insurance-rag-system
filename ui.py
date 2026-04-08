@@ -4,7 +4,7 @@ from app import answer_query
 
 st.set_page_config(page_title="Insurance AI Auditor", page_icon="🏦", layout="centered")
 
-st.title("🏦 AI Insurance Auditor")
+st.title("🏦 AI-Driven Insurance Knowledge Assessment System")
 st.markdown("Ask questions about your **LIC Policies** and **IRDAI Guidelines**.")
 
 # Initialize chat history
@@ -33,9 +33,12 @@ if prompt := st.chat_input("What is the basic sum assured for Jeevan Anand?"):
             sources = result["sources"]
 
             # Construct the final display string
-            display_text = f"{answer}\n\n**📚 SOURCES:**\n"
-            for s in sources:
-                display_text += f"\n- {s['source_document']} — Page {s['page_number']}"
+            if "I could not find this information" in answer:
+                display_text = answer
+            else:
+                display_text = f"{answer}\n\n**📚 SOURCES:**\n"
+                for s in sources:
+                    display_text += f"\n- {s['source_document']} — Page {s['page_number']}"
 
             st.markdown(display_text)
             

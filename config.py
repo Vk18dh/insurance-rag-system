@@ -5,6 +5,9 @@ All paths, model names, and tuneable parameters live here.
 
 import os
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ──────────────────────────── Directory Paths ────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,7 +19,9 @@ BM25_INDEX_PATH = os.path.join(BASE_DIR, "data", "bm25_index.pkl")
 
 # ──────────────────────────── Model Settings ─────────────────────────────
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-LLM_MODEL = "gemini-1.5-flash"
+LLM_MODEL = "gemma-3-27b-it"
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 # ──────────────────────────── Chunking Parameters ────────────────────────
 CHUNK_SIZE = 4096
