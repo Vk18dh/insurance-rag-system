@@ -19,8 +19,6 @@ from config import (
     CHROMA_DIR,
     EMBEDDING_MODEL,
     LLM_MODEL,
-    OPENROUTER_API_KEY,
-    GOOGLE_API_KEY,
     TOP_K,
     VECTOR_WEIGHT,
     setup_logging,
@@ -257,6 +255,9 @@ def answer_query(query: str) -> dict:
     context = _format_context(chunks)
     prompt = SYSTEM_PROMPT.format(context=context, question=query)
 
+    # Use keys from config
+    from config import OPENROUTER_API_KEY, GOOGLE_API_KEY
+
     # Generate answer via OpenRouter (Primary) or Google Gemini SDK (Secondary)
     try:
         import json
@@ -271,11 +272,10 @@ def answer_query(query: str) -> dict:
                 "HTTP-Referer": "http://localhost:3000",
                 "X-Title": "Insurance Auditor"
             }
-            # Correct OpenRouter IDs based on available_models.txt
+            # Correct OpenRouter mapping based on available_models.txt
             model_map = {
-                "gemma-3-27b-it": "google/gemma-3-27b-it",
+                "gemma-3-27b-it": "google/gemma-3-27b-it:free",
                 "gemini-2.0-flash": "google/gemini-2.0-flash-001",
-                "gemini-2.5-flash": "google/gemini-2.5-flash",
                 "gemini-1.5-flash": "google/gemini-flash-1.5"
             }
             or_model = model_map.get(LLM_MODEL, f"google/{LLM_MODEL}" if "/" not in LLM_MODEL else LLM_MODEL)
@@ -290,20 +290,21 @@ def answer_query(query: str) -> dict:
                 with urllib.request.urlopen(req) as response:
                     result = json.loads(response.read().decode("utf-8"))
                     answer_text = result["choices"][0]["message"]["content"]
-                    # If success, skip fallback
+                    # If success, return immediately
                     sources = [{"source_document": c["source_document"], "page_number": c["page_number"], "section_title": c["section_title"]} for c in chunks]
                     return {"query": query, "answer": answer_text, "sources": sources}
             except Exception as e:
                 logger.error("OpenRouter failed: %s", e)
-                # Fall through to Google SDK
 
         # 2. Google Gemini SDK (Secondary)
         if GOOGLE_API_KEY:
             import google.generativeai as genai
             genai.configure(api_key=GOOGLE_API_KEY)
             
-            # Use exact model names from list_models
-            native_model = f"models/{LLM_MODEL}" if "gemma" in LLM_MODEL.lower() and not LLM_MODEL.startswith("models/") else LLM_MODEL
+            # Correct prefix handling for Google SDK
+            native_model = LLM_MODEL
+            if not native_model.startswith("models/"):
+                native_model = f"models/{native_model}"
             model = genai.GenerativeModel(native_model)
             
             response = model.generate_content(prompt)

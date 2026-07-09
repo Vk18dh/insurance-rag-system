@@ -33,7 +33,7 @@ if prompt := st.chat_input("What is the basic sum assured for Jeevan Anand?"):
             sources = result["sources"]
 
             # Construct the final display string
-            if "I could not find this information" in answer:
+            if answer.strip() == "I could not find this information in the provided documents.":
                 display_text = answer
             else:
                 display_text = f"{answer}\n\n**📚 SOURCES:**\n"

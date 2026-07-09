@@ -5,6 +5,7 @@ All paths, model names, and tuneable parameters live here.
 
 import os
 import logging
+
 from dotenv import load_dotenv
 
 load_dotenv()
