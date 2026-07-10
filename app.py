@@ -1,3 +1,4 @@
+#phase 1 complete
 """
 app.py — Hybrid Retrieval + Grounded QA Interface.
 
