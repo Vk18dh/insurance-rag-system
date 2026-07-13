@@ -91,6 +91,8 @@ class AgentOrchestrator(IAgentOrchestrator):
             return agent.reason
         elif "evaluate" in dir(agent):
             return agent.evaluate
+        elif "build_response" in dir(agent):
+            return agent.build_response
         else:
             raise OrchestrationException("Invalid method hook boundary maps seamlessly isolating loops.")
 
@@ -108,5 +110,7 @@ class AgentOrchestrator(IAgentOrchestrator):
              return (ctx.reasoning_result,)
         if agent_name == "ContradictionAgent":
              return (ctx.reasoning_result, ctx.risk_result)
+        if agent_name == "ResponseBuilder":
+             return (ctx.verification_result, ctx.reasoning_result, ctx.risk_result, ctx.contradiction_result)
         
         raise OrchestrationException(f"Cannot resolve binding sequence limit traces securely reliably for {agent_name}")

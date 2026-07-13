@@ -15,6 +15,7 @@ from phase2.agents.verification_agent import VerificationAgentFactory
 from phase2.agents.reasoning_agent import ReasoningAgentFactory
 from phase2.agents.risk_agent import RiskAgentFactory
 from phase2.agents.contradiction_agent import ContradictionAgentFactory
+from phase2.agents.response_builder import ResponseBuilderFactory
 
 from phase2.orchestrator.orchestrator import AgentOrchestrator
 from phase2.orchestrator.workflow_engine import WorkflowEngine
@@ -42,6 +43,7 @@ def run():
     reasoning_agent = ReasoningAgentFactory.create(settings, llm_analyzer)
     risk_agent = RiskAgentFactory.create(settings, llm_analyzer)
     contradiction_agent = ContradictionAgentFactory.create(settings, llm_analyzer)
+    response_builder = ResponseBuilderFactory.create(settings)
     
     agents_map = {
         "QueryUnderstandingAgent": query_agent,
@@ -49,7 +51,8 @@ def run():
         "VerificationAgent": verification_agent,
         "ReasoningAgent": reasoning_agent,
         "RiskAssessmentAgent": risk_agent,
-        "ContradictionAgent": contradiction_agent
+        "ContradictionAgent": contradiction_agent,
+        "ResponseBuilder": response_builder
     }
     
     logger.info("Initializing Orchestrator dependencies natively...")

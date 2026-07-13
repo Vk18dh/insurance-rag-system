@@ -254,9 +254,18 @@ orchestrator:
     - "ReasoningAgent"
     - "RiskAssessmentAgent"
     - "ContradictionAgent"
+    - "ResponseBuilder"
   max_retries: 2
   retry_delay_ms: 150.0
   agent_timeout_ms: 30000.0
   max_workflow_timeout_ms: 90000.0
 
 
+
+response_builder:
+  fallback_explanation: "Unable to trace logical limits firmly enough to provide a certain explanation."
+  fallback_answer: "Insufficient verified context available to answer accurately."
+  timeout_seconds: 2.0
+  retry_policy: 1
+  language_options:
+    - "en"

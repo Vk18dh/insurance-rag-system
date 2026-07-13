@@ -391,13 +391,22 @@ class OrchestratorSettings(BaseModel):
             "VerificationAgent",
             "ReasoningAgent",
             "RiskAssessmentAgent",
-            "ContradictionAgent"
+            "ContradictionAgent",
+            "ResponseBuilder"
         ]
     )
     max_retries: int = Field(default=1, ge=0)
     retry_delay_ms: float = Field(default=200.0, ge=10.0)
     agent_timeout_ms: float = Field(default=30000.0, gt=0.0)
     max_workflow_timeout_ms: float = Field(default=120000.0, gt=0.0)
+
+class ResponseBuilderSettings(BaseModel):
+    """Configuration driving the Response Builder formatting structures mapping fallbacks explicitly."""
+    fallback_explanation: str = Field(default="Unable to construct a logically verified explanation.")
+    fallback_answer: str = Field(default="Insufficient policy evidence available to answer.")
+    timeout_seconds: float = Field(default=2.0, ge=0.5, le=10.0, description="Latency limit.")
+    retry_policy: int = Field(default=1, ge=0)
+    language_options: List[str] = Field(default_factory=lambda: ["en"])
 
 # ===========================================================================
 # Root settings object
@@ -453,6 +462,10 @@ class Phase2Settings(BaseSettings):
     orchestrator: OrchestratorSettings = Field(
         default_factory=OrchestratorSettings,
         description="Configuration spanning central orchestrator loops efficiently safely."
+    )
+    response_builder: ResponseBuilderSettings = Field(
+        default_factory=ResponseBuilderSettings,
+        description="Response Builder mapping limits safely natively."
     )
 
     @model_validator(mode="after")
