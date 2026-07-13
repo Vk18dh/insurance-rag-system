@@ -37,6 +37,15 @@ from phase2.interfaces.verification_interface import (
     IVerificationAgent,
 )
 
+# Part 4 interfaces (new)
+from phase2.interfaces.reasoning_interface import (
+    IClauseInterpreter,
+    IEvidenceLinker,
+    IReasoningChainBuilder,
+    IExplanationService,
+    IReasoningAgent,
+)
+
 __all__ = [
     # Part 1
     "IAmbiguityDetector",
@@ -60,4 +69,10 @@ __all__ = [
     "IEvidenceValidator",
     "IRelevanceChecker",
     "IVerificationAgent",
+    # Part 4
+    "IClauseInterpreter",
+    "IEvidenceLinker",
+    "IReasoningChainBuilder",
+    "IExplanationService",
+    "IReasoningAgent",
 ]

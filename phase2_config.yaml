@@ -190,3 +190,26 @@ verification:
   require_citations: true
   rules:
     strict_metadata: true
+
+# ---------------------------------------------------------------------------
+# 4. REASONING AGENT CONFIGURATION (Part 4)
+# ---------------------------------------------------------------------------
+reasoning:
+  # Base Engine Configuration
+  prompt_template_path: "phase2/prompts/reasoning_prompt.txt"
+  max_steps: 6
+  explanation_format: "structured"
+  max_chunk_length: 1200
+  
+  # Linkage Constraints
+  supported_clause_relationships:
+    - supports
+    - restricts
+    - qualifies
+    - overrides
+    - references
+    - complements
+
+  # Operational Resilience
+  timeout_seconds: 45
+  max_retries: 3

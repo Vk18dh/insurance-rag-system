@@ -69,12 +69,27 @@ __all__ = [
     "RetrievalConfigurationException",
     # Part 3 verification exceptions
     "VerificationException",
+    
+    # Part 4
+    "ReasoningException",
+    "InvalidVerificationException",
+    "ClauseInterpretationException",
+    "ExplanationException",
+    "ReasoningTimeoutException",
     "InvalidEvidenceException",
     "MetadataException",
     "CitationException",
     "VerificationConfigurationException",
     "VerificationTimeoutException",
 ]
+
+from phase2.exceptions.reasoning_exception import (
+    ReasoningException,
+    InvalidVerificationException,
+    ClauseInterpretationException,
+    ExplanationException,
+    ReasoningTimeoutException
+)
 
 from phase2.exceptions.verification_exception import (
     VerificationException,

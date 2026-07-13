@@ -26,6 +26,12 @@ from phase2.services.consistency_checker import ConsistencyChecker
 from phase2.services.evidence_validator import EvidenceValidator
 from phase2.services.relevance_checker import RelevanceChecker
 
+# Phase 2 Part 4 (Reasoning Agent) Services
+from phase2.services.clause_interpreter import ClauseInterpreter
+from phase2.services.evidence_linker import EvidenceLinker
+from phase2.services.reasoning_chain_builder import ReasoningChainBuilder
+from phase2.services.explanation_service import ExplanationService
+
 __all__ = [
     # Part 1
     "FallbackQueryAnalyzer",
@@ -44,4 +50,10 @@ __all__ = [
     "ConsistencyChecker",
     "EvidenceValidator",
     "RelevanceChecker",
+    
+    # Part 4
+    "ClauseInterpreter",
+    "EvidenceLinker",
+    "ReasoningChainBuilder",
+    "ExplanationService",
 ]

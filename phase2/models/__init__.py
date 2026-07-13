@@ -21,6 +21,13 @@ from phase2.models.validation_metrics import ValidationMetrics
 from phase2.models.verification_report import VerificationReport, VerificationStatus, VerificationWarning
 from phase2.models.verification_result import VerificationResult
 
+# Part 4 models (new)
+from phase2.models.reasoning_step import SupportingEvidence, ReasoningStep
+from phase2.models.reasoning_chain import ReasoningChain
+from phase2.models.explanation import Explanation
+from phase2.models.reasoning_metrics import ReasoningMetrics
+from phase2.models.reasoning_result import ReasoningResult
+
 __all__ = [
     # Part 1
     "IntentResult",
@@ -43,4 +50,11 @@ __all__ = [
     "VerificationStatus",
     "VerificationWarning",
     "VerificationResult",
+    # Part 4
+    "SupportingEvidence",
+    "ReasoningStep",
+    "ReasoningChain",
+    "Explanation",
+    "ReasoningMetrics",
+    "ReasoningResult",
 ]

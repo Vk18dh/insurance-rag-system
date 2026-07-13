@@ -334,6 +334,23 @@ class VerificationSettings(BaseModel):
     )
 
 
+class ReasoningSettings(BaseModel):
+    """
+    Configuration parameters regulating Part 4 logic flows and topological limits.
+    """
+    model_config = SettingsConfigDict(extra="forbid")
+
+    prompt_template_path: str = Field(default="phase2/prompts/reasoning_prompt.txt", description="Path to the system logic abstraction template")
+    max_steps: int = Field(default=5, ge=1, le=15, description="Maximum permitted step deductions before halting")
+    explanation_format: str = Field(default="structured", description="Target representation format strings")
+    max_chunk_length: int = Field(default=1000, ge=100, le=4000, description="Payload string truncation protections")
+    supported_clause_relationships: List[str] = Field(
+        default_factory=lambda: ["supports", "restricts", "qualifies", "overrides", "references", "complements"], 
+        description="Permitted relational topology bounds"
+    )
+    timeout_seconds: int = Field(default=45, ge=5, le=120, description="Deduction latency tripwire")
+    max_retries: int = Field(default=3, ge=0, le=5, description="Fallback attempts upon parsing failures")
+
 # ===========================================================================
 # Root settings object
 # ===========================================================================
@@ -374,6 +391,8 @@ class Phase2Settings(BaseSettings):
     validation: ValidationSettings = Field(default_factory=ValidationSettings)
     # Part 3 — Verification Agent
     verification: VerificationSettings = Field(default_factory=VerificationSettings)
+    # Part 4 — Reasoning Agent
+    reasoning: ReasoningSettings = Field(default_factory=ReasoningSettings)
 
     @model_validator(mode="after")
     def _inject_secrets(self) -> "Phase2Settings":
