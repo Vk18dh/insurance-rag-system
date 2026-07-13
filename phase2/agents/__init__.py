@@ -1,9 +1,16 @@
 """
-phase2.agents — Public API exports.
+phase2.agents — Public agent exports.
 
-    from phase2.agents import QueryUnderstandingAgent, QueryUnderstandingAgentFactory
+Part 1: QueryUnderstandingAgent
+Part 2: RetrievalAgent (new)
 """
 
 from phase2.agents.query_agent import QueryUnderstandingAgent, QueryUnderstandingAgentFactory
+from phase2.agents.retrieval_agent import RetrievalAgent, RetrievalAgentFactory
 
-__all__ = ["QueryUnderstandingAgent", "QueryUnderstandingAgentFactory"]
+__all__ = [
+    "QueryUnderstandingAgent",
+    "QueryUnderstandingAgentFactory",
+    "RetrievalAgent",
+    "RetrievalAgentFactory",
+]

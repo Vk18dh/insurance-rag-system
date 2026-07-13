@@ -122,3 +122,58 @@ api:
   prefix: "/api/v2"
   docs_url: "/docs"
   redoc_url: "/redoc"
+
+# ---------------------------------------------------------------------------
+# Phase 1 Integration (Used by Part 2 Retrieval Agent)
+# ---------------------------------------------------------------------------
+phase1:
+  bm25_index_path: "data/bm25_index.pkl"
+  chroma_dir: "data/chroma_db"
+  chroma_collection_name: "insurance_docs"
+
+# ---------------------------------------------------------------------------
+# Part 2 — Retrieval Agent settings
+# All weights are configuration-driven. No hardcoded values in the codebase.
+# ---------------------------------------------------------------------------
+retrieval:
+  top_k: 8                          # default chunks to retrieve
+  timeout_seconds: 10.0             # max seconds before RetrievalTimeoutException
+  max_retries: 2                    # retries for transient index failures
+  similarity_threshold: 0.3         # minimum combined_score to avoid LOW_SIMILARITY warning
+
+  # Per-classification retrieval weights.
+  # Keys must match QueryClassification enum values + 'default'.
+  # bm25  : weight for BM25 keyword retrieval [0, 1]
+  # vector: weight for semantic retrieval    [0, 1]
+  # top_k : classification-specific top_k override
+  strategy_weights:
+    policy_specific: { bm25: 0.7, vector: 0.3, top_k: 8 }   # policy name → BM25 wins
+    factual:         { bm25: 0.5, vector: 0.5, top_k: 8 }   # balanced
+    regulatory:      { bm25: 0.4, vector: 0.6, top_k: 8 }   # concept → vector wins
+    comparative:     { bm25: 0.3, vector: 0.7, top_k: 10 }  # semantic comparison
+    risk:            { bm25: 0.5, vector: 0.5, top_k: 8 }   # balanced
+    multi_document:  { bm25: 0.4, vector: 0.6, top_k: 12 }  # broad retrieval
+    general:         { bm25: 0.5, vector: 0.5, top_k: 8 }   # default balanced
+    unknown:         { bm25: 0.5, vector: 0.5, top_k: 8 }   # safe default
+    default:         { bm25: 0.5, vector: 0.5, top_k: 8 }   # fallback (required)
+
+# ---------------------------------------------------------------------------
+# Part 2 — Evidence ranking weights
+# ranking_score = retrieval_score_weight * score
+#               + keyword_overlap_weight * overlap
+#               + metadata_completeness_weight * completeness
+# ---------------------------------------------------------------------------
+ranking:
+  retrieval_score_weight: 0.6       # Phase 1 hybrid retrieval quality signal
+  keyword_overlap_weight: 0.2       # query token overlap with chunk text
+  metadata_completeness_weight: 0.2 # source_document + page_number present
+  min_ranking_score: 0.0            # exclude chunks below this score
+
+# ---------------------------------------------------------------------------
+# Part 2 — Retrieval validation thresholds
+# ---------------------------------------------------------------------------
+validation:
+  min_chunks_required: 1            # 0 chunks → RetrievalValidationException
+  min_similarity_score: 0.1         # top chunk below this → HIGH warning
+  max_incomplete_metadata_ratio: 0.5 # > 50% incomplete → LOW warning
+  require_page_numbers: false       # true → warn when all page refs are N/A

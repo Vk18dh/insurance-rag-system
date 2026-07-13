@@ -29,7 +29,7 @@ import logging
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -151,6 +151,8 @@ class LoggingSettings(BaseModel):
 class Phase1Settings(BaseModel):
     """Phase 1 integration parameters consumed by the Retrieval Agent (Part 2)."""
 
+    bm25_index_path: str = Field(default="data/bm25_index.pkl")
+    chroma_dir: str = Field(default="data/chroma_db")
     chroma_collection_name: str = Field(default="insurance_docs")
     top_k: int = Field(default=8, gt=0)
     bm25_weight: float = Field(default=0.5, ge=0.0, le=1.0)
@@ -166,6 +168,139 @@ class APISettings(BaseModel):
     prefix: str = Field(default="/api/v2")
     docs_url: str = Field(default="/docs")
     redoc_url: str = Field(default="/redoc")
+
+
+# ---------------------------------------------------------------------------
+# Part 2 — Retrieval Agent settings
+# ---------------------------------------------------------------------------
+
+class RetrievalSettings(BaseModel):
+    """
+    Retrieval Agent configuration.
+
+    strategy_weights maps QueryClassification values to {bm25, vector, top_k}.
+    Each key must match a QueryClassification enum value or 'default'.
+    The 'default' key is mandatory — used when no specific strategy matches.
+
+    Example (from phase2_config.yaml):
+        strategy_weights:
+          policy_specific: { bm25: 0.7, vector: 0.3, top_k: 8 }
+          regulatory:      { bm25: 0.4, vector: 0.6, top_k: 8 }
+          default:         { bm25: 0.5, vector: 0.5, top_k: 8 }
+    """
+
+    top_k: int = Field(
+        default=8, gt=0,
+        description="Default number of evidence chunks to retrieve.",
+    )
+    timeout_seconds: float = Field(
+        default=10.0, gt=0,
+        description="Max seconds for Phase 1 retrieval before TimeoutException.",
+    )
+    max_retries: int = Field(
+        default=2, ge=0, le=5,
+        description="Max retry attempts for transient retrieval failures.",
+    )
+    similarity_threshold: float = Field(
+        default=0.3, ge=0.0, le=1.0,
+        description="Minimum combined_score for a chunk to pass validation.",
+    )
+    strategy_weights: Dict[str, Dict[str, Any]] = Field(
+        default_factory=lambda: {
+            "policy_specific": {"bm25": 0.7, "vector": 0.3, "top_k": 8},
+            "factual":         {"bm25": 0.5, "vector": 0.5, "top_k": 8},
+            "regulatory":      {"bm25": 0.4, "vector": 0.6, "top_k": 8},
+            "comparative":     {"bm25": 0.3, "vector": 0.7, "top_k": 8},
+            "risk":            {"bm25": 0.5, "vector": 0.5, "top_k": 8},
+            "multi_document":  {"bm25": 0.4, "vector": 0.6, "top_k": 12},
+            "general":         {"bm25": 0.5, "vector": 0.5, "top_k": 8},
+            "unknown":         {"bm25": 0.5, "vector": 0.5, "top_k": 8},
+            "default":         {"bm25": 0.5, "vector": 0.5, "top_k": 8},
+        },
+        description="Per-classification retrieval weight map. 'default' is required.",
+    )
+
+    @field_validator("strategy_weights")
+    @classmethod
+    def validate_strategy_weights(cls, v: Dict[str, Any]) -> Dict[str, Any]:
+        if "default" not in v:
+            raise ValueError("retrieval.strategy_weights must contain a 'default' entry.")
+        for key, cfg in v.items():
+            if not isinstance(cfg, dict):
+                raise ValueError(f"retrieval.strategy_weights.{key} must be a dict.")
+            bm25 = float(cfg.get("bm25", 0.5))
+            vector = float(cfg.get("vector", 0.5))
+            if not (0.0 <= bm25 <= 1.0 and 0.0 <= vector <= 1.0):
+                raise ValueError(
+                    f"retrieval.strategy_weights.{key}: bm25 and vector must be in [0, 1]."
+                )
+        return v
+
+
+class RankingSettings(BaseModel):
+    """
+    Evidence re-ranking configuration.
+
+    The three signal weights control how the WeightedRankingService computes
+    its composite ranking_score:
+
+        ranking_score = (
+            retrieval_score_weight * normalised_combined_score
+          + keyword_overlap_weight * keyword_overlap_ratio
+          + metadata_completeness_weight * metadata_completeness
+        )
+
+    Weights do not need to sum to 1.0 — they are applied independently.
+    """
+
+    retrieval_score_weight: float = Field(
+        default=0.6, ge=0.0, le=1.0,
+        description="Weight for the Phase 1 combined retrieval score signal.",
+    )
+    keyword_overlap_weight: float = Field(
+        default=0.2, ge=0.0, le=1.0,
+        description="Weight for query-to-chunk keyword token overlap.",
+    )
+    metadata_completeness_weight: float = Field(
+        default=0.2, ge=0.0, le=1.0,
+        description="Weight for chunk metadata completeness (source + page).",
+    )
+    min_ranking_score: float = Field(
+        default=0.0, ge=0.0,
+        description="Chunks with ranking_score below this are excluded from results.",
+    )
+
+    @model_validator(mode="after")
+    def validate_weights_non_zero(self) -> "RankingSettings":
+        total = self.retrieval_score_weight + self.keyword_overlap_weight + self.metadata_completeness_weight
+        if total == 0.0:
+            raise ValueError("Sum of ranking weights must be > 0.")
+        return self
+
+
+class ValidationSettings(BaseModel):
+    """
+    Retrieval quality validation thresholds.
+
+    All thresholds are configurable — no hardcoded values in the validation service.
+    """
+
+    min_chunks_required: int = Field(
+        default=1, ge=0,
+        description="Minimum number of chunks for retrieval to be considered non-empty.",
+    )
+    min_similarity_score: float = Field(
+        default=0.1, ge=0.0, le=1.0,
+        description="Minimum top-chunk combined_score to avoid LOW_SIMILARITY warning.",
+    )
+    max_incomplete_metadata_ratio: float = Field(
+        default=0.5, ge=0.0, le=1.0,
+        description="Maximum fraction of chunks allowed to have incomplete metadata.",
+    )
+    require_page_numbers: bool = Field(
+        default=False,
+        description="If True, warn when all chunks have page_number='N/A'.",
+    )
 
 
 # ===========================================================================
@@ -202,6 +337,10 @@ class Phase2Settings(BaseSettings):
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     phase1: Phase1Settings = Field(default_factory=Phase1Settings)
     api: APISettings = Field(default_factory=APISettings)
+    # Part 2 — Retrieval Agent
+    retrieval: RetrievalSettings = Field(default_factory=RetrievalSettings)
+    ranking: RankingSettings = Field(default_factory=RankingSettings)
+    validation: ValidationSettings = Field(default_factory=ValidationSettings)
 
     @model_validator(mode="after")
     def _inject_secrets(self) -> "Phase2Settings":

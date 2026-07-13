@@ -1,29 +1,33 @@
 """
-phase2.models — Public API exports.
+phase2.models — Public model exports.
 
-Import from here to keep downstream imports stable when internal
-module structure changes.
-
-    from phase2.models import (
-        IntentType, IntentResult,
-        QueryClassification, AmbiguityInfo, QueryMetadata,
-        ExtractedEntities, QueryContext,
-    )
+Part 1 models (QueryContext, IntentResult, etc.) are already exported here.
+Part 2 adds: RetrievedChunk, RetrievalResult, RetrievalMetrics.
 """
 
+# Part 1 models (unchanged)
 from phase2.models.intent import IntentResult, IntentType
 from phase2.models.query_context import ExtractedEntities, QueryContext
 from phase2.models.query_metadata import AmbiguityInfo, QueryClassification, QueryMetadata
 
+# Part 2 models (new)
+from phase2.models.retrieved_chunk import RetrievalSource, RetrievedChunk
+from phase2.models.retrieval_metrics import RetrievalMetrics
+from phase2.models.retrieval_result import RetrievalResult, RetrievalWarning
+
 __all__ = [
-    # intent
-    "IntentType",
+    # Part 1
     "IntentResult",
-    # query_metadata
-    "QueryClassification",
-    "AmbiguityInfo",
-    "QueryMetadata",
-    # query_context
+    "IntentType",
     "ExtractedEntities",
     "QueryContext",
+    "AmbiguityInfo",
+    "QueryClassification",
+    "QueryMetadata",
+    # Part 2
+    "RetrievalSource",
+    "RetrievedChunk",
+    "RetrievalMetrics",
+    "RetrievalResult",
+    "RetrievalWarning",
 ]

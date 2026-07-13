@@ -1,13 +1,11 @@
 """
-phase2.exceptions — Public API exports.
+phase2.exceptions — Public exception exports.
 
-    from phase2.exceptions import (
-        Phase2BaseException, QueryValidationException, ...
-        ErrorResponse, build_error_response, retry_on_transient,
-        safe_agent_call, GlobalExceptionHandler, is_retryable,
-    )
+Part 1: Full exception hierarchy + RecoveryStrategy + handlers.
+Part 2: Retrieval-specific exceptions (RetrievalException, etc.).
 """
 
+# Part 1 exceptions (unchanged)
 from phase2.exceptions.query_exception import (
     AmbiguityDetectionException,
     EntityExtractionException,
@@ -31,8 +29,18 @@ from phase2.exceptions.handlers import (
     safe_agent_call,
 )
 
+# Part 2 exceptions (new)
+from phase2.exceptions.retrieval_exception import (
+    IndexUnavailableException,
+    RankingException,
+    RetrievalConfigurationException,
+    RetrievalException,
+    RetrievalTimeoutException,
+    RetrievalValidationException,
+)
+
 __all__ = [
-    # Hierarchy
+    # Part 1 hierarchy
     "Phase2BaseException",
     "QueryException",
     "QueryValidationException",
@@ -44,7 +52,7 @@ __all__ = [
     "QueryTimeoutException",
     "QueryConfigurationException",
     "QuerySecurityException",
-    # Handlers
+    # Part 1 handlers
     "ErrorResponse",
     "RecoveryStrategy",
     "build_error_response",
@@ -52,4 +60,11 @@ __all__ = [
     "retry_on_transient",
     "safe_agent_call",
     "GlobalExceptionHandler",
+    # Part 2 retrieval exceptions
+    "RetrievalException",
+    "IndexUnavailableException",
+    "RetrievalValidationException",
+    "RetrievalTimeoutException",
+    "RankingException",
+    "RetrievalConfigurationException",
 ]
