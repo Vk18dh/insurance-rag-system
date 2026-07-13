@@ -32,6 +32,14 @@ from phase2.services.evidence_linker import EvidenceLinker
 from phase2.services.reasoning_chain_builder import ReasoningChainBuilder
 from phase2.services.explanation_service import ExplanationService
 
+# Part 5 services (new)
+from phase2.services.ambiguity_detector import AmbiguityDetector
+from phase2.services.legal_sensitivity_checker import LegalSensitivityChecker
+from phase2.services.exclusion_checker import ExclusionChecker
+from phase2.services.regulatory_checker import RegulatoryChecker
+from phase2.services.escalation_service import EscalationService
+from phase2.services.risk_assessment_service import RiskAssessmentService
+
 __all__ = [
     # Part 1
     "FallbackQueryAnalyzer",
@@ -56,4 +64,11 @@ __all__ = [
     "EvidenceLinker",
     "ReasoningChainBuilder",
     "ExplanationService",
+    # Part 5
+    "AmbiguityDetector",
+    "LegalSensitivityChecker",
+    "ExclusionChecker",
+    "RegulatoryChecker",
+    "EscalationService",
+    "RiskAssessmentService",
 ]

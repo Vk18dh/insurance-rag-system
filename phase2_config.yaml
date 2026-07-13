@@ -213,3 +213,18 @@ reasoning:
   # Operational Resilience
   timeout_seconds: 45
   max_retries: 3
+
+# ---------------------------------------------------------------------------
+# 5. RISK AGENT CONFIGURATION (Part 5)
+# ---------------------------------------------------------------------------
+risk:
+  prompt_template_path: "phase2/prompts/risk_assessment_prompt.txt"
+  timeout_seconds: 1.0
+  escalation_rules:
+    - "CRITICAL -> Immediate lock"
+    - "HIGH -> Force Compliance Review"
+  supported_risk_categories:
+    - "Ambiguity"
+    - "Legal Sensitivity"
+    - "Regulatory"
+    - "Insurance Exclusion"

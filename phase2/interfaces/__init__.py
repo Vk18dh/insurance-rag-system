@@ -46,6 +46,17 @@ from phase2.interfaces.reasoning_interface import (
     IReasoningAgent,
 )
 
+# Part 5 interfaces (new)
+from phase2.interfaces.risk_agent_interface import (
+    IRiskAgent,
+    IRiskAssessmentService,
+    IRiskAmbiguityDetector,
+    ILegalSensitivityChecker,
+    IExclusionChecker,
+    IRegulatoryChecker,
+    IEscalationService,
+)
+
 __all__ = [
     # Part 1
     "IAmbiguityDetector",
@@ -75,4 +86,12 @@ __all__ = [
     "IReasoningChainBuilder",
     "IExplanationService",
     "IReasoningAgent",
+    # Part 5
+    "IRiskAgent",
+    "IRiskAssessmentService",
+    "IRiskAmbiguityDetector",
+    "ILegalSensitivityChecker",
+    "IExclusionChecker",
+    "IRegulatoryChecker",
+    "IEscalationService",
 ]

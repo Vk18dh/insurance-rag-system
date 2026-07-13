@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="1" skipped="0" tests="8" time="0.455" timestamp="2026-07-13T22:16:55.837985+05:30" hostname="Dhyan"><testcase classname="phase2.tests.test_risk_services" name="test_ambiguity_detector_happy_path" time="0.002" /><testcase classname="phase2.tests.test_risk_services" name="test_ambiguity_detector_empty_payload" time="0.001" /><testcase classname="phase2.tests.test_risk_services" name="test_legal_sensitivity_checker_happy_path" time="0.000" /><testcase classname="phase2.tests.test_risk_services" name="test_exclusion_checker" time="0.000" /><testcase classname="phase2.tests.test_risk_services" name="test_regulatory_checker" time="0.000" /><testcase classname="phase2.tests.test_risk_services" name="test_escalation_service_high_risk" time="0.001"><failure message="AssertionError: assert 'Recommend' in 'Strongly recommend compliance review'&#10; +  where 'Strongly recommend compliance review' = EscalationRecommendation(escalation_required=True, recommended_action='Strongly recommend compliance review', reasoning='Threat').recommended_action">def test_escalation_service_high_risk():
+        service = EscalationService()
+        payload = {"high_risk": {"is_high_risk_query": True, "justification": "Threat"}}
+        res = service.evaluate(payload)
+        assert res.escalation_required is True
+&gt;       assert "Recommend" in res.recommended_action
+E       AssertionError: assert 'Recommend' in 'Strongly recommend compliance review'
+E        +  where 'Strongly recommend compliance review' = EscalationRecommendation(escalation_required=True, recommended_action='Strongly recommend compliance review', reasoning='Threat').recommended_action
+
+phase2\tests\test_risk_services.py:67: AssertionError</failure></testcase><testcase classname="phase2.tests.test_risk_services" name="test_escalation_service_low_risk" time="0.001" /><testcase classname="phase2.tests.test_risk_agent" name="test_risk_agent_integration" time="0.002"><error message="failed on setup with &quot;AttributeError: Mock object has no attribute 'verification_source'&quot;">@pytest.fixture
+    def mock_reasoning_result():
+        # Shallow mock because the orchestrator simply formats fields safely.
+        mock_res = MagicMock(spec=ReasoningResult)
+&gt;       mock_res.verification_source.retrieval_result.query_context.original_query = "What is the waiting period?"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+phase2\tests\test_risk_agent.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;MagicMock spec='ReasoningResult' id='2524221550144'&gt;
+name = 'verification_source'
+
+    def __getattr__(self, name):
+        if name in {'_mock_methods', '_mock_unsafe'}:
+            raise AttributeError(name)
+        elif self._mock_methods is not None:
+            if name not in self._mock_methods or name in _all_magics:
+&gt;               raise AttributeError("Mock object has no attribute %r" % name)
+E               AttributeError: Mock object has no attribute 'verification_source'
+
+..\..\AppData\Local\Programs\Python\Python313\Lib\unittest\mock.py:690: AttributeError</error></testcase></testsuite></testsuites>

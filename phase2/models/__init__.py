@@ -28,6 +28,17 @@ from phase2.models.explanation import Explanation
 from phase2.models.reasoning_metrics import ReasoningMetrics
 from phase2.models.reasoning_result import ReasoningResult
 
+# Part 5 models (new)
+from phase2.models.risk_level import RiskLevel
+from phase2.models.risk_factor import RiskFactor
+from phase2.models.legal_warning import LegalWarning
+from phase2.models.escalation_recommendation import EscalationRecommendation
+from phase2.models.ambiguity_report import AmbiguityReport
+from phase2.models.regulatory_warning import RegulatoryWarning
+from phase2.models.exclusion_warning import ExclusionWarning
+from phase2.models.risk_processing_metrics import RiskProcessingMetrics
+from phase2.models.risk_assessment import RiskAssessmentResult
+
 __all__ = [
     # Part 1
     "IntentResult",
@@ -57,4 +68,14 @@ __all__ = [
     "Explanation",
     "ReasoningMetrics",
     "ReasoningResult",
+    # Part 5
+    "RiskLevel",
+    "RiskFactor",
+    "LegalWarning",
+    "EscalationRecommendation",
+    "AmbiguityReport",
+    "RegulatoryWarning",
+    "ExclusionWarning",
+    "RiskProcessingMetrics",
+    "RiskAssessmentResult",
 ]

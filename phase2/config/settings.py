@@ -351,6 +351,29 @@ class ReasoningSettings(BaseModel):
     timeout_seconds: int = Field(default=45, ge=5, le=120, description="Deduction latency tripwire")
     max_retries: int = Field(default=3, ge=0, le=5, description="Fallback attempts upon parsing failures")
 
+class RiskSettings(BaseModel):
+    """
+    Configuration mapping zero hardcodes specifically constraining Part 5 Risk bounds natively.
+    """
+    prompt_template_path: str = Field(
+        ...,
+        description="Absolute template bound securing JSON parsing routes explicitly."
+    )
+    timeout_seconds: float = Field(
+        default=1.0, 
+        ge=0.1, 
+        le=5.0,
+        description="Strict latency telemetry mapping preventing excessive execution limits natively."
+    )
+    supported_risk_categories: List[str] = Field(
+        default_factory=lambda: ["Ambiguity", "Legal Sensitivity", "Regulatory", "Insurance Exclusion"],
+        description="Explicit string literals safely enforcing classification checks seamlessly."
+    )
+    escalation_rules: List[str] = Field(
+        default_factory=list,
+        description="Arbitrary action definitions mapping HIGH/CRITICAL flows downstream natively."
+    )
+
 # ===========================================================================
 # Root settings object
 # ===========================================================================
@@ -393,6 +416,8 @@ class Phase2Settings(BaseSettings):
     verification: VerificationSettings = Field(default_factory=VerificationSettings)
     # Part 4 — Reasoning Agent
     reasoning: ReasoningSettings = Field(default_factory=ReasoningSettings)
+    # Part 5 — Risk Agent
+    risk: RiskSettings = Field(default_factory=RiskSettings)
 
     @model_validator(mode="after")
     def _inject_secrets(self) -> "Phase2Settings":

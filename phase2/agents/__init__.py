@@ -14,6 +14,9 @@ from phase2.agents.verification_agent import VerificationAgent, VerificationAgen
 # Part 4 (new)
 from phase2.agents.reasoning_agent import ReasoningAgent, ReasoningAgentFactory
 
+# Part 5 agents (new)
+from phase2.agents.risk_agent import RiskAgent, RiskAgentFactory
+
 __all__ = [
     # Part 1
     "QueryUnderstandingAgent",
@@ -27,4 +30,7 @@ __all__ = [
     # Part 4
     "ReasoningAgent",
     "ReasoningAgentFactory",
+    # Part 5
+    "RiskAgent",
+    "RiskAgentFactory",
 ]
