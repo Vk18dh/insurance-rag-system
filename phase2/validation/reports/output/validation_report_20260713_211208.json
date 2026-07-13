@@ -1,0 +1,135 @@
+{
+  "timestamp_utc": "2026-07-13T21:12:08.586553",
+  "overall_passed": false,
+  "total_duration_seconds": 1.8031888008117676,
+  "categories": {
+    "unit": {
+      "category": "unit",
+      "passed": false,
+      "total_tests": 2,
+      "passed_tests": 0,
+      "failed_tests": 2,
+      "skipped_tests": 0,
+      "duration_seconds": 0.5284843444824219,
+      "performance_metrics": null,
+      "security_results": [],
+      "errors": []
+    },
+    "integration": {
+      "category": "integration",
+      "passed": true,
+      "total_tests": 1,
+      "passed_tests": 1,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "duration_seconds": 0.20656132698059082,
+      "performance_metrics": null,
+      "security_results": [],
+      "errors": []
+    },
+    "system": {
+      "category": "system",
+      "passed": true,
+      "total_tests": 1,
+      "passed_tests": 1,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "duration_seconds": 0.20241808891296387,
+      "performance_metrics": null,
+      "security_results": [],
+      "errors": []
+    },
+    "performance": {
+      "category": "performance",
+      "passed": false,
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "duration_seconds": 0.0,
+      "performance_metrics": null,
+      "security_results": [],
+      "errors": [
+        "No runner found for category: performance"
+      ]
+    },
+    "stress": {
+      "category": "stress",
+      "passed": false,
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "duration_seconds": 0.0,
+      "performance_metrics": null,
+      "security_results": [],
+      "errors": [
+        "No runner found for category: stress"
+      ]
+    },
+    "concurrency": {
+      "category": "concurrency",
+      "passed": false,
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "duration_seconds": 0.0,
+      "performance_metrics": null,
+      "security_results": [],
+      "errors": [
+        "No runner found for category: concurrency"
+      ]
+    },
+    "security": {
+      "category": "security",
+      "passed": true,
+      "total_tests": 1,
+      "passed_tests": 1,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "duration_seconds": 0.20553851127624512,
+      "performance_metrics": null,
+      "security_results": [],
+      "errors": []
+    },
+    "regression": {
+      "category": "regression",
+      "passed": false,
+      "total_tests": 1,
+      "passed_tests": 0,
+      "failed_tests": 1,
+      "skipped_tests": 0,
+      "duration_seconds": 0.22999954223632812,
+      "performance_metrics": null,
+      "security_results": [],
+      "errors": []
+    },
+    "recovery": {
+      "category": "recovery",
+      "passed": true,
+      "total_tests": 1,
+      "passed_tests": 1,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "duration_seconds": 0.20437312126159668,
+      "performance_metrics": null,
+      "security_results": [],
+      "errors": []
+    },
+    "deployment": {
+      "category": "deployment",
+      "passed": true,
+      "total_tests": 2,
+      "passed_tests": 2,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "duration_seconds": 0.22552752494812012,
+      "performance_metrics": null,
+      "security_results": [],
+      "errors": []
+    }
+  },
+  "environment": "development",
+  "version": "Phase2-Part10"
+}
