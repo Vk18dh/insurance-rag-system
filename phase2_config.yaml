@@ -1,0 +1,124 @@
+# ===========================================================================
+# phase2_config.yaml
+# Phase 2 – Agentic RAG Configuration
+#
+# RULES:
+#   • Every value here can be overridden by an environment variable.
+#   • Environment variable names follow the pattern:
+#       PHASE2__<SECTION>__<KEY>  (double underscore separator)
+#   • No secret values live here. Secrets come from .env only.
+#   • Booleans: true / false   Integers: plain number   Floats: 0.0 form
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Top-level agent metadata
+# ---------------------------------------------------------------------------
+agent_version: "2.0.0"
+environment: "development"          # development | testing | staging | production
+
+# ---------------------------------------------------------------------------
+# LLM provider settings
+# All model names and provider identifiers come from here — NEVER from code.
+# ---------------------------------------------------------------------------
+llm:
+  provider: "gemini"                # gemini | offline
+  model_name: "gemma-3-27b-it"     # Google Generative AI model identifier
+  # api_key loaded exclusively from env var: GOOGLE_API_KEY
+  timeout_seconds: 30.0
+  max_retries: 3
+  temperature: 0.0
+  max_output_tokens: 1024
+
+# ---------------------------------------------------------------------------
+# Query Understanding Agent settings
+# ---------------------------------------------------------------------------
+query_agent:
+  agent_name: "QueryUnderstandingAgent"
+
+  # Input constraints
+  max_query_length: 2000            # characters – after normalisation
+  min_query_length: 3              # characters – reject very short inputs
+
+  # NLP / LLM thresholds
+  confidence_threshold: 0.6        # minimum intent confidence to trust result
+
+  # Privacy / logging
+  log_query_preview_length: 80     # max chars of raw query written to log
+
+  # Prompt template location (relative to project root)
+  prompt_template_path: "phase2/prompts/query_understanding_prompt.txt"
+
+  # Supported intent categories (must match IntentType enum values)
+  # Add new intents here — no code change required
+  supported_intents:
+    - "policy_information"
+    - "benefits"
+    - "exclusions"
+    - "premium"
+    - "eligibility"
+    - "claim_process"
+    - "maturity"
+    - "surrender"
+    - "loan"
+    - "nomination"
+    - "rider"
+    - "tax_benefit"
+    - "waiting_period"
+    - "regulatory_information"
+    - "compliance"
+    - "general_inquiry"
+    - "unknown"
+
+  # Supported query classification types (must match QueryClassification enum)
+  classification_types:
+    - "factual"
+    - "comparative"
+    - "regulatory"
+    - "risk"
+    - "policy_specific"
+    - "multi_document"
+    - "general"
+    - "unknown"
+
+# ---------------------------------------------------------------------------
+# Security settings
+# ---------------------------------------------------------------------------
+security:
+  max_payload_length: 10000        # hard cap before normalisation
+  allowed_origins:                  # CORS – loaded by API layer
+    - "http://localhost:3000"
+    - "http://localhost:5173"
+  rate_limit_requests_per_minute: 60
+  request_timeout_seconds: 60.0
+
+# ---------------------------------------------------------------------------
+# Logging settings
+# ---------------------------------------------------------------------------
+logging:
+  level: "INFO"                     # DEBUG | INFO | WARNING | ERROR | CRITICAL
+  format: "json"                    # json | text
+  log_dir: "logs/phase2"
+  log_filename: "phase2.log"
+  max_bytes: 10485760              # 10 MB
+  backup_count: 5
+  include_query_preview: true
+
+# ---------------------------------------------------------------------------
+# Phase 1 integration (retrieval – used by Retrieval Agent in Part 2)
+# ---------------------------------------------------------------------------
+phase1:
+  chroma_collection_name: "insurance_docs"
+  top_k: 8
+  bm25_weight: 0.5
+  vector_weight: 0.5
+  similarity_threshold: 0.4
+
+# ---------------------------------------------------------------------------
+# API / FastAPI settings (used by Part 11 – Final Integration)
+# ---------------------------------------------------------------------------
+api:
+  host: "0.0.0.0"
+  port: 8000
+  prefix: "/api/v2"
+  docs_url: "/docs"
+  redoc_url: "/redoc"

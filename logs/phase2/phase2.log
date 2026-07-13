@@ -1,0 +1,4 @@
+{"timestamp": "2026-07-13T13:06:03.150545+00:00", "level": "INFO", "logger": "phase2", "message": "Phase 2 file logging enabled", "module": "logger", "lineno": 202, "log_file": "logs\\phase2\\phase2.log", "max_bytes": 10485760}
+{"timestamp": "2026-07-13T13:06:03.150898+00:00", "level": "INFO", "logger": "phase2", "message": "Phase 2 logging initialised", "module": "logger", "lineno": 212, "format": "json", "environment": "development"}
+{"timestamp": "2026-07-13T13:06:03.151122+00:00", "level": "INFO", "logger": "phase2.integration.test", "message": "Integration test log entry", "module": "<string>", "lineno": 23, "check": 3}
+{"timestamp": "2026-07-13T13:06:03.151323+00:00", "level": "INFO", "logger": "phase2.integration.test", "message": "AUDIT | integration_check", "module": "logger", "lineno": 302, "event": "integration_check", "query_id": "q-integration-001", "agent": "IntegrationTest", "elapsed_ms": 5.0}

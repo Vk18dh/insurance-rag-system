@@ -1,0 +1,4 @@
+{"timestamp": "2026-07-13T12:56:22.304455+00:00", "level": "INFO", "logger": "phase2", "message": "Phase 2 file logging enabled", "module": "logger", "lineno": 202, "log_file": "logs\\phase2_test\\phase2.log", "max_bytes": 10485760}
+{"timestamp": "2026-07-13T12:56:22.305574+00:00", "level": "INFO", "logger": "phase2", "message": "Phase 2 logging initialised", "module": "logger", "lineno": 212, "format": "json", "environment": "development"}
+{"timestamp": "2026-07-13T12:56:22.305801+00:00", "level": "INFO", "logger": "phase2.test.module", "message": "Logging test", "module": "<string>", "lineno": 35, "query_id": "q-001", "agent": "TestAgent"}
+{"timestamp": "2026-07-13T12:56:22.306066+00:00", "level": "INFO", "logger": "phase2.test.module", "message": "AUDIT | query_received", "module": "logger", "lineno": 302, "event": "query_received", "query_id": "q-001", "agent": "QueryUnderstandingAgent", "elapsed_ms": 12.5}

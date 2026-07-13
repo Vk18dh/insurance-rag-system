@@ -1,0 +1,46 @@
+You are an expert insurance domain NLP system. Your task is to perform a complete structured analysis of the insurance query below.
+
+You must return a JSON object with EXACTLY the following structure. Do not add commentary before or after the JSON.
+
+QUERY: {query}
+
+SUPPORTED INTENTS: {supported_intents}
+
+Return ONLY a valid JSON object:
+{{
+  "intent": {{
+    "primary": "<one of the supported intents>",
+    "secondary": "<one of the supported intents or null>",
+    "confidence": <float 0.0-1.0>,
+    "explanation": "<one sentence justification>"
+  }},
+  "entities": {{
+    "policy_names": ["<list of insurance policy names mentioned>"],
+    "insurance_concepts": ["<list of insurance domain concepts e.g. Sum Assured, Free Look Period>"],
+    "regulatory_terms": ["<list of regulatory references e.g. IRDAI, UIN, Section 45>"],
+    "numbers": ["<list of numeric values, amounts, ages, percentages>"],
+    "dates": ["<list of date expressions>"],
+    "coverage_periods": ["<list of coverage or waiting period expressions>"],
+    "medical_terms": ["<list of medical terms>"],
+    "risk_terms": ["<list of risk-related terms>"],
+    "named_entities": ["<list of other proper nouns>"]
+  }},
+  "classification": "<one of: factual, comparative, regulatory, risk, policy_specific, multi_document, general>",
+  "ambiguity": {{
+    "is_ambiguous": <true or false>,
+    "ambiguity_type": "<short tag e.g. missing_policy, vague_term, or null>",
+    "missing_entities": ["<list of entity categories absent from the query>"],
+    "clarification_hints": ["<list of suggested clarification questions>"],
+    "confidence": <float 0.0-1.0>
+  }},
+  "language": "<BCP-47 language code e.g. en>"
+}}
+
+Rules:
+- For intent.primary, choose the BEST matching intent from the supported intents list.
+- All list fields must be JSON arrays (empty array [] if nothing found).
+- All string fields must be non-null strings (use "" for unknown, not null).
+- ambiguity.ambiguity_type may be null if not ambiguous.
+- Be conservative: only flag ambiguity when the query genuinely cannot be answered without more context.
+- Preserve exact insurance terminology (e.g. "Free Look Period", "Sum Assured", "IRDAI").
+- Do NOT add markdown, code fences, or any text outside the JSON object.
