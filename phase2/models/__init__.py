@@ -47,6 +47,12 @@ from phase2.models.contradiction_record import ContradictionRecord
 from phase2.models.contradiction_metrics import ContradictionMetrics
 from phase2.models.contradiction_result import ContradictionResult
 
+# Part 7 models (new)
+from phase2.models.execution_status import ExecutionStatus
+from phase2.models.execution_step import ExecutionStep
+from phase2.models.workflow_metrics import WorkflowMetrics
+from phase2.models.orchestration_result import OrchestrationResult, SharedContext
+
 __all__ = [
     # Part 1
     "IntentResult",
@@ -93,4 +99,10 @@ __all__ = [
     "ContradictionRecord",
     "ContradictionMetrics",
     "ContradictionResult",
+    # Part 7
+    "ExecutionStatus",
+    "ExecutionStep",
+    "WorkflowMetrics",
+    "OrchestrationResult",
+    "SharedContext",
 ]

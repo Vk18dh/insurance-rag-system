@@ -382,6 +382,23 @@ class ContradictionSettings(BaseModel):
     supported_contradiction_categories: List[str] = Field(default_factory=list, description="Exclusion tracking maps.")
     comparison_rules: List[str] = Field(default_factory=list, description="Policy context boundaries.")
 
+class OrchestratorSettings(BaseModel):
+    """Configuration driving the Phase 2 Execution DAG mapping zero-hardcoded limits efficiently natively."""
+    execution_sequence: List[str] = Field(
+        default_factory=lambda: [
+            "QueryUnderstandingAgent",
+            "RetrievalAgent",
+            "VerificationAgent",
+            "ReasoningAgent",
+            "RiskAssessmentAgent",
+            "ContradictionAgent"
+        ]
+    )
+    max_retries: int = Field(default=1, ge=0)
+    retry_delay_ms: float = Field(default=200.0, ge=10.0)
+    agent_timeout_ms: float = Field(default=30000.0, gt=0.0)
+    max_workflow_timeout_ms: float = Field(default=120000.0, gt=0.0)
+
 # ===========================================================================
 # Root settings object
 # ===========================================================================
@@ -432,6 +449,10 @@ class Phase2Settings(BaseSettings):
     contradiction: ContradictionSettings = Field(
         default_factory=ContradictionSettings,
         description="Configuration for zero-hardcoded contradiction thresholds natively."
+    )
+    orchestrator: OrchestratorSettings = Field(
+        default_factory=OrchestratorSettings,
+        description="Configuration spanning central orchestrator loops efficiently safely."
     )
 
     @model_validator(mode="after")

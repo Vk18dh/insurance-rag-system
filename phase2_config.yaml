@@ -246,3 +246,17 @@ contradiction:
   comparison_rules:
     - "Only compare identical policy products"
 
+orchestrator:
+  execution_sequence:
+    - "QueryUnderstandingAgent"
+    - "RetrievalAgent"
+    - "VerificationAgent"
+    - "ReasoningAgent"
+    - "RiskAssessmentAgent"
+    - "ContradictionAgent"
+  max_retries: 2
+  retry_delay_ms: 150.0
+  agent_timeout_ms: 30000.0
+  max_workflow_timeout_ms: 90000.0
+
+
