@@ -177,3 +177,16 @@ validation:
   min_similarity_score: 0.1         # top chunk below this → HIGH warning
   max_incomplete_metadata_ratio: 0.5 # > 50% incomplete → LOW warning
   require_page_numbers: false       # true → warn when all page refs are N/A
+
+# ---------------------------------------------------------------------------
+# Part 3 — Verification Agent settings
+# Quality and Structural checks
+# ---------------------------------------------------------------------------
+verification:
+  min_relevance_score: 0.3
+  min_evidence_count: 1
+  timeout_seconds: 5.0
+  max_retries: 2
+  require_citations: true
+  rules:
+    strict_metadata: true

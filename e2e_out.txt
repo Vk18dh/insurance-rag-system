@@ -1,0 +1,83 @@
+==================================================================
+Phase 2 Full E2E Pipeline Check (Query -> Retrieval -> Verification)
+==================================================================
+
+{"timestamp": "2026-07-13T15:47:27.751262+00:00", "level": "INFO", "logger": "phase2", "message": "Phase 2 file logging enabled", "module": "logger", "lineno": 210, "log_file": "logs\\phase2\\phase2.log", "max_bytes": 10485760}
+{"timestamp": "2026-07-13T15:47:27.751510+00:00", "level": "INFO", "logger": "phase2", "message": "Phase 2 logging initialised", "module": "logger", "lineno": 219, "format": "json", "environment": "development"}
+[1] Initialising and linking all Agents...
+{"timestamp": "2026-07-13T15:47:27.754549+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Loaded prompt template from phase2\\prompts\\query_understanding_prompt.txt", "module": "query_processing_service", "lineno": 754}
+{"timestamp": "2026-07-13T15:47:27.754708+00:00", "level": "WARNING", "logger": "phase2.services.query_processing_service", "message": "Using FallbackQueryAnalyzer (offline mode). LLM results will be UNKNOWN.", "module": "query_processing_service", "lineno": 777}
+{"timestamp": "2026-07-13T15:47:27.754806+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "QueryProcessingService initialised (agent_version=2.0.0, max_query_length=2000)", "module": "query_processing_service", "lineno": 489}
+{"timestamp": "2026-07-13T15:47:27.754892+00:00", "level": "INFO", "logger": "phase2.agents.query_agent", "message": "QueryUnderstandingAgent initialised (name=QueryUnderstandingAgent, version=2.0.0)", "module": "query_agent", "lineno": 99}
+    -> Injecting MockPhase1Retriever for pipeline independence...
+    -> Agents bound successfully.
+
+[Test 1] Executing User Query: 'What is the term life insurance grace period?'
+  -> Q-Agent Processing...
+{"timestamp": "2026-07-13T15:47:27.755498+00:00", "level": "INFO", "logger": "phase2.agents.query_agent", "message": "[QueryUnderstandingAgent] Query received | preview='What is the term life insurance grace period?' | length=45", "module": "query_agent", "lineno": 141}
+{"timestamp": "2026-07-13T15:47:27.755634+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Processing query (query_id=5673c237-7ab0-4134-8420-c161643f0011, length=45)", "module": "query_processing_service", "lineno": 516}
+{"timestamp": "2026-07-13T15:47:27.755929+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Intent detected (query_id=5673c237-7ab0-4134-8420-c161643f0011): general_inquiry (conf=0.00)", "module": "query_processing_service", "lineno": 532}
+{"timestamp": "2026-07-13T15:47:27.756035+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Entities extracted (query_id=5673c237-7ab0-4134-8420-c161643f0011): 0 unique", "module": "query_processing_service", "lineno": 539}
+{"timestamp": "2026-07-13T15:47:27.756159+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Classification (query_id=5673c237-7ab0-4134-8420-c161643f0011): general", "module": "query_processing_service", "lineno": 546}
+{"timestamp": "2026-07-13T15:47:27.756303+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Query processing complete (query_id=5673c237-7ab0-4134-8420-c161643f0011, 0.7 ms)", "module": "query_processing_service", "lineno": 568}
+{"timestamp": "2026-07-13T15:47:27.756415+00:00", "level": "INFO", "logger": "phase2.agents.query_agent", "message": "[QueryUnderstandingAgent] Processing complete | query_id=5673c237-7ab0-4134-8420-c161643f0011 | intent=general_inquiry | confidence=0.00 | entities=0 | classification=general | ambiguous=False | elapsed=0.9 ms", "module": "query_agent", "lineno": 152}
+  -> R-Agent Retrieving based on intent [general_inquiry]...
+{"timestamp": "2026-07-13T15:47:27.756512+00:00", "level": "INFO", "logger": "phase2.agents.retrieval_agent", "message": "Retrieval agent started", "module": "retrieval_agent", "lineno": 232, "query_preview": "What is the term life insurance grace period?", "query_id": "5673c237-7ab0-4134-8420-c161643f0011", "agent_version": "2.0.0", "phase1_available": true}
+{"timestamp": "2026-07-13T15:47:27.756639+00:00", "level": "INFO", "logger": "phase2.agents.retrieval_agent", "message": "Strategy selected", "module": "retrieval_agent", "lineno": 258, "strategy": "general", "bm25": 0.5, "vector": 0.5, "top_k": 8, "query_id": "5673c237-7ab0-4134-8420-c161643f0011"}
+{"timestamp": "2026-07-13T15:47:27.756726+00:00", "level": "INFO", "logger": "phase2.services.retrieval_service", "message": "Retrieval started", "module": "retrieval_service", "lineno": 303, "query_preview": "What is the term life insurance grace period?", "top_k": 8, "bm25_weight": 0.5, "vector_weight": 0.5, "query_id": "5673c237-7ab0-4134-8420-c161643f0011"}
+{"timestamp": "2026-07-13T15:47:27.757153+00:00", "level": "INFO", "logger": "phase2.services.retrieval_service", "message": "Retrieval completed", "module": "retrieval_service", "lineno": 357, "bm25_count": 1, "vector_count": 1, "merged_count": 2, "elapsed_ms": 0.4, "query_id": "5673c237-7ab0-4134-8420-c161643f0011"}
+{"timestamp": "2026-07-13T15:47:27.757505+00:00", "level": "INFO", "logger": "phase2.services.ranking_service", "message": "Ranking completed", "module": "ranking_service", "lineno": 140, "input_count": 2, "output_count": 2, "filtered_out": 0, "top_score": 0.8571, "elapsed_ms": 0.2}
+{"timestamp": "2026-07-13T15:47:27.757683+00:00", "level": "INFO", "logger": "phase2.services.retrieval_validation_service", "message": "Validation completed", "module": "retrieval_validation_service", "lineno": 193, "chunks": 2, "warnings": 0, "top_score": 1.0, "query_id": "5673c237-7ab0-4134-8420-c161643f0011"}
+{"timestamp": "2026-07-13T15:47:27.757845+00:00", "level": "INFO", "logger": "phase2.agents.retrieval_agent", "message": "Retrieval agent completed", "module": "retrieval_agent", "lineno": 359, "metrics_id": "23283df1-9fb0-41dd-80ea-a3e4343ce1de", "query_id": "5673c237-7ab0-4134-8420-c161643f0011", "strategy": "general", "chunks_final": 2, "duplicates_removed": 0, "top_score": 0.8571, "retrieval_confidence": 0.6786, "total_ms": 1.2, "validation_passed": true, "warnings": 0}
+  -> V-Agent Verifying 2 chunks of evidence...
+{"timestamp": "2026-07-13T15:47:27.758017+00:00", "level": "INFO", "logger": "phase2.agents.verification_agent", "message": "Verification started for query_id 'Unknown' with 2 chunks.", "module": "verification_agent", "lineno": 36}
+{"timestamp": "2026-07-13T15:47:27.758289+00:00", "level": "INFO", "logger": "phase2.agents.verification_agent", "message": "Verification complete for 'Unknown'. Status: passed. Valid for reasoning: True", "module": "verification_agent", "lineno": 50}
+
+  [OK] VERIFICATION DICT (Future Part 4 Entrypoint):
+{
+    "is_valid": true,
+    "status": "passed",
+    "query": "What is the term life insurance grace period?",
+    "evidence_count": 2,
+    "recommendations": [
+        "Proceed cleanly with Reasoning generation."
+    ]
+}
+  Final Valid Boundary Status : True
+
+[Test 2] Executing User Query: 'Gibberish invalid question context'
+  -> Q-Agent Processing...
+{"timestamp": "2026-07-13T15:47:27.758451+00:00", "level": "INFO", "logger": "phase2.agents.query_agent", "message": "[QueryUnderstandingAgent] Query received | preview='Gibberish invalid question context' | length=34", "module": "query_agent", "lineno": 141}
+{"timestamp": "2026-07-13T15:47:27.758647+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Processing query (query_id=e83455fa-2d3d-4258-8618-33dad8c1c03e, length=34)", "module": "query_processing_service", "lineno": 516}
+{"timestamp": "2026-07-13T15:47:27.758774+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Intent detected (query_id=e83455fa-2d3d-4258-8618-33dad8c1c03e): general_inquiry (conf=0.00)", "module": "query_processing_service", "lineno": 532}
+{"timestamp": "2026-07-13T15:47:27.758867+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Entities extracted (query_id=e83455fa-2d3d-4258-8618-33dad8c1c03e): 0 unique", "module": "query_processing_service", "lineno": 539}
+{"timestamp": "2026-07-13T15:47:27.758940+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Classification (query_id=e83455fa-2d3d-4258-8618-33dad8c1c03e): general", "module": "query_processing_service", "lineno": 546}
+{"timestamp": "2026-07-13T15:47:27.759052+00:00", "level": "INFO", "logger": "phase2.services.query_processing_service", "message": "Query processing complete (query_id=e83455fa-2d3d-4258-8618-33dad8c1c03e, 0.4 ms)", "module": "query_processing_service", "lineno": 568}
+{"timestamp": "2026-07-13T15:47:27.759148+00:00", "level": "INFO", "logger": "phase2.agents.query_agent", "message": "[QueryUnderstandingAgent] Processing complete | query_id=e83455fa-2d3d-4258-8618-33dad8c1c03e | intent=general_inquiry | confidence=0.00 | entities=0 | classification=general | ambiguous=False | elapsed=0.7 ms", "module": "query_agent", "lineno": 152}
+  -> R-Agent Retrieving based on intent [general_inquiry]...
+{"timestamp": "2026-07-13T15:47:27.759237+00:00", "level": "INFO", "logger": "phase2.agents.retrieval_agent", "message": "Retrieval agent started", "module": "retrieval_agent", "lineno": 232, "query_preview": "Gibberish invalid question context", "query_id": "e83455fa-2d3d-4258-8618-33dad8c1c03e", "agent_version": "2.0.0", "phase1_available": true}
+{"timestamp": "2026-07-13T15:47:27.759358+00:00", "level": "INFO", "logger": "phase2.agents.retrieval_agent", "message": "Strategy selected", "module": "retrieval_agent", "lineno": 258, "strategy": "general", "bm25": 0.5, "vector": 0.5, "top_k": 8, "query_id": "e83455fa-2d3d-4258-8618-33dad8c1c03e"}
+{"timestamp": "2026-07-13T15:47:27.759440+00:00", "level": "INFO", "logger": "phase2.services.retrieval_service", "message": "Retrieval started", "module": "retrieval_service", "lineno": 303, "query_preview": "Gibberish invalid question context", "top_k": 8, "bm25_weight": 0.5, "vector_weight": 0.5, "query_id": "e83455fa-2d3d-4258-8618-33dad8c1c03e"}
+{"timestamp": "2026-07-13T15:47:27.759547+00:00", "level": "INFO", "logger": "phase2.services.retrieval_service", "message": "Retrieval completed", "module": "retrieval_service", "lineno": 357, "bm25_count": 1, "vector_count": 1, "merged_count": 2, "elapsed_ms": 0.1, "query_id": "e83455fa-2d3d-4258-8618-33dad8c1c03e"}
+{"timestamp": "2026-07-13T15:47:27.759667+00:00", "level": "INFO", "logger": "phase2.services.ranking_service", "message": "Ranking completed", "module": "ranking_service", "lineno": 140, "input_count": 2, "output_count": 2, "filtered_out": 0, "top_score": 0.8, "elapsed_ms": 0.0}
+{"timestamp": "2026-07-13T15:47:27.759753+00:00", "level": "INFO", "logger": "phase2.services.retrieval_validation_service", "message": "Validation completed", "module": "retrieval_validation_service", "lineno": 193, "chunks": 2, "warnings": 0, "top_score": 1.0, "query_id": "e83455fa-2d3d-4258-8618-33dad8c1c03e"}
+{"timestamp": "2026-07-13T15:47:27.759856+00:00", "level": "INFO", "logger": "phase2.agents.retrieval_agent", "message": "Retrieval agent completed", "module": "retrieval_agent", "lineno": 359, "metrics_id": "d308f4ee-0356-4122-bc7f-0964a844c516", "query_id": "e83455fa-2d3d-4258-8618-33dad8c1c03e", "strategy": "general", "chunks_final": 2, "duplicates_removed": 0, "top_score": 0.8, "retrieval_confidence": 0.65, "total_ms": 0.5, "validation_passed": true, "warnings": 0}
+  -> V-Agent Verifying 2 chunks of evidence...
+{"timestamp": "2026-07-13T15:47:27.759961+00:00", "level": "INFO", "logger": "phase2.agents.verification_agent", "message": "Verification started for query_id 'Unknown' with 2 chunks.", "module": "verification_agent", "lineno": 36}
+{"timestamp": "2026-07-13T15:47:27.760100+00:00", "level": "INFO", "logger": "phase2.agents.verification_agent", "message": "Verification complete for 'Unknown'. Status: passed. Valid for reasoning: True", "module": "verification_agent", "lineno": 50}
+
+  [OK] VERIFICATION DICT (Future Part 4 Entrypoint):
+{
+    "is_valid": true,
+    "status": "passed",
+    "query": "Gibberish invalid question context",
+    "evidence_count": 2,
+    "recommendations": [
+        "Proceed cleanly with Reasoning generation."
+    ]
+}
+  Final Valid Boundary Status : True
+
+==================================================================
+E2E Validation Completes: No uncaught system fatals generated.
+==================================================================

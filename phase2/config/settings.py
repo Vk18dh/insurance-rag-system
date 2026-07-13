@@ -303,6 +303,37 @@ class ValidationSettings(BaseModel):
     )
 
 
+class VerificationSettings(BaseModel):
+    """
+    Verification Agent (Part 3) configurations handling boundaries for
+    evidence validation thresholds. Zero hardcoding policy enforced here.
+    """
+    min_relevance_score: float = Field(
+        default=0.3, ge=0.0, le=1.0,
+        description="Minimum score mapping valid intent to chunks."
+    )
+    min_evidence_count: int = Field(
+        default=1, ge=1,
+        description="Minimum fully cited chunks required to avoid incomplete status."
+    )
+    timeout_seconds: float = Field(
+        default=5.0, gt=0.0,
+        description="Seconds limit before verification exception fires."
+    )
+    max_retries: int = Field(
+        default=2, ge=0,
+        description="Max retries for transient verification faults."
+    )
+    require_citations: bool = Field(
+        default=True,
+        description="Strips chunks entirely if source documentation is missing."
+    )
+    rules: Dict[str, Any] = Field(
+        default_factory=lambda: {"strict_metadata": True},
+        description="Map governing structural completeness checks."
+    )
+
+
 # ===========================================================================
 # Root settings object
 # ===========================================================================
@@ -341,6 +372,8 @@ class Phase2Settings(BaseSettings):
     retrieval: RetrievalSettings = Field(default_factory=RetrievalSettings)
     ranking: RankingSettings = Field(default_factory=RankingSettings)
     validation: ValidationSettings = Field(default_factory=ValidationSettings)
+    # Part 3 — Verification Agent
+    verification: VerificationSettings = Field(default_factory=VerificationSettings)
 
     @model_validator(mode="after")
     def _inject_secrets(self) -> "Phase2Settings":

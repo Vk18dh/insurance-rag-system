@@ -15,6 +15,12 @@ from phase2.models.retrieved_chunk import RetrievalSource, RetrievedChunk
 from phase2.models.retrieval_metrics import RetrievalMetrics
 from phase2.models.retrieval_result import RetrievalResult, RetrievalWarning
 
+# Part 3 models (new)
+from phase2.models.evidence_score import EvidenceScore
+from phase2.models.validation_metrics import ValidationMetrics
+from phase2.models.verification_report import VerificationReport, VerificationStatus, VerificationWarning
+from phase2.models.verification_result import VerificationResult
+
 __all__ = [
     # Part 1
     "IntentResult",
@@ -30,4 +36,11 @@ __all__ = [
     "RetrievalMetrics",
     "RetrievalResult",
     "RetrievalWarning",
+    # Part 3
+    "EvidenceScore",
+    "ValidationMetrics",
+    "VerificationReport",
+    "VerificationStatus",
+    "VerificationWarning",
+    "VerificationResult",
 ]

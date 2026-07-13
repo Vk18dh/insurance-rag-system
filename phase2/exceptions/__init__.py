@@ -67,4 +67,20 @@ __all__ = [
     "RetrievalTimeoutException",
     "RankingException",
     "RetrievalConfigurationException",
+    # Part 3 verification exceptions
+    "VerificationException",
+    "InvalidEvidenceException",
+    "MetadataException",
+    "CitationException",
+    "VerificationConfigurationException",
+    "VerificationTimeoutException",
 ]
+
+from phase2.exceptions.verification_exception import (
+    VerificationException,
+    InvalidEvidenceException,
+    MetadataException,
+    CitationException,
+    VerificationConfigurationException,
+    VerificationTimeoutException,
+)

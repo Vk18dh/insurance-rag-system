@@ -27,6 +27,16 @@ from phase2.interfaces.retrieval_interface import (
     IValidationService,
 )
 
+# Part 3 interfaces (new)
+from phase2.interfaces.verification_interface import (
+    ICitationValidator,
+    ICompletenessChecker,
+    IConsistencyChecker,
+    IEvidenceValidator,
+    IRelevanceChecker,
+    IVerificationAgent,
+)
+
 __all__ = [
     # Part 1
     "IAmbiguityDetector",
@@ -43,4 +53,11 @@ __all__ = [
     "IRetrievalAgent",
     "IRetrievalStrategy",
     "IValidationService",
+    # Part 3
+    "ICitationValidator",
+    "ICompletenessChecker",
+    "IConsistencyChecker",
+    "IEvidenceValidator",
+    "IRelevanceChecker",
+    "IVerificationAgent",
 ]
