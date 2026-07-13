@@ -35,7 +35,8 @@ def test_verification_agent_accepts_retrieval_result(verification_agent):
     assert result.retrieval_result.query_context.normalized_query == "test"
 
 def test_verification_agent_rejects_invalid_inputs(verification_agent):
-    with pytest.raises(ValueError):
+    from phase2.exceptions.verification_exception import InvalidEvidenceException
+    with pytest.raises(InvalidEvidenceException):
         verification_agent.verify("Not a RetrievalResult object")
 
 def test_verification_agent_degraded_on_empty(verification_agent):

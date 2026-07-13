@@ -26,13 +26,13 @@ def test_policy_context_validator_bounds():
     v = PolicyContextValidator()
     res = MagicMock()
     # Missing chunks
-    res.verification_source.retrieval_result.top_chunks = []
+    res.verification_source.retrieval_result.ranked_evidence = []
     assert v.validate_compatibility(res) is False
     
     # Valid chunks
     mock_chunk = MagicMock()
     mock_chunk.source.source_document = "PolA.pdf"
-    res.verification_source.retrieval_result.top_chunks = [mock_chunk] * 2
+    res.verification_source.retrieval_result.ranked_evidence = [mock_chunk] * 2
     assert v.validate_compatibility(res) is True
 
 def test_evidence_alignment_traces_logic():

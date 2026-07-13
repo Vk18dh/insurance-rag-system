@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: deployment/backend.Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - BACKEND_JWT_SECRET=production_super_secret_override_me
+      - CHROMA_PORT=8001
+      - LLM_PROVIDER=openai # Assuming Phase 2 orchestrator fallback
+    volumes:
+      - .:/app # Maps codebase for local dev sync mapping
+    depends_on:
+      - chromadb
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../deployment/frontend.Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma/
+    environment:
+      - IS_PERSISTENT=TRUE
+
+volumes:
+  chroma_data:

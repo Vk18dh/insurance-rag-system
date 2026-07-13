@@ -356,7 +356,7 @@ class RiskSettings(BaseModel):
     Configuration mapping zero hardcodes specifically constraining Part 5 Risk bounds natively.
     """
     prompt_template_path: str = Field(
-        ...,
+        default="phase2/prompts/risk_assessment_prompt.txt",
         description="Absolute template bound securing JSON parsing routes explicitly."
     )
     timeout_seconds: float = Field(

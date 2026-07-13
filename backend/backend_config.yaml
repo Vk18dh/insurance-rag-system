@@ -1,0 +1,20 @@
+# backend_config.yaml
+# Provides standalone configuration mapped strictly to Part 11 FastAPI needs
+
+app:
+  name: "AI-Driven Insurance Knowledge Assessment API"
+  version: "1.0.0"
+  port: 8000
+  host: "0.0.0.0"
+
+security:
+  jwt_secret_env_var: "BACKEND_JWT_SECRET"  # Evaluates strictly from ENV for high security
+  jwt_algorithm: "HS256"
+  access_token_expire_minutes: 60
+  cors_origins:
+    - "http://localhost:5173"
+    - "http://localhost:3000"
+    
+logging:
+  level: "INFO"
+  format: "json"
