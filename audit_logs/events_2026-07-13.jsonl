@@ -1,0 +1,2 @@
+{"event_id": "156df94c-8753-411a-8b13-84b49f8c9f23", "event_type": "agent_started", "execution_id": "verify-001", "agent_name": "QueryAgent", "timestamp_utc": "2026-07-13 20:53:41.877108+00:00", "extra": {}, "duration_ms": null, "retry_count": 0, "error_message": null}
+{"event_id": "7dbb439f-2bc9-4856-b516-55d8f6b260c8", "event_type": "agent_completed", "execution_id": "verify-001", "agent_name": "QueryAgent", "timestamp_utc": "2026-07-13 20:53:41.878199+00:00", "extra": {}, "duration_ms": 5.0, "retry_count": 0, "error_message": null}

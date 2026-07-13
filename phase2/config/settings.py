@@ -408,6 +408,80 @@ class ResponseBuilderSettings(BaseModel):
     retry_policy: int = Field(default=1, ge=0)
     language_options: List[str] = Field(default_factory=lambda: ["en"])
 
+
+class ObservabilitySettings(BaseModel):
+    """Configuration for the non-invasive Observability Layer (Part 9)."""
+
+    enabled: bool = Field(default=True, description="Master switch — set False to use NullFacade.")
+    log_level: str = Field(default="INFO", description="Logging level: DEBUG | INFO | WARNING | ERROR | CRITICAL.")
+    log_dir: str = Field(default="logs", description="Directory for observability log files.")
+    log_to_file: bool = Field(default=True)
+    log_to_console: bool = Field(default=True)
+    log_format: str = Field(default="json", description="Log format: json | text.")
+    audit_enabled: bool = Field(default=True)
+    audit_storage_backend: str = Field(default="json", description="Storage backend: json | sqlite.")
+    audit_dir: str = Field(default="audit_logs", description="Directory for audit JSONL / SQLite files.")
+    metrics_enabled: bool = Field(default=True)
+    tracing_enabled: bool = Field(default=True)
+    health_monitor_enabled: bool = Field(default=True)
+    health_window_size: int = Field(
+        default=100, ge=10, le=10000,
+        description="Rolling window size for health metric computation."
+    )
+    alert_failure_rate_threshold: float = Field(
+        default=0.3, ge=0.0, le=1.0,
+        description="Failure rate fraction that triggers a HIGH alert."
+    )
+    alert_avg_latency_ms_threshold: float = Field(
+        default=5000.0, gt=0.0,
+        description="Average latency (ms) that triggers a MEDIUM alert."
+    )
+    query_hash_salt_env_var: str = Field(
+        default="OBSERVABILITY_SALT",
+        description="Name of the env var holding the HMAC salt for query hashing."
+    )
+    max_audit_retention_days: int = Field(
+        default=30, ge=1,
+        description="Number of days to retain audit files (enforced by external job)."
+    )
+    # Agent role classification — used to segment per-type latency (no agent logic here)
+    retrieval_agent_names: List[str] = Field(
+        default_factory=lambda: ["RetrievalAgent"],
+        description="Agent names classified as retrieval workers for metrics segmentation."
+    )
+    reasoning_agent_names: List[str] = Field(
+        default_factory=lambda: ["ReasoningAgent"],
+        description="Agent names classified as reasoning workers for metrics segmentation."
+    )
+    response_agent_names: List[str] = Field(
+        default_factory=lambda: ["ResponseBuilder"],
+        description="Agent names classified as response workers for metrics segmentation."
+    )
+
+    @field_validator("log_level")
+    @classmethod
+    def _validate_log_level(cls, v: str) -> str:
+        valid = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+        if v.upper() not in valid:
+            raise ValueError(f"log_level must be one of {valid}, got '{v}'")
+        return v.upper()
+
+    @field_validator("audit_storage_backend")
+    @classmethod
+    def _validate_storage_backend(cls, v: str) -> str:
+        valid = {"json", "sqlite"}
+        if v.lower() not in valid:
+            raise ValueError(f"audit_storage_backend must be one of {valid}, got '{v}'")
+        return v.lower()
+
+    @field_validator("log_format")
+    @classmethod
+    def _validate_log_format(cls, v: str) -> str:
+        valid = {"json", "text"}
+        if v.lower() not in valid:
+            raise ValueError(f"log_format must be one of {valid}, got '{v}'")
+        return v.lower()
+
 # ===========================================================================
 # Root settings object
 # ===========================================================================
@@ -466,6 +540,11 @@ class Phase2Settings(BaseSettings):
     response_builder: ResponseBuilderSettings = Field(
         default_factory=ResponseBuilderSettings,
         description="Response Builder mapping limits safely natively."
+    )
+    # Part 9 — Observability Layer
+    observability: ObservabilitySettings = Field(
+        default_factory=ObservabilitySettings,
+        description="Centralized observability configuration for logging, metrics, audit, and tracing."
     )
 
     @model_validator(mode="after")

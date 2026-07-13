@@ -9,6 +9,8 @@ from phase2.interfaces.orchestrator_interface import (
 from phase2.models.orchestration_result import OrchestrationResult
 from phase2.models.execution_status import ExecutionStatus
 from phase2.exceptions.orchestration_exception import OrchestrationException, TimeoutException
+from phase2.observability.facade import NullObservabilityFacade
+from phase2.observability.interfaces.observability_interface import IObservabilityFacade
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,8 @@ class AgentOrchestrator(IAgentOrchestrator):
                  execution_manager: IExecutionManager,
                  context_manager: IContextManager,
                  metrics_collector: IMetricsCollector,
-                 agents_map: Dict[str, Any]):
+                 agents_map: Dict[str, Any],
+                 observability: IObservabilityFacade | None = None):
         """
         The Orchestrator defines exactly zero hardcoded models reliably mapping dynamic bounds centrally smoothly natively safely.
         """
@@ -27,6 +30,7 @@ class AgentOrchestrator(IAgentOrchestrator):
         self._context_manager = context_manager
         self._metrics_collector = metrics_collector
         self._agents_map = agents_map
+        self._obs: IObservabilityFacade = observability if observability is not None else NullObservabilityFacade()
 
     def orchestrate(self, query: str) -> OrchestrationResult:
         request_id = str(uuid.uuid4())
@@ -36,6 +40,9 @@ class AgentOrchestrator(IAgentOrchestrator):
         overall_status = ExecutionStatus.SUCCESS
         errors = []
         warnings = []
+        
+        # --- Observability: pipeline start ---
+        trace = self._obs.on_pipeline_start(request_id, query)
         
         for agent_name in sequence:
             agent = self._agents_map.get(agent_name)
@@ -47,6 +54,13 @@ class AgentOrchestrator(IAgentOrchestrator):
                 break
                 
             self._metrics_collector.start_agent(agent_name)
+            # --- Observability: agent start ---
+            span = self._obs.on_agent_start(trace, agent_name)
+            _agent_start_ms = __import__('time').time() * 1000
+            _succeeded = False
+            _retry = 0
+            _timed_out = False
+            _err_type = None
             try:
                 args_list = self._resolve_agent_args(agent_name, query)
                 func = self._resolve_agent_entrypoint(agent)
@@ -54,21 +68,41 @@ class AgentOrchestrator(IAgentOrchestrator):
                 result = self._execution_manager.execute_agent(agent_name, func, *args_list)
                 self._context_manager.update_context(agent_name, result)
                 self._metrics_collector.end_agent(agent_name, ExecutionStatus.SUCCESS, 0)
+                _succeeded = True
                 
             except TimeoutException as e:
                 logger.error(f"Execution bound forcefully terminated securely natively: {e}")
                 self._metrics_collector.end_agent(agent_name, ExecutionStatus.TIMEOUT, 0, str(e))
                 errors.append(str(e))
                 overall_status = ExecutionStatus.FAILURE
+                _timed_out = True
+                _err_type = type(e).__name__
                 break
             except Exception as e:
                 logger.error(f"Execution exception gracefully trapped dynamically securely: {e}")
                 self._metrics_collector.end_agent(agent_name, ExecutionStatus.FAILURE, 0, str(e))
                 errors.append(str(e))
                 overall_status = ExecutionStatus.FAILURE
+                _err_type = type(e).__name__
                 break
+            finally:
+                _duration_ms = __import__('time').time() * 1000 - _agent_start_ms
+                # --- Observability: agent end ---
+                self._obs.on_agent_end(
+                    span, agent_name, _duration_ms,
+                    succeeded=_succeeded,
+                    retry_count=_retry,
+                    timed_out=_timed_out,
+                    error_type=_err_type,
+                )
                 
         metrics = self._metrics_collector.compile_metrics()
+        
+        # --- Observability: pipeline end ---
+        self._obs.on_pipeline_end(
+            trace,
+            overall_status="success" if overall_status == ExecutionStatus.SUCCESS else "failure",
+        )
         
         return OrchestrationResult(
             request_id=request_id,
