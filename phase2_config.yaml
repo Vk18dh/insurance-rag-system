@@ -228,3 +228,21 @@ risk:
     - "Legal Sensitivity"
     - "Regulatory"
     - "Insurance Exclusion"
+
+contradiction:
+  prompt_template_path: "phase2/prompts/contradiction_detection_prompt.txt"
+  timeout_seconds: 1.0
+  conflict_thresholds:
+    - "CRITICAL -> HALT"
+    - "HIGH -> REVIEW"
+  supported_contradiction_categories:
+    - "Logical"
+    - "Regulatory"
+    - "Clause"
+    - "Coverage"
+    - "Eligibility"
+    - "Benefit"
+    - "Exclusion"
+  comparison_rules:
+    - "Only compare identical policy products"
+

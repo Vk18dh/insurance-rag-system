@@ -38,6 +38,14 @@ from phase2.services.legal_sensitivity_checker import LegalSensitivityChecker
 from phase2.services.exclusion_checker import ExclusionChecker
 from phase2.services.regulatory_checker import RegulatoryChecker
 from phase2.services.escalation_service import EscalationService
+
+# Part 6 services
+from phase2.services.policy_context_validator import PolicyContextValidator
+from phase2.services.evidence_alignment_service import EvidenceAlignmentService
+from phase2.services.contradiction_classifier import ContradictionClassifier
+from phase2.services.contradiction_explainer import ContradictionExplainer
+from phase2.services.conflict_resolution_helper import ConflictResolutionHelper
+from phase2.services.contradiction_service import ContradictionService
 from phase2.services.risk_assessment_service import RiskAssessmentService
 
 __all__ = [

@@ -57,6 +57,17 @@ from phase2.interfaces.risk_agent_interface import (
     IEscalationService,
 )
 
+# Part 6 interfaces (new)
+from phase2.interfaces.contradiction_interface import (
+    IContradictionAgent,
+    IContradictionService,
+    IPolicyContextValidator,
+    IEvidenceAlignmentService,
+    IContradictionClassifier,
+    IContradictionExplainer,
+    IConflictResolutionHelper,
+)
+
 __all__ = [
     # Part 1
     "IAmbiguityDetector",
@@ -94,4 +105,12 @@ __all__ = [
     "IExclusionChecker",
     "IRegulatoryChecker",
     "IEscalationService",
+    # Part 6
+    "IContradictionAgent",
+    "IContradictionService",
+    "IPolicyContextValidator",
+    "IEvidenceAlignmentService",
+    "IContradictionClassifier",
+    "IContradictionExplainer",
+    "IConflictResolutionHelper",
 ]

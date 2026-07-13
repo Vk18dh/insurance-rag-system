@@ -374,6 +374,14 @@ class RiskSettings(BaseModel):
         description="Arbitrary action definitions mapping HIGH/CRITICAL flows downstream natively."
     )
 
+class ContradictionSettings(BaseModel):
+    """Configuration mapping mapping bounds across LLM schema traces securely natively."""
+    prompt_template_path: str = Field("phase2/prompts/contradiction_detection_prompt.txt", description="System constraint.")
+    timeout_seconds: float = Field(1.0, ge=0.1, le=5.0, description="Latency boundary.")
+    conflict_thresholds: List[str] = Field(default_factory=list, description="Map mapping CRITICAL conflicts.")
+    supported_contradiction_categories: List[str] = Field(default_factory=list, description="Exclusion tracking maps.")
+    comparison_rules: List[str] = Field(default_factory=list, description="Policy context boundaries.")
+
 # ===========================================================================
 # Root settings object
 # ===========================================================================
@@ -417,7 +425,14 @@ class Phase2Settings(BaseSettings):
     # Part 4 — Reasoning Agent
     reasoning: ReasoningSettings = Field(default_factory=ReasoningSettings)
     # Part 5 — Risk Agent
-    risk: RiskSettings = Field(default_factory=RiskSettings)
+    risk: RiskSettings = Field(
+        default_factory=RiskSettings,
+        description="Configuration for global Risk limits."
+    )
+    contradiction: ContradictionSettings = Field(
+        default_factory=ContradictionSettings,
+        description="Configuration for zero-hardcoded contradiction thresholds natively."
+    )
 
     @model_validator(mode="after")
     def _inject_secrets(self) -> "Phase2Settings":

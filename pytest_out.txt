@@ -1,0 +1,40 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 6 items
+
+phase2\tests\test_contradiction_services.py .F...                        [ 83%]
+phase2\tests\test_contradiction_agent.py .                               [100%]
+
+================================== FAILURES ===================================
+_______________________ test_explainer_extracts_cleanly _______________________
+
+    def test_explainer_extracts_cleanly():
+        e = ContradictionExplainer()
+        assert e.explain({"explanation": "Logical clash bounded."}) == "Logical clash bounded."
+>       assert e.explain({}) == "Insufficient Evidence"
+E       AssertionError: assert 'Insufficient...ion properly.' == 'Insufficient Evidence'
+E         
+E         - Insufficient Evidence
+E         + Insufficient Evidence mapping explanation properly.
+
+phase2\tests\test_contradiction_services.py:18: AssertionError
+============================== warnings summary ===============================
+phase2\models\intent.py:57
+  C:\Users\dhyan\Desktop\majorcode\phase2\models\intent.py:57: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class IntentResult(BaseModel):
+
+phase2\models\query_metadata.py:104
+  C:\Users\dhyan\Desktop\majorcode\phase2\models\query_metadata.py:104: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryMetadata(BaseModel):
+
+phase2\models\query_context.py:133
+  C:\Users\dhyan\Desktop\majorcode\phase2\models\query_context.py:133: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryContext(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED phase2/tests/test_contradiction_services.py::test_explainer_extracts_cleanly
+=================== 1 failed, 5 passed, 3 warnings in 0.46s ===================

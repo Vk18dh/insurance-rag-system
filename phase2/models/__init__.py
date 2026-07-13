@@ -39,6 +39,14 @@ from phase2.models.exclusion_warning import ExclusionWarning
 from phase2.models.risk_processing_metrics import RiskProcessingMetrics
 from phase2.models.risk_assessment import RiskAssessmentResult
 
+# Part 6 models (new)
+from phase2.models.conflict_level import ConflictLevel
+from phase2.models.contradiction_type import ContradictionType
+from phase2.models.evidence_alignment import EvidenceAlignment
+from phase2.models.contradiction_record import ContradictionRecord
+from phase2.models.contradiction_metrics import ContradictionMetrics
+from phase2.models.contradiction_result import ContradictionResult
+
 __all__ = [
     # Part 1
     "IntentResult",
@@ -78,4 +86,11 @@ __all__ = [
     "ExclusionWarning",
     "RiskProcessingMetrics",
     "RiskAssessmentResult",
+    # Part 6
+    "ConflictLevel",
+    "ContradictionType",
+    "EvidenceAlignment",
+    "ContradictionRecord",
+    "ContradictionMetrics",
+    "ContradictionResult",
 ]

@@ -1,0 +1,42 @@
+INFO: Phase2Settings loaded (env=development, llm_provider=gemini, model=gemma-3-27b-it)
+INFO: QueryUnderstandingAgent initialised (name=QueryUnderstandingAgent, version=2.0.0)
+INFO: [QueryUnderstandingAgent] Query received | preview='Does the policy cover illness on exactly day 15?' | length=48
+INFO: [QueryUnderstandingAgent] Processing complete | query_id=TEST_Q | intent=<MagicMock name='mock.intent.value' id='2927946161120'> | confidence=1.00 | entities=0 | classification=<MagicMock name='mock.value' id='2927946163472'> | ambiguous=<MagicMock name='mock.is_ambiguous' id='2927946164144'> | elapsed=0.7 ms
+INFO: Retrieval agent started
+INFO: Strategy selected
+INFO: Ranking completed
+INFO: Validation completed
+INFO: Retrieval agent completed
+INFO: Verification started for query_id 'Unknown' with 1 chunks.
+WARNING: Chunk missing critical citation anchors: chk_1
+INFO: Evidence evaluated as Incomplete: Found 0, Required 1
+INFO: Verification complete for 'Unknown'. Status: degraded. Valid for reasoning: True
+INFO: Reasoning phase executing for Query [Unknown]
+INFO: Clauses interpreted successfully
+INFO: Evidence linkages established
+INFO: Reasoning chain steps formulated natively
+INFO: Reasoning successfully generated for Query [Unknown] spanning 0 sequence bounds in 0.14ms
+INFO: Risk evaluation initiated securely for Query [Unknown]
+INFO: Risk Analysis generation complete
+INFO: Risk bounds processed securely generating a [MEDIUM] Level Assessment
+INFO: Contradiction agent analysis initiated natively securely.
+INFO: Contradiction detection mapped natively securely finding 0 isolates.
+
+=========================================
+PIPELINE: CONTRADICTION EVALUATION TRACE
+=========================================
+
+[1] Running Query Agent...
+[2] Running Retrieval Agent...
+[3] Running Verification Agent...
+[4] Running Reasoning Agent...
+[5] Running Risk Agent...
+[6] Running Contradiction Detection Agent...
+
+=========================================
+CONTRADICTION ASSESSMENT RESULT:
+Metrics (total executed): 0 conflicts safely extracted.
+Time Taken: 0.01ms
+No logical constraints collided natively securely.
+=========================================
+
