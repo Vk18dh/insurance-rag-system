@@ -1,103 +1,78 @@
-# AI-Driven Insurance Knowledge Assessment System
+# 🛡️ Production-Grade AI Insurance Knowledge System
 
-RAG-based system for processing LIC Policy PDFs and IRDAI Annual Reports. Extracts text via OCR, chunks with clause awareness, indexes in both vector (ChromaDB) and keyword (BM25) stores, and answers queries with grounded, citation-backed responses.
+A state-of-the-art, **Multi-Agent RAG (Retrieval-Augmented Generation)** platform designed exclusively for high-stakes insurance policy and regulatory compliance analysis (LIC & IRDAI). 
 
-## Architecture
+Built to eliminate AI hallucinations, this platform leverages a deterministic strict-evaluation architecture providing **Human-In-The-Loop safety bounds**, sophisticated regulatory risk assessment, and beautiful structural markdown outputs.
 
-```
-PDF Files → [ingest.py] → JSON → [index.py] → ChromaDB + BM25 → [app.py] → Grounded Answer
-```
+---
 
-| Module       | Purpose                                              |
-|--------------|------------------------------------------------------|
-| `config.py`  | Central configuration (paths, models, parameters)    |
-| `ingest.py`  | Hi-res OCR extraction + post-processing → JSON       |
-| `index.py`   | Clause-aware chunking + dual index build             |
-| `app.py`     | Hybrid retrieval (50/50) + LLM QA + interactive CLI  |
+## 🚀 Key Features
 
-## Setup
+* **Strict Safety Boundaries:** Automatically halts execution and triggers a Human-in-the-Loop review if contradictory policy evidence, legal hazards, or out-of-domain logic is detected.
+* **Multi-Agent Orchestration:** 
+  * 🧠 *Query Understanding Agent:* Evaluates domain limits and extracts critical policy entities.
+  * ⚖️ *Reasoning Agent:* Traces explicit logical syllogisms mapped directly to chunked policy evidence.
+  * 🛑 *Risk Assessment Agent:* Flags unverified regulatory or financial assertions preventing unauthorized financial advice.
+  * 🔍 *Contradiction Agent:* Employs cross-policy validation to detect logic gaps.
+* **Hybrid Retrieval System:** Merges semantic vector similarity (*ChromaDB*) with exacting keyword preservation (*BM25*) to never miss an obscure clause.
+* **Beautiful Structural Responses:** Generates pristine, highly readable Gemini-style markdown summaries strictly detailing what is known (and what isn't) natively.
+* **Dockerized Microservices:** Seamless deployment spanning a React UI, FastAPI Backend, and Vector Databases.
 
-```bash
-# 1. Create virtual environment
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # Linux / macOS
+---
 
-# 2. Install dependencies
-pip install -r requirements.txt
+## 🏗️ Architecture
 
-# 3. Configure API key
-copy .env.example .env
-# Edit .env and add your Gemini API key
-```
-
-## Usage
-
-### Step 1 — Place PDFs
-Put your LIC policy PDFs and IRDAI reports into `data/pdfs/`.
-
-### Step 2 — Ingest (OCR + JSON)
-```bash
-python ingest.py
-```
-Processed JSONs are saved to `data/extracted/` (won't re-process existing files).
-
-### Step 3 — Build Indices
-```bash
-python index.py
-```
-Creates ChromaDB vector store in `data/chroma_db/` and BM25 index at `data/bm25_index.pkl`.
-
-### Step 4 — Query
-```bash
-python app.py
-```
-
-Or run the full pipeline in one go:
-```bash
-python app.py --ingest --index
-```
-
-### Example
-```
-📋 Question: What is the death benefit under Jeevan Anand policy?
-
-🔍 Searching...
-
-──────────────────────────────────────────────────────────────
-📝 ANSWER:
-
-The death benefit under the Jeevan Anand policy includes...
-(Source: LIC_Jeevan_Anand.pdf, Page: 5)
-
-📚 SOURCES:
-   • LIC_Jeevan_Anand.pdf — Page 5 (Benefits)
-   • LIC_Jeevan_Anand.pdf — Page 6 (Death Benefit)
-──────────────────────────────────────────────────────────────
-```
-
-## Project Structure
-
-```
+```text
 majorcode/
-├── config.py            # Configuration constants
-├── ingest.py            # Document ingestion & OCR
-├── index.py             # Chunking & index building
-├── app.py               # Retrieval & QA interface
-├── requirements.txt     # Python dependencies
-├── .env.example         # API key template
-├── .env                 # Your API key (not committed)
-└── data/
-    ├── pdfs/            # Input PDF documents
-    ├── extracted/       # Processed JSON files
-    ├── chroma_db/       # ChromaDB vector store
-    └── bm25_index.pkl   # BM25 keyword index
+├── backend/            # FastAPI orchestration endpoints and DI containers
+├── frontend/           # React + Material UI dashboard with visual safety banners (Vite)
+├── phase2/             # Multi-Agent logic, LLM Prompt adapters, and core services
+├── data/               # Vector bounds (ChromaDB + BM25) and original PDF artifacts
+└── docker-compose.yml  # Zero-configuration production scale orchestrator
 ```
 
-## Key Features
+### Tech Stack
+* **Frontend:** React, TypeScript, Material-UI, Vite
+* **Backend:** Python, FastAPI, Pydantic, Pydantic-Settings
+* **AI & Data Layer:** OpenRouter (LLM Actuator), ChromaDB, BM25(Rank-BM25), BGE-Large (Embeddings)
+* **DevOps:** Docker, Docker Compose
 
-- **Hi-res OCR** via `unstructured` — handles scanned PDFs, tables, multi-column layouts
-- **Clause-aware chunking** — preserves insurance clause boundaries (exclusions, benefits)
-- **Hybrid retrieval** — BM25 (keyword) + ChromaDB (semantic) with 50/50 weighting
-- **Grounded QA** — Insurance Auditor prompt ensures answers cite source document and page number
-- **Incremental processing** — already-processed PDFs are skipped automatically
+---
+
+## ⚙️ Quick Start (Docker Run)
+
+Launch the entire AI architecture effortlessly.
+
+### 1. Configure the Environment
+Copy the example environment configuration securely.
+```bash
+cp .env.phase2.example .env.phase2
+```
+Edit `.env.phase2` to inject your **OpenRouter API Key**. 
+
+### 2. Boot the Platform
+```bash
+docker-compose up -d --build
+```
+*Note: Make sure Docker Desktop is actively running.*
+
+### 3. Access the Dashboard
+Navigate to your portal dynamically:
+👉 **[http://localhost:5173](http://localhost:5173)**
+
+---
+
+## 🚨 Understanding Safety Constraints
+
+The AI employs a visual traffic-light style boundary validation on the front end mapping to exact constraint thresholds natively:
+
+| UI Alert | Description | Trigger Example |
+| :--- | :--- | :--- |
+| **Normal (No Banner)** | Fully verified policy insights | *"What is the minimum age for LIC Jeevan Shagun?"* |
+| **🟠 REGULATORY RISK** | Financial advice limits, legal risks, or lack of explicit evidence. Routes to human expert. | *"If I lie about a pre-existing medical issue, can I still get the policy payout?"* |
+| **🔴 LOW CONFIDENCE** | Out-of-Domain bounds. The AI could not find related evidence and actively refuses hallucination. | *"Who won the world cup in 2022?"* |
+
+---
+
+## 🧑‍💻 Contributing
+This pipeline executes complex deterministic mappings. Please observe the rigid constraints outlined in `phase2/interfaces` if refactoring logical boundaries to prevent regressions against the orchestrator.
