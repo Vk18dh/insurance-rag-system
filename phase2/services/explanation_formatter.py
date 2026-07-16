@@ -16,7 +16,11 @@ class ExplanationFormatter(IExplanationFormatter):
         if not reasoning_result or not getattr(reasoning_result, 'reasoning_chain', None):
             return self._fallback
             
+        summary = getattr(reasoning_result.explanation, 'reasoning_summary', self._fallback)
+        clause = getattr(reasoning_result.explanation, 'clause_interpretation', '')
+        text = f"{summary}\n\n{clause}".strip()
+        
         if not reasoning_result.reasoning_chain.is_complete:
-            return f"{self._fallback}\n\n*Partial Details:* {reasoning_result.explanation}"
+            return f"{self._fallback}\n\n*Partial Details:* {text}"
             
-        return reasoning_result.explanation
+        return text

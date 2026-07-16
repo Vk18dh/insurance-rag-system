@@ -63,7 +63,7 @@ class ResponseBuilderFactory:
     """Configures explicit scopes safely dynamically via strictly inverted bounds optimally explicitly cleanly."""
     
     @staticmethod
-    def create(settings: Any) -> IResponseBuilderAgent:
+    def create(settings: Any, llm_analyzer: Optional[Any] = None) -> IResponseBuilderAgent:
         from phase2.services.response_composer import ResponseComposer
         from phase2.services.citation_service import CitationService
         from phase2.services.warning_service import WarningService
@@ -80,7 +80,7 @@ class ResponseBuilderFactory:
         version = getattr(settings, 'agent_version', "1.0.0")
         
         exp_fmt = ExplanationFormatter(fb_exp)
-        ans_fmt = ResponseFormatter(fb_ans)
+        ans_fmt = ResponseFormatter(fb_ans, llm_analyzer=llm_analyzer)
         val_svc = ResponseValidator()
         
         composer = ResponseComposer(cit_svc, warn_svc, exp_fmt, ans_fmt, agent_version=version)

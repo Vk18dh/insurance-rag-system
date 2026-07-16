@@ -24,18 +24,12 @@ class CitationService(ICitationService):
             for ev in step.evidence_used:
                 if ev.chunk_id not in seen_chunks:
                     seen_chunks.add(ev.chunk_id)
-                    metadata = ev.metadata or {}
-                    
-                    # Prevent oversized snippets silently
-                    raw_text = ev.text_chunk or ""
-                    snippet = raw_text[:120] + "..." if len(raw_text) > 120 else raw_text
-                    
                     citations.append(Citation(
                         citation_id=f"[{citation_idx}]",
-                        source_document=metadata.get("source_document", metadata.get("policy_id", "Unknown Document")),
-                        page_number=str(metadata.get("page_number", "N/A")),
-                        clause_reference=metadata.get("clause", None),
-                        snippet=snippet if snippet else None
+                        source_document=getattr(ev, 'source_document', 'Unknown Document'),
+                        page_number=str(getattr(ev, 'page_number', 'N/A')),
+                        clause_reference=getattr(ev, 'section_title', None),
+                        snippet=None
                     ))
                     citation_idx += 1
                     

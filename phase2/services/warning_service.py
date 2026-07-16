@@ -15,17 +15,17 @@ class WarningService(IWarningService):
     def build_warnings(self, risk_result: Optional[RiskAssessmentResult], contradiction_result: Optional[ContradictionResult]) -> List[ResponseWarning]:
         warnings: List[ResponseWarning] = []
         
-        if risk_result and risk_result.risk_level.value not in ("none", "low"):
+        if risk_result and str(risk_result.overall_risk_level.value).lower() not in ("none", "low"):
             warnings.append(ResponseWarning(
-                severity=WarningSeverity.HIGH if risk_result.risk_level.value == "high" else WarningSeverity.MEDIUM,
-                message=risk_result.explanation,
+                severity=WarningSeverity.HIGH if risk_result.overall_risk_level.value == "high" else WarningSeverity.MEDIUM,
+                message="Risk threshold breached across defined logical boundary.",
                 source_agent="RiskAssessmentAgent"
             ))
             
-        if contradiction_result and contradiction_result.overall_contradiction:
+        if contradiction_result and len(contradiction_result.contradictions) > 0:
             warnings.append(ResponseWarning(
-                severity=WarningSeverity.CRITICAL if contradiction_result.requires_escalation else WarningSeverity.HIGH,
-                message=f"Contradiction identified: {contradiction_result.explanation}",
+                severity=WarningSeverity.CRITICAL if contradiction_result.has_critical_conflict else WarningSeverity.HIGH,
+                message=f"Contradiction identified: {contradiction_result.recommendation}",
                 source_agent="ContradictionAgent"
             ))
             

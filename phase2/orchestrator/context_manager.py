@@ -20,7 +20,8 @@ class ContextManager(IContextManager):
             "VerificationAgent": "verification_result",
             "ReasoningAgent": "reasoning_result",
             "RiskAssessmentAgent": "risk_result",
-            "ContradictionAgent": "contradiction_result"
+            "ContradictionAgent": "contradiction_result",
+            "ResponseBuilder": "final_response"
         }
         target_property = property_map.get(agent_name)
         if target_property:

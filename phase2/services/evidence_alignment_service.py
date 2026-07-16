@@ -16,7 +16,7 @@ class EvidenceAlignmentService(IEvidenceAlignmentService):
             
             for step in reasoning_result.reasoning_chain.steps:
                 step_ids.append(step.step_number)
-                for ev in step.supporting_evidence:
+                for ev in step.evidence_used:
                     if ev.chunk_id not in chunk_ids:
                         chunk_ids.append(ev.chunk_id)
             

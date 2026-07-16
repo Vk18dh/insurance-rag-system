@@ -22,3 +22,29 @@ data/bm25_index.pkl
 .venv/
 venv/
 env/
+
+# Logs and Traces
+*.txt
+!requirements.txt
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!tsconfig.node.json
+*.xml
+logs/
+audit_logs/
+.pytest_cache/
+
+# Node
+node_modules/
+
+# Temp AI Scripts
+*_tmp.py
+*_tmp*.py
+test_run.py
+test_patch_run.py
+append_obs_yaml.py
+parse_pytest.py
+safe_pytest.py
+update_yaml.py

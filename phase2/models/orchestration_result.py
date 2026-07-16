@@ -12,6 +12,7 @@ from phase2.models.verification_result import VerificationResult
 from phase2.models.reasoning_result import ReasoningResult
 from phase2.models.risk_assessment import RiskAssessmentResult
 from phase2.models.contradiction_result import ContradictionResult
+from phase2.models.final_response import FinalResponse
 
 class SharedContext(BaseModel):
     """Maintains SharedExecutionContext tracking properties independently avoiding memory overlap natively."""
@@ -21,6 +22,7 @@ class SharedContext(BaseModel):
     reasoning_result: Optional[ReasoningResult] = None
     risk_result: Optional[RiskAssessmentResult] = None
     contradiction_result: Optional[ContradictionResult] = None
+    final_response: Optional[FinalResponse] = None
 
 class OrchestrationResult(BaseModel):
     """Root trace returning the completely executed Context natively strictly mapping cleanly sequentially."""

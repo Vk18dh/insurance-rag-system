@@ -9,6 +9,7 @@ RULES:
 1. Every detected risk MUST reference the specific reasoning step numbers [e.g., [1], [2], [4]] it applies to.
 2. If there is insufficient evidence mapping to a risk facet, declare it as 'Insufficient Evidence' instead of hallucinations.
 3. Only evaluate strictly based on the text constrained below.
+4. CRITICAL RULES FOR RISK LEVEL: 'risk_level' MUST remain 'LOW' for general informational inquiries or queries lacking evidence. ONLY elevate to 'MEDIUM', 'HIGH', or 'CRITICAL' if the query involves active legal dangers, medical emergencies, policy cancellations, or detected fraud.
 
 QUERY: {QUERY}
 

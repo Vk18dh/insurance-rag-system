@@ -10,7 +10,9 @@ services:
     environment:
       - BACKEND_JWT_SECRET=production_super_secret_override_me
       - CHROMA_PORT=8001
-      - LLM_PROVIDER=openai # Assuming Phase 2 orchestrator fallback
+      - PHASE2__ENVIRONMENT=testing
+      - PHASE2__LLM__PROVIDER=openrouter
+      - PHASE2__LLM__API_KEY=${OPENROUTER_API_KEY}
     volumes:
       - .:/app # Maps codebase for local dev sync mapping
     depends_on:

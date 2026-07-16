@@ -62,7 +62,7 @@ class LLMSettings(BaseModel):
     @field_validator("provider")
     @classmethod
     def validate_provider(cls, v: str) -> str:
-        allowed = {"gemini", "openai", "anthropic", "local", "offline"}
+        allowed = {"gemini", "openai", "anthropic", "local", "offline", "openrouter"}
         if v.lower() not in allowed:
             raise ValueError(f"llm.provider must be one of {allowed}, got: {v!r}")
         return v.lower()
@@ -360,9 +360,9 @@ class RiskSettings(BaseModel):
         description="Absolute template bound securing JSON parsing routes explicitly."
     )
     timeout_seconds: float = Field(
-        default=1.0, 
+        default=45.0, 
         ge=0.1, 
-        le=5.0,
+        le=120.0,
         description="Strict latency telemetry mapping preventing excessive execution limits natively."
     )
     supported_risk_categories: List[str] = Field(
@@ -377,7 +377,7 @@ class RiskSettings(BaseModel):
 class ContradictionSettings(BaseModel):
     """Configuration mapping mapping bounds across LLM schema traces securely natively."""
     prompt_template_path: str = Field("phase2/prompts/contradiction_detection_prompt.txt", description="System constraint.")
-    timeout_seconds: float = Field(1.0, ge=0.1, le=5.0, description="Latency boundary.")
+    timeout_seconds: float = Field(45.0, ge=0.1, le=120.0, description="Latency boundary.")
     conflict_thresholds: List[str] = Field(default_factory=list, description="Map mapping CRITICAL conflicts.")
     supported_contradiction_categories: List[str] = Field(default_factory=list, description="Exclusion tracking maps.")
     comparison_rules: List[str] = Field(default_factory=list, description="Policy context boundaries.")
@@ -404,7 +404,7 @@ class ResponseBuilderSettings(BaseModel):
     """Configuration driving the Response Builder formatting structures mapping fallbacks explicitly."""
     fallback_explanation: str = Field(default="Unable to construct a logically verified explanation.")
     fallback_answer: str = Field(default="Insufficient policy evidence available to answer.")
-    timeout_seconds: float = Field(default=2.0, ge=0.5, le=10.0, description="Latency limit.")
+    timeout_seconds: float = Field(default=45.0, ge=0.5, le=120.0, description="Latency limit.")
     retry_policy: int = Field(default=1, ge=0)
     language_options: List[str] = Field(default_factory=lambda: ["en"])
 
