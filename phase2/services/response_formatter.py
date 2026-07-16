@@ -26,5 +26,5 @@ class ResponseFormatter(IResponseFormatter):
             return self._fallback_answer
             
         # Natively trace the final step deduction gracefully representing the direct conclusion smoothly quietly safely cleanly smoothly purely efficiently safely.
-        final_deduction = steps[-1].deduction
+        final_deduction = getattr(steps[-1], 'conclusion', self._fallback_answer)
         return final_deduction if final_deduction else self._fallback_answer

@@ -1,9 +1,0 @@
-unstructured[all-docs]
-chromadb
-sentence-transformers
-rank-bm25
-llama-index-core
-nltk
-google-generativeai
-python-dotenv
-streamlit

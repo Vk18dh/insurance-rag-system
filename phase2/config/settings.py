@@ -62,7 +62,7 @@ class LLMSettings(BaseModel):
     @field_validator("provider")
     @classmethod
     def validate_provider(cls, v: str) -> str:
-        allowed = {"gemini", "openai", "anthropic", "local", "offline"}
+        allowed = {"gemini", "openai", "anthropic", "local", "offline", "openrouter"}
         if v.lower() not in allowed:
             raise ValueError(f"llm.provider must be one of {allowed}, got: {v!r}")
         return v.lower()

@@ -14,6 +14,11 @@ class RetrievedSource(BaseModel):
     content_snippet: str
     confidence: float
 
+class AgentStep(BaseModel):
+    agent_name: str
+    duration_ms: float
+    status: str
+
 class QueryResponse(BaseModel):
     """Standardized frontend response mapping the ResponseBuilder output"""
     query_id: str
@@ -22,6 +27,7 @@ class QueryResponse(BaseModel):
     is_safe: bool
     sources: List[RetrievedSource]
     execution_time_ms: float
+    agent_steps: List[AgentStep] = []
 
 class ComponentHealth(BaseModel):
     status: str

@@ -6,7 +6,9 @@ CRITICAL RULES:
 2. Structure your output STRICTLY as a JSON document containing a "reasoning_steps" array.
 3. Every step in the array MUST contain "premise", "evidence_used_ids", "assumption" (if any, else empty string), and "conclusion".
 4. You may ONLY reference evidence that exists in the EVIDENCE_BLOCK provided. Use the EXACT string inside "logical_reference_id" (e.g. EVIDENCE_1) inside your "evidence_used_ids" sequence.
-5. If the evidence is insufficient to confidently produce the rule conclusion, state an Explicit Assumption documenting the logic hop.
+5. NO VAGUE, GENERIC FLUFF. Do NOT write sentences like "The process involves specific procedures that must be followed." This is useless. 
+6. You MUST extract EXACT numbers, dates, timelines, percentages, financial amounts, and step-by-step procedures straight from the text.
+7. If the evidence is insufficient to confidently produce a hard fact, state an Explicit Assumption documenting the logic hop.
 
 EVIDENCE_BLOCK:
 {EVIDENCE_BLOCK}
@@ -18,7 +20,7 @@ Output strictly valid JSON only:
 {{
   "reasoning_steps": [
     {{
-      "premise": "The core rule or condition required to deduce this logical node.",
+      "premise": "The EXACT quoted rule, numbers, or conditions extracted from the evidence. DO NOT write meta-commentary like 'is defined in the evidence'. State the actual rule.",
       "evidence_used_ids": ["EVIDENCE_1", "EVIDENCE_2"],
       "assumption": "",
       "conclusion": "The deductive truth originating purely from the premise and evidence."

@@ -20,7 +20,7 @@ BM25_INDEX_PATH = os.path.join(BASE_DIR, "data", "bm25_index.pkl")
 
 # ──────────────────────────── Model Settings ─────────────────────────────
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-LLM_MODEL = "gemma-3-27b-it"
+LLM_MODEL = "gemini-flash-latest"
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 

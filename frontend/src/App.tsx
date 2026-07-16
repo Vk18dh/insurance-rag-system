@@ -1,29 +1,25 @@
 import React from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { Login } from './components/Login';
 import { QueryDashboard } from './components/QueryDashboard';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 
 const theme = createTheme({
   palette: {
-    primary: { main: '#1976d2' },
-    secondary: { main: '#dc004e' },
-    background: { default: '#f5f5f5' }
+    mode: 'dark',
+    primary: { main: '#90caf9' },
+    secondary: { main: '#f48fb1' },
+    background: { default: '#121212', paper: '#1e1e1e' }
   },
 });
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <QueryDashboard /> : <Login />;
+  return <QueryDashboard />;
 };
 
 const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <AppContent />
     </ThemeProvider>
   );
 };

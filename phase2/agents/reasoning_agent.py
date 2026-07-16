@@ -19,6 +19,8 @@ from phase2.exceptions.reasoning_exception import InvalidVerificationException
 
 logger = logging.getLogger(__name__)
 
+# Triggering uvicorn reload to load new prompt template
+
 class ReasoningAgent(IReasoningAgent):
     """
     Sits strictly between the QA Verification layer (Part 3) and Risk Layer (Part 5).

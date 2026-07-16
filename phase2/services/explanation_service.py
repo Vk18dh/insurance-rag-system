@@ -32,11 +32,11 @@ class ExplanationService(IExplanationService):
         
         for step in reasoning_chain.steps:
             if step.assumption:
-                assumptions.append(f"Step {step.step_number}: {step.assumption}")
+                assumptions.append(f"Logic leap (Step {step.step_number}): {step.assumption}")
             if not step.is_supported:
-                assumptions.append(f"Step {step.step_number}: UNSUPPORTED conclusion logic leap.")
+                assumptions.append(f"Failure (Step {step.step_number}): UNSUPPORTED conclusion logic leap.")
                 
-            summary += f"Step {step.step_number}: {step.conclusion}\n"
+            summary += f"{step.conclusion} "
             
             # Map evidence docs cleanly
             if step.evidence_used:

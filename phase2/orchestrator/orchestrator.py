@@ -14,6 +14,10 @@ from phase2.observability.interfaces.observability_interface import IObservabili
 
 logger = logging.getLogger(__name__)
 
+# Agents that halt the entire pipeline on failure (core logic).
+# Optional agents (risk, contradiction, response) may fail without stopping execution.
+_CRITICAL_AGENTS = {"QueryUnderstandingAgent", "RetrievalAgent", "VerificationAgent", "ReasoningAgent"}
+
 class AgentOrchestrator(IAgentOrchestrator):
     def __init__(self, 
                  workflow_engine: IWorkflowEngine,
@@ -77,14 +81,20 @@ class AgentOrchestrator(IAgentOrchestrator):
                 overall_status = ExecutionStatus.FAILURE
                 _timed_out = True
                 _err_type = type(e).__name__
-                break
+                # Critical agents halt the pipeline; optional agents continue
+                if agent_name in _CRITICAL_AGENTS:
+                    break
             except Exception as e:
                 logger.error(f"Execution exception gracefully trapped dynamically securely: {e}")
                 self._metrics_collector.end_agent(agent_name, ExecutionStatus.FAILURE, 0, str(e))
                 errors.append(str(e))
                 overall_status = ExecutionStatus.FAILURE
                 _err_type = type(e).__name__
-                break
+                # Only break on critical agents — optional agents log and continue
+                if agent_name in _CRITICAL_AGENTS:
+                    break
+                else:
+                    logger.warning(f"Optional agent {agent_name} failed but pipeline will continue.")
             finally:
                 _duration_ms = __import__('time').time() * 1000 - _agent_start_ms
                 # --- Observability: agent end ---

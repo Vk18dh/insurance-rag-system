@@ -231,9 +231,17 @@ class GeminiQueryAnalyzer(ILLMAnalyzer):
         # Strip markdown fences if model added them despite instructions
         clean = re.sub(r"^```(?:json)?\s*", "", raw_text, flags=re.MULTILINE)
         clean = re.sub(r"\s*```$", "", clean, flags=re.MULTILINE).strip()
+        
+        start_idx = clean.find('{')
+        end_idx = clean.rfind('}')
+        if start_idx != -1 and end_idx != -1:
+            clean = clean[start_idx:end_idx+1]
+            
         try:
             return json.loads(clean)
         except json.JSONDecodeError as exc:
+            import sys
+            print("JSON PARSE ERROR. RAW TEXT RAW:", repr(raw_text), file=sys.stderr)
             logger.error("Failed to parse LLM JSON response: %s", raw_text[:200])
             raise QueryProcessingException(
                 "LLM returned malformed JSON. Cannot parse analysis result.",
@@ -288,6 +296,114 @@ class FallbackQueryAnalyzer(ILLMAnalyzer):
             },
             "language": "en",
         }
+
+
+# ===========================================================================
+# OpenRouterQueryAnalyzer — ILLMAnalyzer via OpenRouter (OpenAI-compatible)
+# ===========================================================================
+class OpenRouterQueryAnalyzer(ILLMAnalyzer):
+    """
+    LLM Analyzer that routes all requests through OpenRouter using the
+    OpenAI-compatible REST API. Any OpenRouter-supported model can be used by
+    changing the model_name argument (e.g. openai/gpt-4o-mini, mistralai/mixtral-8x7b).
+
+    Implements ILLMAnalyzer — drop-in replacement with no other code changes.
+    """
+
+    OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
+    def __init__(
+        self,
+        api_key: str,
+        model_name: str,
+        prompt_template: str,
+        supported_intents: List[str],
+        timeout_seconds: float,
+        max_retries: int,
+        temperature: float,
+        max_output_tokens: int,
+        base_delay_seconds: float,
+        max_delay_seconds: float,
+    ) -> None:
+        if not api_key:
+            raise QueryConfigurationException(
+                "OPENROUTER_API_KEY is required for OpenRouterQueryAnalyzer.",
+                config_key="OPENROUTER_API_KEY",
+            )
+        self._api_key = api_key
+        self._model_name = model_name
+        self._prompt_template = prompt_template
+        self._supported_intents = supported_intents
+        self._timeout_seconds = timeout_seconds
+        self._max_retries = max_retries
+        self._temperature = temperature
+        self._max_output_tokens = max_output_tokens
+        self._base_delay_seconds = base_delay_seconds
+        self._max_delay_seconds = max_delay_seconds
+        logger.info("OpenRouterQueryAnalyzer initialised with model=%s", model_name)
+
+    def analyse(self, normalized_query: str) -> Dict[str, Any]:
+        """Call OpenRouter with an OpenAI-compatible request and return parsed JSON."""
+        try:
+            from openai import OpenAI as _OpenAI
+        except ImportError:
+            raise QueryConfigurationException(
+                "openai package is required. Run: pip install openai",
+                config_key="llm.provider",
+            )
+
+        client = _OpenAI(
+            api_key=self._api_key,
+            base_url=self.OPENROUTER_BASE_URL,
+        )
+
+        prompt = self._prompt_template.format(
+            query=normalized_query,
+            supported_intents=", ".join(self._supported_intents),
+        )
+
+        last_exc: Optional[Exception] = None
+        for attempt in range(1, self._max_retries + 1):
+            try:
+                response = client.chat.completions.create(
+                    model=self._model_name,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=self._temperature,
+                    max_tokens=self._max_output_tokens,
+                    timeout=self._timeout_seconds,
+                )
+                raw_text = response.choices[0].message.content.strip()
+                return self._parse_llm_response(raw_text)
+            except Exception as exc:  # noqa: BLE001
+                last_exc = exc
+                logger.warning("OpenRouter attempt %d/%d failed: %s", attempt, self._max_retries, str(exc))
+                if attempt < self._max_retries:
+                    delay = min(self._base_delay_seconds * (2 ** (attempt - 1)), self._max_delay_seconds)
+                    time.sleep(delay)
+
+        raise QueryProcessingException(
+            f"OpenRouter LLM analysis failed after {self._max_retries} attempts.",
+            step="llm_analysis",
+            context={"last_error": str(last_exc)},
+        )
+
+    def _parse_llm_response(self, raw_text: str) -> Dict[str, Any]:
+        """Parse the LLM JSON response, stripping markdown fences."""
+        clean = re.sub(r"^```(?:json)?\s*", "", raw_text, flags=re.MULTILINE)
+        clean = re.sub(r"\s*```$", "", clean, flags=re.MULTILINE).strip()
+        start_idx = clean.find("{")
+        end_idx = clean.rfind("}")
+        if start_idx != -1 and end_idx != -1:
+            clean = clean[start_idx:end_idx + 1]
+        try:
+            return json.loads(clean)
+        except json.JSONDecodeError as exc:
+            logger.error("Failed to parse OpenRouter JSON response: %s", raw_text[:200])
+            raise QueryProcessingException(
+                "OpenRouter returned malformed JSON.",
+                step="llm_response_parsing",
+                context={"parse_error": str(exc)},
+            ) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -778,16 +894,37 @@ class QueryProcessingServiceFactory:
                 "Using FallbackQueryAnalyzer (offline mode). LLM results will be UNKNOWN."
             )
             analyzer = FallbackQueryAnalyzer()
+        elif provider == "openrouter":
+            import os
+            openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
+            if not openrouter_key:
+                raise QueryConfigurationException(
+                    "OPENROUTER_API_KEY must be set in .env when llm.provider=openrouter.",
+                    config_key="OPENROUTER_API_KEY",
+                )
+            analyzer = OpenRouterQueryAnalyzer(
+                api_key=openrouter_key,
+                model_name=settings.llm.model_name,
+                prompt_template=prompt_template,
+                supported_intents=settings.query_agent.supported_intents,
+                timeout_seconds=settings.llm.timeout_seconds,
+                max_retries=settings.llm.max_retries,
+                temperature=settings.llm.temperature,
+                max_output_tokens=settings.llm.max_output_tokens,
+                base_delay_seconds=1.0,
+                max_delay_seconds=settings.llm.timeout_seconds,
+            )
+            logger.info("Using OpenRouterQueryAnalyzer with model=%s", settings.llm.model_name)
         elif provider in ("openai", "anthropic", "local"):
             raise QueryConfigurationException(
                 f"LLM provider '{provider}' is planned but not yet implemented. "
-                "Available now: gemini, offline.",
+                "Available now: gemini, openrouter, offline.",
                 config_key="llm.provider",
             )
         else:
             raise QueryConfigurationException(
                 f"Unsupported LLM provider: '{provider}'. "
-                "Supported: gemini, openai, anthropic, local, offline.",
+                "Supported: gemini, openrouter, openai, anthropic, local, offline.",
                 config_key="llm.provider",
             )
 
