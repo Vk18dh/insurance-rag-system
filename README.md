@@ -2,69 +2,110 @@
 
 A state-of-the-art, **Multi-Agent RAG (Retrieval-Augmented Generation)** platform designed exclusively for high-stakes insurance policy and regulatory compliance analysis (LIC & IRDAI). 
 
-Built to eliminate AI hallucinations, this platform leverages a deterministic strict-evaluation architecture providing **Human-In-The-Loop safety bounds**, sophisticated regulatory risk assessment, and beautiful structural markdown outputs.
+Built to eliminate AI hallucinations, this platform unifies an advanced offline **PDF Ingestion & Indexing Pipeline** (Phase 1) with a deterministic, **Multi-Agent Orchestration & React Dashboard** (Phase 2). It leverages a strict-evaluation architecture providing **Human-In-The-Loop safety bounds**, sophisticated regulatory risk assessment, and beautiful structural markdown outputs.
 
 ---
 
 ## 🚀 Key Features
 
-* **Strict Safety Boundaries:** Automatically halts execution and triggers a Human-in-the-Loop review if contradictory policy evidence, legal hazards, or out-of-domain logic is detected.
+* **High-Res OCR Processing:** Ingests complex multi-column LIC PDFs explicitly preserving structural insurance clauses through localized deduplication.
+* **Hybrid Retrieval (50/50):** Merges semantic vector similarity (*ChromaDB*) with exacting keyword preservation (*BM25*) to never miss an obscure medical or financial clause.
+* **Strict Safety Boundaries:** Automatically halts execution and triggers a Human-in-the-Loop review if contradictory policy evidence, legal hazards, or out-of-domain logic is detected natively.
 * **Multi-Agent Orchestration:** 
   * 🧠 *Query Understanding Agent:* Evaluates domain limits and extracts critical policy entities.
   * ⚖️ *Reasoning Agent:* Traces explicit logical syllogisms mapped directly to chunked policy evidence.
-  * 🛑 *Risk Assessment Agent:* Flags unverified regulatory or financial assertions preventing unauthorized financial advice.
+  * 🛑 *Risk Assessment Agent:* Flags unverified regulatory or financial assertions preventing unauthorized advice.
   * 🔍 *Contradiction Agent:* Employs cross-policy validation to detect logic gaps.
-* **Hybrid Retrieval System:** Merges semantic vector similarity (*ChromaDB*) with exacting keyword preservation (*BM25*) to never miss an obscure clause.
-* **Beautiful Structural Responses:** Generates pristine, highly readable Gemini-style markdown summaries strictly detailing what is known (and what isn't) natively.
-* **Dockerized Microservices:** Seamless deployment spanning a React UI, FastAPI Backend, and Vector Databases.
+* **Beautiful Structural Responses:** Generates pristine, Gemini-style markdown summaries strictly detailing what is known (and what isn't) natively via OpenRouter configurations.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture Stack
+
+### Core Tooling
+* **Frontend:** React, TypeScript, Material-UI, Vite
+* **Backend:** Python, FastAPI, Pydantic 
+* **Data Processing:** OpenCV, Unstructured (OCR), Langchain
+* **AI & Retrieval Level:** OpenRouter (LLM Actuation), ChromaDB, BM25 (Rank-BM25), BGE-Large
+* **DevOps:** Docker, Docker Compose
+
+### System Data Flow
+```text
+[Phase 1] PDF Documents → (OCR ingest.py) → JSON → (Chunking index.py) → BM25 & ChromaDB 
+                                                                              ↓
+[Phase 2] React Dashboard → FastAPI Router → Multi-Agent Orchestrator → Final Verified Markdown
+```
+
+---
+
+## 📁 Repository Structure
 
 ```text
 majorcode/
-├── backend/            # FastAPI orchestration endpoints and DI containers
-├── frontend/           # React + Material UI dashboard with visual safety banners (Vite)
-├── phase2/             # Multi-Agent logic, LLM Prompt adapters, and core services
-├── data/               # Vector bounds (ChromaDB + BM25) and original PDF artifacts
-└── docker-compose.yml  # Zero-configuration production scale orchestrator
+├── backend/            # FastAPI REST endpoints and dependency injections (Phase 2)
+├── frontend/           # React + Material UI dashboard with visual safety banners (Phase 2)
+├── phase2/             # Multi-Agent logic, LLM Prompt adapters, and safety constraint services
+├── data/               
+│   ├── pdfs/           # Input legacy PDF documents (LIC, IRDAI)
+│   ├── chroma_db/      # Persistent Vector storage
+│   └── bm25_index.pkl  # Compiled keyword index bounds
+├── app.py              # Phase 1 CLI application for hybrid search
+├── ingest.py           # Core OCR document extraction algorithms
+├── index.py            # Phase 1 chunking and localized vector encoding
+└── docker-compose.yml  # Production scale orchestrator for Phase 2 components
 ```
-
-### Tech Stack
-* **Frontend:** React, TypeScript, Material-UI, Vite
-* **Backend:** Python, FastAPI, Pydantic, Pydantic-Settings
-* **AI & Data Layer:** OpenRouter (LLM Actuator), ChromaDB, BM25(Rank-BM25), BGE-Large (Embeddings)
-* **DevOps:** Docker, Docker Compose
 
 ---
 
-## ⚙️ Quick Start (Docker Run)
+## ⚙️ Quick Start Guide
 
-Launch the entire AI architecture effortlessly.
+You can run this project via the CLI (Phase 1) or as a Full-Stack Web Application (Phase 2).
 
-### 1. Configure the Environment
-Copy the example environment configuration securely.
+### Step 1: Document Processing (Phase 1)
+Make sure your original PDFs reside inside `data/pdfs/`.
+
 ```bash
-cp .env.phase2.example .env.phase2
+# 1. Create a virtual environment and install dependencies
+python -m venv venv
+venv\Scripts\activate       # Windows
+# source venv/bin/activate  # macOS / Linux
+pip install -r requirements.txt
+
+# 2. Extract PDFs using high-res OCR
+python ingest.py 
+
+# 3. Compile the Hybrid Indices (Chroma + BM25)
+python index.py
 ```
-Edit `.env.phase2` to inject your **OpenRouter API Key**. 
 
-### 2. Boot the Platform
+*Optional: Test the embeddings securely using the CLI interactive loop:*
 ```bash
+python app.py
+```
+
+### Step 2: Full-Stack Multi-Agent Launch (Phase 2)
+
+Launch the entire AI architecture effortlessly leveraging Docker containers natively.
+
+```bash
+# 1. Configure the Environment
+cp .env.phase2.example .env.phase2
+
+# Edit your newly created .env.phase2 file to inject your OpenRouter API Key
+```
+
+```bash
+# 2. Boot the Platform seamlessly
 docker-compose up -d --build
 ```
-*Note: Make sure Docker Desktop is actively running.*
 
-### 3. Access the Dashboard
-Navigate to your portal dynamically:
-👉 **[http://localhost:5173](http://localhost:5173)**
+Access the React Web Dashboard natively mapped at: **[http://localhost:5173](http://localhost:5173)**
 
 ---
 
-## 🚨 Understanding Safety Constraints
+## 🚨 Understanding Safety Constraints (UI Dashboard)
 
-The AI employs a visual traffic-light style boundary validation on the front end mapping to exact constraint thresholds natively:
+The Phase 2 frontend employs a visual traffic-light style boundary validation mapped to exact constraint thresholds natively:
 
 | UI Alert | Description | Trigger Example |
 | :--- | :--- | :--- |
@@ -75,4 +116,4 @@ The AI employs a visual traffic-light style boundary validation on the front end
 ---
 
 ## 🧑‍💻 Contributing
-This pipeline executes complex deterministic mappings. Please observe the rigid constraints outlined in `phase2/interfaces` if refactoring logical boundaries to prevent regressions against the orchestrator.
+This pipeline executes complex deterministic mappings ensuring insurance compliance securely. Please observe the rigid constraints outlined in `phase2/interfaces` if refactoring logical boundaries to prevent regressions against the primary Orchestrator.
