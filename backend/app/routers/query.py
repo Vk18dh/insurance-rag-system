@@ -31,7 +31,8 @@ async def process_query(
         
         if final_resp is None:
             # Fallback if pipeline broke cleanly securely
-            final_resp_answer = f"Pipeline executing correctly but failed to map FinalResponse reliably tracking bounds."
+            errs = " | ".join(result.errors) if hasattr(result, 'errors') and result.errors else "Unknown silent failure"
+            final_resp_answer = f"Pipeline failed to execute. Error details: {errs}"
             sources = []
             confidence = 0.0
             is_safe = False

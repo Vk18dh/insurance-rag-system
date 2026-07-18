@@ -22,7 +22,7 @@ environment: "development"          # development | testing | staging | producti
 # ---------------------------------------------------------------------------
 llm:
   provider: "gemini"                # gemini | offline
-  model_name: "gemma-3-27b-it"     # Google Generative AI model identifier
+  model_name: "gemini-2.5-flash"     # Google Generative AI model identifier
   # api_key loaded exclusively from env var: GOOGLE_API_KEY
   timeout_seconds: 30.0
   max_retries: 3

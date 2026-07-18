@@ -550,7 +550,10 @@ class Phase2Settings(BaseSettings):
     @model_validator(mode="after")
     def _inject_secrets(self) -> "Phase2Settings":
         """Inject secrets from environment variables — never from YAML."""
-        api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("PHASE2__LLM__API_KEY")
+        if self.llm.provider.lower() == "openrouter":
+            api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("PHASE2__LLM__API_KEY")
+        else:
+            api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("PHASE2__LLM__API_KEY")
         if api_key:
             self.llm.api_key = api_key
         return self
