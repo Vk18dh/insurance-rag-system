@@ -7,6 +7,7 @@ __pycache__/
 # Environment variables
 .env
 *.env
+.env.*
 
 # Data (we DO NOT want to push huge PDFs or the vector DB to GitHub)
 data/pdfs/

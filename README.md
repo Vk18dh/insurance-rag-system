@@ -10,6 +10,7 @@ Built to eliminate AI hallucinations, this platform unifies an advanced offline 
 
 * **High-Res OCR Processing:** Ingests complex multi-column LIC PDFs explicitly preserving structural insurance clauses through localized deduplication.
 * **Hybrid Retrieval (50/50):** Merges semantic vector similarity (*ChromaDB*) with exacting keyword preservation (*BM25*) to never miss an obscure medical or financial clause.
+* **Strict Out-of-Domain Denial:** Rigorously blocks code-generation, general trivia, and hallucinated mappings outside of the policy context via precise boundary NLP checks.
 * **Strict Safety Boundaries:** Automatically halts execution and triggers a Human-in-the-Loop review if contradictory policy evidence, legal hazards, or out-of-domain logic is detected natively.
 * **Multi-Agent Orchestration:** 
   * 🧠 *Query Understanding Agent:* Evaluates domain limits and extracts critical policy entities.
@@ -99,7 +100,7 @@ cp .env.phase2.example .env.phase2
 docker-compose up -d --build
 ```
 
-Access the React Web Dashboard natively mapped at: **[http://localhost:5173](http://localhost:5173)**
+Access the React Web Dashboard natively mapped at: **[http://localhost:3000](http://localhost:3000)**
 
 ---
 
