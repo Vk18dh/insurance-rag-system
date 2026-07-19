@@ -1,5 +1,5 @@
 import functools
-from phase2.config.settings import Phase2Settings
+from phase2.config.settings import Phase2Settings, get_settings
 from phase2.orchestrator.orchestrator import AgentOrchestrator
 
 
@@ -11,7 +11,7 @@ def get_agent_orchestrator() -> AgentOrchestrator:
     
     Since Part 11 mandates strict zero modifications to Phase 2, we initialize it using Phase 2's native structure.
     """
-    settings = Phase2Settings()
+    settings = get_settings()
     
     # In a full deployment, these agents would be wired via absolute imports directly from Phase 2.
     # To keep this testable and avoid circular/missing imports if Phase 2 parts are detached,

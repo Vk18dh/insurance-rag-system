@@ -32,6 +32,8 @@ class ResponseFormatter(IResponseFormatter):
             prompt = f"""You are a professional Insurance AI Knowledge Assistant. 
 Convert the following logical deduction into a highly detailed, professional conversational response. You MUST use the exact Markdown skeleton provided below.
 
+CRITICAL RULE: If the Raw Deduction states 'I could not find this information in the provided documents.' (or substantially similar), you MUST IGNORE the markdown skeleton completely and output EXACTLY the phrase 'I could not find this information in the provided documents.' and nothing else.
+
 Raw Deduction: {final_deduction}
 Internal Logic Trace: {getattr(reasoning_result.explanation, 'reasoning_summary', '')}
 

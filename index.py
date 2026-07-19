@@ -90,6 +90,7 @@ def chunk_elements(elements: list[dict]) -> list[dict]:
         List of chunk dicts with keys:
           chunk_id, text, source_document, page_number, section_title
     """
+    from collections import defaultdict
     from llama_index.core.node_parser import SentenceSplitter
 
     splitter = SentenceSplitter(
@@ -100,13 +101,21 @@ def chunk_elements(elements: list[dict]) -> list[dict]:
     )
 
     chunks: list[dict] = []
-
+    
+    # Group elements securely by document and page to securely reconstruct paragraphs
+    docs_pages = defaultdict(list)
     for elem in elements:
-        text = elem.get("text", "").strip()
-        if not text:
+        doc = elem.get("source_document", "unknown")
+        page = elem.get("page_number", 0)
+        docs_pages[(doc, page)].append(elem)
+
+    for (doc, page), elems in docs_pages.items():
+        # Reconstruct the page text cleanly
+        page_text = "\n".join([e.get("text", "").strip() for e in elems if e.get("text", "").strip()])
+        if not page_text:
             continue
 
-        splits = splitter.split_text(text)
+        splits = splitter.split_text(page_text)
 
         for split_text in splits:
             if not split_text.strip():
@@ -115,10 +124,10 @@ def chunk_elements(elements: list[dict]) -> list[dict]:
             chunk = {
                 "chunk_id": str(uuid.uuid4()),
                 "text": split_text.strip(),
-                "source_document": elem.get("source_document", "unknown"),
-                "page_number": elem.get("page_number"),
-                "section_title": elem.get("section_title", "Unknown"),
-                "element_type": elem.get("element_type", "text"),
+                "source_document": doc,
+                "page_number": page,
+                "section_title": elems[0].get("section_title", "Unknown") if elems else "Unknown",
+                "element_type": "text",
             }
             chunks.append(chunk)
 

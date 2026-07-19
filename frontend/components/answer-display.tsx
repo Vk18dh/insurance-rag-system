@@ -2,7 +2,7 @@
 
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { Sparkles } from "lucide-react"
+import { Sparkles, ShieldAlert } from "lucide-react"
 import { SafetyPill } from "@/components/metrics-panel"
 import type { QueryResponse } from "@/lib/types"
 
@@ -16,7 +16,14 @@ export function AnswerDisplay({ result }: { result: QueryResponse }) {
           </div>
           <h2 className="text-sm font-semibold">Auditor Response</h2>
         </div>
-        <SafetyPill isSafe={result.is_safe} />
+        {result.confidence_score === 0.0 ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-destructive/40 bg-destructive/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-destructive">
+            <ShieldAlert className="size-3" />
+            Low Confidence
+          </span>
+        ) : (
+          <SafetyPill isSafe={result.is_safe} />
+        )}
       </div>
 
       <div className="prose-answer max-w-none text-[15px] leading-relaxed text-foreground/90">

@@ -32,10 +32,21 @@ async def process_query(
         if final_resp is None:
             # Fallback if pipeline broke cleanly securely
             errs = " | ".join(result.errors) if hasattr(result, 'errors') and result.errors else "Unknown silent failure"
-            final_resp_answer = f"Pipeline failed to execute. Error details: {errs}"
-            sources = []
-            confidence = 0.0
-            is_safe = False
+            if "VerificationResult failed QA upstream constraints" in errs:
+                final_resp_answer = "I could not find related evidence in the insurance documents to answer your query. I am actively refusing to hallucinate an answer outside my domain bounds."
+                sources = []
+                confidence = 0.0
+                is_safe = True
+            elif "Query must be at least" in errs:
+                final_resp_answer = "Your query is too short for me to understand. Please provide more context about what you're looking for in the insurance documents."
+                sources = []
+                confidence = 0.0
+                is_safe = True
+            else:
+                final_resp_answer = f"Pipeline failed to execute. Error details: {errs}"
+                sources = []
+                confidence = 0.0
+                is_safe = False
         else:
             final_resp_answer = final_resp.direct_answer
             sources = []
@@ -49,8 +60,15 @@ async def process_query(
                 ))
             
             is_safe = len(final_resp.warnings) == 0
-            # Safe attribution pulling metadata bounds natively
-            confidence = getattr(final_resp.metadata, 'confidence', 0.95) if hasattr(final_resp, 'metadata') else 0.95
+            
+            # If the response explicitly hit the grounded refusal, force Low Confidence natively
+            if "I could not find this information in the provided documents" in final_resp_answer:
+                confidence = 0.0
+                is_safe = True
+                sources = []
+            else:
+                # Safe attribution pulling metadata bounds natively
+                confidence = getattr(final_resp.metadata, 'confidence', 0.95) if hasattr(final_resp, 'metadata') else 0.95
 
         response_model = QueryResponse(
             query_id=result.request_id,

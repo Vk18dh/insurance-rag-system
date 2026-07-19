@@ -47,6 +47,8 @@ class ReasoningChainBuilder(IReasoningChainBuilder):
                 EVIDENCE_BLOCK=evidence_str,
                 MAX_STEPS=self.max_steps
             )
+            with open("data/debug_prompt.txt", "w", encoding="utf-8") as debug_file:
+                debug_file.write(prompt)
             
             # Rely strictly on structured LLM outputs to parse native schema maps.
             # (Note: Fallback offline mocks must yield properly structured JSON strings tracking dict bounds)

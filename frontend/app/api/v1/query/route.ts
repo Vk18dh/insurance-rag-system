@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 60_000)
+    const timeout = setTimeout(() => controller.abort(), 120_000)
 
     const upstream = await fetch(`${API_URL}/api/v1/query`, {
       method: "POST",

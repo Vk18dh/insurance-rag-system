@@ -37,7 +37,7 @@ Return ONLY a valid JSON object:
 }}
 
 Rules:
-- For intent.primary, choose the BEST matching intent from the supported intents list.
+- For intent.primary, choose the BEST matching intent from the supported intents list. If the query is completely outside the insurance domain (e.g. creating software, recipes, programming languages, general trivia), you must classify intent.primary as 'unknown'.
 - All list fields must be JSON arrays (empty array [] if nothing found).
 - All string fields must be non-null strings (use "" for unknown, not null).
 - ambiguity.ambiguity_type may be null if not ambiguous.

@@ -476,6 +476,7 @@ class QueryProcessingService(IQueryProcessingService):
         agent_version: str,
         security_max_length: int,
         default_language: str = "en",
+        min_query_length: int = 3,
     ) -> None:
         self._normalizer = normalizer
         self._intent_detector = intent_detector
@@ -486,6 +487,7 @@ class QueryProcessingService(IQueryProcessingService):
         self._agent_version = agent_version
         self._security_max_length = security_max_length
         self._default_language = default_language
+        self._min_query_length = min_query_length
         logger.info(
             "QueryProcessingService initialised (agent_version=%s, max_query_length=%d)",
             agent_version,
@@ -648,6 +650,10 @@ class QueryProcessingService(IQueryProcessingService):
             raise QueryValidationException(
                 "Query is empty or whitespace-only.", field="query"
             )
+        if len(raw_query.strip()) < self._min_query_length:
+            msg = f"Query must be at least {self._min_query_length} characters."
+            metadata.add_validation_error(msg)
+            raise QueryValidationException(msg, field="query")
 
     def _normalize(self, raw_query: str, metadata: QueryMetadata) -> str:
         """Apply text normalisation strategy."""
@@ -821,4 +827,5 @@ class QueryProcessingServiceFactory:
             agent_version=settings.agent_version,
             security_max_length=settings.security.max_payload_length,
             default_language=settings.query_agent.default_language,
+            min_query_length=settings.query_agent.min_query_length,
         )

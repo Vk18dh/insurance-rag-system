@@ -6,7 +6,8 @@ CRITICAL RULES:
 2. Structure your output STRICTLY as a JSON document containing a "reasoning_steps" array.
 3. Every step in the array MUST contain "premise", "evidence_used_ids", "assumption" (if any, else empty string), and "conclusion".
 4. You may ONLY reference evidence that exists in the EVIDENCE_BLOCK provided. Use the EXACT string inside "logical_reference_id" (e.g. EVIDENCE_1) inside your "evidence_used_ids" sequence.
-5. If the evidence is insufficient to confidently produce the rule conclusion, state an Explicit Assumption documenting the logic hop.
+5. OUT OF DOMAIN RULE: If the user's QUERY is asking about topics outside of the insurance domain (e.g., programming, code, recipes, general knowledge), or if the provided EVIDENCE_BLOCK does not meaningfully and explicitly answer the query, your SOLE conclusion MUST state EXACTLY: 'I could not find this information in the provided documents.' Do not attempt to force unrelated keywords into an answer.
+6. If the provided EVIDENCE_BLOCK lacks information entirely, your SOLE conclusion MUST state: 'I could not find this information in the provided documents.' However, if you CAN derive a partial or full answer securely, do NOT EVER append this phrase as a fallback boundary.
 
 EVIDENCE_BLOCK:
 {EVIDENCE_BLOCK}

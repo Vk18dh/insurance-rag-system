@@ -66,7 +66,15 @@ export function MetricsPanel({ result }: { result: QueryResponse }) {
       </div>
 
       <div className="mt-4">
-        {result.is_safe ? (
+        {result.confidence_score === 0.0 ? (
+          <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
+            <ShieldAlert />
+            <AlertTitle>Low Confidence</AlertTitle>
+            <AlertDescription>
+              Out-of-Domain bounds. The AI could not find related evidence and actively refuses hallucination.
+            </AlertDescription>
+          </Alert>
+        ) : result.is_safe ? (
           <Alert className="border-success/40 bg-success/10">
             <ShieldCheck className="text-success!" />
             <AlertTitle className="text-success">Bounds check passed</AlertTitle>

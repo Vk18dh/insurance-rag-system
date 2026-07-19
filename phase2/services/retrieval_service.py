@@ -392,9 +392,18 @@ class RetrievalService:
     @staticmethod
     def _normalise_vector_scores(chunks: List[RetrievedChunk]) -> List[RetrievedChunk]:
         """
-        Vector scores from ChromaDB are already cosine similarity in [0, 1].
-        No transformation needed — they are used as-is.
+        Vector scores from ChromaDB are cosine distances (lower is better, 0.0 = perfect match).
+        We must invert them to similarities [0, 1] so higher is better during the hybrid merge.
         """
+        if not chunks:
+            return chunks
+        scores = [c.vector_score for c in chunks]
+        min_s, max_s = min(scores), max(scores)
+        spread = max_s - min_s if max_s != min_s else 1.0
+        
+        for c in chunks:
+            # 1.0 is the best (formerly min_s distance), 0.0 is the worst (formerly max_s distance)
+            object.__setattr__(c, "vector_score", 1.0 - ((c.vector_score - min_s) / spread))
         return chunks
 
     @staticmethod

@@ -343,7 +343,7 @@ class ReasoningSettings(BaseModel):
     prompt_template_path: str = Field(default="phase2/prompts/reasoning_prompt.txt", description="Path to the system logic abstraction template")
     max_steps: int = Field(default=5, ge=1, le=15, description="Maximum permitted step deductions before halting")
     explanation_format: str = Field(default="structured", description="Target representation format strings")
-    max_chunk_length: int = Field(default=1000, ge=100, le=4000, description="Payload string truncation protections")
+    max_chunk_length: int = Field(default=1000, ge=100, le=9000, description="Payload string truncation protections")
     supported_clause_relationships: List[str] = Field(
         default_factory=lambda: ["supports", "restricts", "qualifies", "overrides", "references", "complements"], 
         description="Permitted relational topology bounds"
