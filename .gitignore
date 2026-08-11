@@ -49,3 +49,6 @@ append_obs_yaml.py
 parse_pytest.py
 safe_pytest.py
 update_yaml.py
+
+# Keys
+*.pem

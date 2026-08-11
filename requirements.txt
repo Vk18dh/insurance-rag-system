@@ -7,3 +7,6 @@ nltk
 google-generativeai
 python-dotenv
 streamlit
+ragas
+datasets
+pandas
