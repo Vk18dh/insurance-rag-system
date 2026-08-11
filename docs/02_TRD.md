@@ -2,7 +2,7 @@
 
 ## 1. Technical Objective
 
-Define the technology stack, architecture constraints, interfaces, deployment model, configuration strategy, security model, and engineering rules for the AI-Driven Insurance Knowledge Assessment System.
+Define the technology stack, architecture constraints, interfaces, deployment model, configuration strategy, security model, LLM provider resilience model, and engineering rules for the AI-Driven Insurance Knowledge Assessment System.
 
 Existing working modules are the baseline. Do not rewrite or move them without a verified defect, incompatibility, or requirement gap.
 
@@ -66,6 +66,19 @@ Existing working modules are the baseline. Do not rewrite or move them without a
                               │
                          Same backend
                          + RBAC + APIs
+
+
+                    LLM PROVIDER LAYER
+                              │
+                     Existing LLM Abstraction
+                              │
+                    ┌─────────┴─────────┐
+                    ▼                   ▼
+               OpenRouter          Grok / xAI
+                Provider A          Provider B
+                    │                   │
+                    └──── Automatic ───┘
+                         Failover
 ```
 
 ## 3. Frontend Stack
@@ -122,17 +135,91 @@ Preserve source document/page metadata.
 
 ## 6. LLM Architecture
 
-Use the existing LLM abstraction.
+The LLM layer must use the existing abstraction rather than direct provider calls from agents.
 
-Requirements:
-- no provider SDK calls scattered across agents,
-- provider/model configuration externalized,
-- prompts externalized where required,
-- structured output validation,
-- timeout/retry configuration,
-- provider-specific code hidden behind interfaces.
+Required architecture:
 
-The repository's current provider/model configuration is authoritative. Do not replace it without a verified requirement.
+```text
+Agent
+  ↓
+ILLMAnalyzer / existing LLM abstraction
+  ↓
+LLM Provider Manager
+  ↓
+Provider Adapter Interface
+  ├── OpenRouter Adapter
+  └── Grok/xAI Adapter
+```
+
+### Provider Requirements
+
+Supported providers:
+- OpenRouter
+- Grok / xAI
+
+The provider names, models, endpoints, timeouts, retry limits, and failover rules must be configuration-driven.
+
+API keys must be supplied through environment variables/secrets.
+
+Suggested environment variables:
+
+```text
+OPENROUTER_API_KEY
+XAI_API_KEY
+```
+
+Actual names must be reconciled with the existing repository before implementation.
+
+### Automatic Provider Switching
+
+The Provider Manager must:
+1. select the configured preferred provider,
+2. execute the complete request,
+3. classify provider errors,
+4. retry according to configured limits,
+5. switch to the secondary provider when a configured failover condition occurs,
+6. retry the complete request using the secondary provider,
+7. return one validated response,
+8. record provider/failover telemetry.
+
+The system must not expose provider switching to normal users.
+
+### Provider State
+
+The Provider Manager may maintain a controlled health state such as:
+
+```text
+AVAILABLE
+DEGRADED
+COOLDOWN
+UNAVAILABLE
+```
+
+State changes must be thread-safe and configuration-driven.
+
+### Failback
+
+When configured, the manager may return to the preferred provider after a successful health/cooldown period.
+
+### Do Not Do This
+
+```text
+QueryAgent → OpenRouter SDK
+ReasoningAgent → Grok SDK
+RiskAgent → OpenRouter SDK
+```
+
+Correct:
+
+```text
+All LLM agents
+      ↓
+Existing LLM abstraction
+      ↓
+Provider Manager
+      ↓
+OpenRouter OR Grok
+```
 
 ## 7. LangChain
 
@@ -149,6 +236,8 @@ Do not force every agent into LangChain's agent framework.
 The project's multi-agent architecture remains controlled by its interfaces and Agent Orchestrator.
 
 Do not migrate to LangGraph/CrewAI/AutoGen merely for stylistic reasons.
+
+The provider failover layer may use LangChain provider integrations if they fit the existing abstraction, but provider-specific logic must remain behind the project's LLM interface.
 
 ## 8. Agent Architecture
 
@@ -177,7 +266,9 @@ Rules:
 - stateless services where possible,
 - configurable limits,
 - no direct agent-to-agent calls,
-- Orchestrator controls execution.
+- Orchestrator controls execution,
+- agents use the LLM abstraction,
+- provider failover is invisible to agents.
 
 ## 9. Phase 1 Responsibilities
 
@@ -225,21 +316,14 @@ User Website
 
 EXPERT
   ↓
-Management Website → Expert Area
+Management Website → Expert area
 
 ADMIN
   ↓
-Management Website → Admin Area
+Management Website → Admin area
 ```
 
-### Critical rule
-The frontend must not be the security boundary.
-
-Backend authorization must enforce:
-- User cannot access Expert endpoints.
-- User cannot access Admin endpoints.
-- Expert cannot access Admin endpoints unless explicitly granted Admin permissions.
-- Admin access is independently authorized.
+Backend authorization is authoritative.
 
 ## 12. Application URLs
 
@@ -250,14 +334,7 @@ USER_APP_URL
 MANAGEMENT_APP_URL
 ```
 
-Example only:
-
-```text
-https://app.example.com
-https://management.example.com
-```
-
-Do not hardcode actual deployment URLs in application logic.
+Actual deployment URLs must not be hardcoded in application logic.
 
 ## 13. API Requirements
 
@@ -277,37 +354,57 @@ GET  /api/v1/version
 
 Management endpoints must be role-protected.
 
-Examples:
-```text
-GET  /api/v1/expert/reviews
-GET  /api/v1/expert/reviews/{id}
-POST /api/v1/expert/reviews/{id}/approve
-POST /api/v1/expert/reviews/{id}/correct
-
-GET  /api/v1/admin/metrics
-GET  /api/v1/admin/errors
-GET  /api/v1/admin/documents
-POST /api/v1/admin/documents
-```
-
-These examples must be reconciled with the actual repository before implementation.
-
 ## 14. Configuration
 
 Externalize:
-- model/provider
-- thresholds
-- timeouts
-- retries
-- paths
-- vector store
-- database/storage
-- CORS
-- JWT
-- observability
+- model/provider,
+- provider priority,
+- provider timeouts,
+- provider retries,
+- provider cooldown,
+- failover conditions,
+- thresholds,
+- agent timeouts,
+- paths,
+- vector store,
+- database/storage,
+- CORS,
+- JWT,
+- observability,
 - application URLs.
 
 Never store secrets in source control.
+
+Example logical configuration:
+
+```yaml
+llm:
+  strategy: automatic_failover
+  primary_provider: openrouter
+  secondary_provider: grok
+
+  providers:
+    openrouter:
+      enabled: true
+      model: configured_value
+      timeout_seconds: configured_value
+
+    grok:
+      enabled: true
+      model: configured_value
+      timeout_seconds: configured_value
+
+  failover:
+    enabled: true
+    max_retries_per_provider: configured_value
+    switch_on_timeout: true
+    switch_on_rate_limit: true
+    switch_on_transient_error: true
+    cooldown_seconds: configured_value
+    failback_enabled: true
+```
+
+This is a schema example, not permission to hardcode these values.
 
 ## 15. Security
 
@@ -321,7 +418,11 @@ Never store secrets in source control.
 - path traversal protection,
 - request-size limits,
 - secure CORS,
-- no frontend secrets.
+- no frontend secrets,
+- no API keys in logs,
+- no API keys in error messages.
+
+Provider failover must not disclose secret material.
 
 ## 16. Observability
 
@@ -334,7 +435,17 @@ Must support:
 - traces,
 - audit events,
 - health,
-- alerts.
+- alerts,
+- provider used,
+- provider switch count,
+- provider failure reason category,
+- provider latency.
+
+Never log:
+- API keys,
+- Authorization headers,
+- raw sensitive prompts unless explicitly approved,
+- secret provider responses.
 
 Observability must not alter business results.
 
@@ -352,6 +463,20 @@ Required:
 - recovery,
 - deployment.
 
+Additional provider tests:
+- primary success,
+- primary timeout → secondary success,
+- primary rate limit → secondary success,
+- primary 5xx → secondary success,
+- both providers unavailable,
+- malformed provider response,
+- provider authentication/configuration failure,
+- failback after recovery,
+- concurrent requests,
+- no context leakage,
+- no secret leakage,
+- structured output compatibility across providers.
+
 ## 18. Deployment
 
 Docker baseline:
@@ -362,6 +487,8 @@ Docker baseline:
 - persistent storage
 - environment configuration
 - health checks.
+
+LLM credentials are injected as runtime secrets/environment variables.
 
 ## 19. Hard Constraints
 
@@ -375,3 +502,9 @@ Docker baseline:
 8. Do not treat frontend route hiding as authorization.
 9. Do not merge User and Management applications into one frontend navigation.
 10. Preserve existing contracts and backward compatibility.
+11. Do not place OpenRouter/Grok SDK calls inside individual agents.
+12. Do not expose provider-selection controls to normal users.
+13. Do not combine partial responses from multiple providers.
+14. A provider switch must not change conversation_id or user context.
+15. Provider secrets must never be committed or exposed.
+16. Do not silently hide permanent configuration/authentication errors behind repeated failover.

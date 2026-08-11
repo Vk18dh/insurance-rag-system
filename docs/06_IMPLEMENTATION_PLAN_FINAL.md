@@ -27,38 +27,39 @@ The repository already contains substantial implementation. This is a **completi
 17. Backend RBAC is authoritative.
 18. Run tests after meaningful changes.
 19. Do not claim completion without verification.
+20. LLM provider selection and failover must remain behind the existing LLM abstraction.
+21. Never commit API keys or secrets.
+22. A provider switch must not change conversation identity or business logic.
+
 ---
 
 # PROJECT STATUS BASELINE
 
-> **Important:** This section is a project-status reference and is intentionally not part of the numbered implementation stages below. The numbered stages remain unchanged.
+> This section is a project-status reference and is intentionally not a new implementation phase.
 
 ## Current Implementation Status
 
 Before implementing anything, Gemini must inspect the actual repository and compare it against this baseline.
 
-### Completed Phase 2 Components
-
-| Part | Component | Current Status | Default Action |
+| Part | Component | Baseline Status | Default Action |
 |---|---|---|---|
-| Part 1 | Query Understanding Agent | ✅ COMPLETE | Do not rebuild |
-| Part 2 | Retrieval Agent | ✅ COMPLETE | Do not rebuild |
-| Part 3 | Verification Agent | ✅ COMPLETE | Do not rebuild |
-| Part 4 | Reasoning Agent | ✅ COMPLETE | Do not rebuild |
-| Part 5 | Risk Agent | ✅ COMPLETE | Do not rebuild |
-| Part 6 | Contradiction Detection Agent | ✅ COMPLETE | Do not rebuild |
-| Part 7 | Agent Orchestrator | ✅ COMPLETE | Do not rebuild |
-| Part 8 | Response Builder | ✅ COMPLETE | Do not rebuild |
-| Part 9 | Observability Layer | ✅ COMPLETE | Do not rebuild |
-| Part 10 | Validation & Production Readiness | ✅ COMPLETE | Do not rebuild |
-| Part 11 | FastAPI / Frontend / Deployment | ⚠️ IMPLEMENTED — VERIFY | Inspect before modifying |
+| Part 1 | Query Understanding Agent | COMPLETE | Do not rebuild |
+| Part 2 | Retrieval Agent | COMPLETE | Do not rebuild |
+| Part 3 | Verification Agent | COMPLETE | Do not rebuild |
+| Part 4 | Reasoning Agent | COMPLETE | Do not rebuild |
+| Part 5 | Risk Agent | COMPLETE | Do not rebuild |
+| Part 6 | Contradiction Detection Agent | COMPLETE | Do not rebuild |
+| Part 7 | Agent Orchestrator | COMPLETE | Do not rebuild |
+| Part 8 | Response Builder | COMPLETE | Do not rebuild |
+| Part 9 | Observability Layer | COMPLETE | Do not rebuild |
+| Part 10 | Validation & Production Readiness | COMPLETE | Do not rebuild |
+| Part 11 | FastAPI / Frontend / Deployment | IMPLEMENTED — VERIFY | Inspect before modifying |
 
-### Phase 1 Status
+## Phase 1 Status
 
 Phase 1 is the foundational RAG/retrieval layer and is considered an existing implementation.
 
 It includes, where applicable:
-
 - document ingestion,
 - PDF processing,
 - OCR/layout processing,
@@ -71,15 +72,11 @@ It includes, where applicable:
 - ranking,
 - source/document/page metadata preservation.
 
-**Current status:** ✅ EXISTING IMPLEMENTATION — VERIFY BEFORE MODIFYING
+**Status:** EXISTING IMPLEMENTATION — VERIFY BEFORE MODIFYING
 
-Gemini must inspect the actual Phase 1 implementation before making any changes.
+Gemini must inspect the actual Phase 1 implementation before making changes.
 
-Do not rewrite Phase 1 simply to introduce a different framework, library, or implementation style.
-
-### Overall Agent Pipeline
-
-The intended execution pipeline is:
+## Intended Agent Pipeline
 
 ```text
 User Query
@@ -103,7 +100,7 @@ FinalResponse
 
 ## Frozen Components
 
-The following components are considered architecturally complete based on the previous implementation and verification work:
+The following are considered architecturally complete based on previous implementation and verification work:
 
 ```text
 Part 1  — Query Understanding Agent
@@ -118,297 +115,253 @@ Part 9  — Observability Layer
 Part 10 — Validation & Production Readiness
 ```
 
-### Meaning of Frozen
+"Frozen" means do not refactor, redesign, replace, rename, move, or rebuild unless repository inspection demonstrates a concrete bug, security problem, integration incompatibility, requirement violation, or missing functionality.
 
-"Frozen" does not mean that bugs can never be fixed.
+## Part 11 Status
 
-It means:
+Part 11 has already been implemented according to previous verification work and must be inspected rather than automatically rebuilt.
 
-> Do not refactor, redesign, replace, rename, move, or rebuild a completed component unless repository inspection demonstrates a concrete bug, security problem, integration incompatibility, requirement violation, or missing functionality.
-
-If a modification is required:
-
-1. Identify the exact problem.
-2. Explain why the existing implementation is insufficient.
-3. Identify affected interfaces/contracts.
-4. Make the smallest necessary change.
-5. Run relevant tests.
-6. Run backward-compatibility tests.
-7. Re-audit the affected component.
-8. Document the change.
-
-## Part 11 — Current Status
-
-Part 11 has already been implemented according to the previous project verification work.
-
-The previous implementation included:
-
-- FastAPI backend,
-- API adapter,
-- authentication,
-- dependency injection,
-- exception handling,
-- Docker integration,
-- ChromaDB connectivity,
-- BM25 integration,
-- frontend integration,
-- end-to-end pipeline integration.
-
-However, the actual repository is the final authority.
-
-Therefore:
-
-> **Part 11 must be inspected and verified before additional implementation is performed.**
-
-Do not automatically rebuild Part 11.
-
-Potential remaining areas include:
-
+Potential areas to verify:
 - User Website,
 - Management Website,
 - Expert dashboard,
 - Admin dashboard,
 - server-side RBAC,
 - expert-review workflow,
-- User ↔ Management feature interaction,
+- multi-conversation support,
 - frontend/backend integration,
 - final deployment configuration,
-- final security verification.
+- final security verification,
+- LLM provider failover.
 
-Only mark an item as remaining after confirming that it is actually missing or incomplete in the repository.
+Only classify an item as missing after checking the actual repository.
 
-## Final Frontend Architecture
+# LLM PROVIDER FAILOVER IMPLEMENTATION
 
-The project must contain exactly **two frontend applications**.
+## Objective
 
-### Application 1 — User Website
-
-Example configurable URL:
-
-```text
-https://app.example.com
-```
-
-The actual URL must be configuration-driven.
-
-The User Website contains:
-
-- User authentication,
-- User dashboard,
-- insurance query interface,
-- query history where required,
-- results,
-- citations,
-- explanations,
-- confidence,
-- warnings,
-- expert-review status.
-
-The User Website must NOT contain:
-
-- Expert Login,
-- Admin Login,
-- Management Login,
-- Expert Dashboard link,
-- Admin Dashboard link,
-- Management Dashboard navigation.
-
-### Application 2 — Management Website
-
-Example configurable URL:
+Add a provider-resilience layer that automatically switches between:
 
 ```text
-https://management.example.com
+OpenRouter
+Grok / xAI
 ```
 
-The actual URL must be configuration-driven.
+without changing the agent architecture.
 
-The Management Website contains:
+## Required Architecture
 
 ```text
-Management Website
-├── Expert Area
-└── Admin Area
+Query / Reasoning / Risk / other LLM-dependent component
+                         ↓
+                Existing LLM Abstraction
+                         ↓
+                 LLM Provider Manager
+                         ↓
+              ┌──────────┴──────────┐
+              ↓                     ↓
+         OpenRouter             Grok/xAI
+         Provider A             Provider B
+              └──────────┬──────────┘
+                         ↓
+                  Validated output
 ```
 
-There are **not three websites**.
+## Critical Rule
 
-The architecture is:
+Do NOT implement:
 
 ```text
-2 Frontend Applications
-        +
-3 Roles
+QueryAgent → if OpenRouter fails → Grok
+ReasoningAgent → if OpenRouter fails → Grok
+RiskAgent → if OpenRouter fails → Grok
 ```
 
-Roles:
+Instead, implement provider switching once behind the existing abstraction.
+
+## Provider Manager Responsibilities
+
+The provider manager should:
+- select preferred provider,
+- execute requests,
+- classify errors,
+- apply configured retries,
+- switch providers when configured,
+- enforce provider timeouts,
+- maintain thread-safe provider health state,
+- support cooldown/circuit-breaker behavior,
+- optionally fail back to the preferred provider,
+- emit non-sensitive telemetry,
+- return one validated provider result.
+
+## Failover Policy
+
+Recommended default:
 
 ```text
-USER
-EXPERT
-ADMIN
+Primary: OpenRouter
+Secondary: Grok/xAI
 ```
 
-## User ↔ Management Interaction Rule
+But this must be configuration-driven.
 
-This is a mandatory architecture rule.
+### Failover-triggering errors
 
-The User Website and Management Website are separate applications.
+Potentially trigger failover for:
+- rate limit,
+- quota exhaustion,
+- timeout,
+- connection error,
+- provider unavailable,
+- transient 5xx.
 
-They may communicate through the shared backend when a product feature requires it.
+Authentication/configuration failures should only fail over if explicitly configured. Otherwise, report a configuration error so a broken credential is not silently hidden.
 
-They must NOT be connected through normal frontend navigation.
+## Request Integrity
 
-### Correct Example
+If Provider A partially fails:
 
 ```text
-USER WEBSITE
-      ↓
-User submits insurance question
-      ↓
-Agentic RAG
-      ↓
-Low confidence / high risk
-      ↓
-ReviewTask created
-      ↓
-User sees:
-"Expert review required"
+Provider A
+   ↓
+partial/invalid response
 ```
 
-The user remains on the User Website.
+do NOT combine it with Provider B.
 
-The user is NOT redirected to the Management Website.
-
-Separately:
+Instead:
 
 ```text
-MANAGEMENT WEBSITE
-      ↓
-Expert Login
-      ↓
-Expert Dashboard
-      ↓
-Review Queue
-      ↓
-ReviewTask
-      ↓
-Inspect Evidence
-      ↓
-Inspect Reasoning
-      ↓
-Inspect Risk
-      ↓
-Inspect Contradictions
-      ↓
-Approve / Correct / Comment
+Provider B
+   ↓
+repeat complete provider-neutral request
+   ↓
+validate full response
 ```
 
-The backend updates the ReviewTask.
+## Provider Configuration
 
-The User Website can later retrieve:
+Use configuration, not source-code constants.
+
+Example logical block:
+
+```yaml
+llm:
+  strategy: automatic_failover
+  primary_provider: openrouter
+  secondary_provider: grok
+
+  providers:
+    openrouter:
+      enabled: true
+      model: configured_value
+      timeout_seconds: configured_value
+
+    grok:
+      enabled: true
+      model: configured_value
+      timeout_seconds: configured_value
+
+  failover:
+    enabled: true
+    max_retries_per_provider: configured_value
+    switch_on_timeout: true
+    switch_on_rate_limit: true
+    switch_on_transient_error: true
+    cooldown_seconds: configured_value
+    failback_enabled: true
+```
+
+Do not copy placeholder values into production blindly.
+
+Suggested secrets:
 
 ```text
-Review Required
-       ↓
-Under Review
-       ↓
-Expert Approved
-       OR
-Expert Corrected
+OPENROUTER_API_KEY
+XAI_API_KEY
 ```
 
-Therefore:
+Reconcile names with the repository.
 
-> **The User Website and Management Website are connected through feature workflows, not through frontend navigation.**
+## Provider Testing
 
-## Expert + Admin Architecture
+Mandatory:
+- OpenRouter success,
+- Grok success,
+- OpenRouter timeout → Grok success,
+- OpenRouter rate limit → Grok success,
+- OpenRouter 5xx → Grok success,
+- both providers unavailable,
+- malformed response,
+- invalid credentials,
+- provider cooldown,
+- provider recovery/failback,
+- concurrent requests,
+- no cross-conversation context leakage,
+- no secret leakage,
+- schema consistency across providers.
 
-Expert and Admin share the same Management Website.
+## Provider Acceptance Criteria
+
+- Agents do not import provider SDKs directly.
+- Switching is automatic.
+- User does not select provider.
+- Provider failure does not create a new conversation.
+- Provider switch does not alter retrieval evidence.
+- Provider switch does not bypass Verification/Risk/Contradiction stages.
+- Provider telemetry is available to observability.
+- Secrets are not logged.
+- Both providers produce compatible validated output schemas.
+
+# MULTI-CONVERSATION IMPLEMENTATION
+
+## Objective
+
+Replace any single-chat-only behavior with isolated conversation management.
+
+Required:
+- Conversation model,
+- Message model,
+- conversation ownership,
+- New Chat,
+- history,
+- continue chat,
+- conversation retrieval,
+- optional rename/archive/delete,
+- authorization.
+
+## Rules
 
 ```text
-Management Website
-        ↓
-      Login
-        ↓
-Authentication + RBAC
-        ↓
-    ┌───────┴───────┐
-    ↓               ↓
- EXPERT           ADMIN
-    ↓               ↓
-Expert Area      Admin Area
+User A
+ ├── Conversation 1
+ └── Conversation 2
+
+User B
+ └── Conversation 3
 ```
 
-### Expert Area
+No context may cross these boundaries.
 
-- Review Queue
-- Review Details
-- User Query
-- Generated Response
-- Retrieved Evidence
-- Citations
-- Reasoning Chain
-- Risk Assessment
-- Contradiction Results
-- Approve
-- Correct
-- Comment
-- Review History
+Provider switching must operate within the active conversation.
 
-### Admin Area
+# IMPLEMENTATION STAGES
 
-- System Dashboard
-- System Health
-- Performance Metrics
-- Errors
-- Users
-- Documents
-- Audit/Operational Information
-- Authorized system management functions
+## Stage 0 — Repository Baseline
 
-### Security Rule
+Inspect:
+- Git branch,
+- repository tree,
+- Phase 1,
+- Phase 2,
+- backend,
+- frontend,
+- deployment,
+- configuration,
+- tests,
+- existing documentation.
 
-Changing a frontend URL must never grant additional permissions.
-
-For example:
-
-```text
-/management/expert
-```
-
-must not be convertible to:
-
-```text
-/management/admin
-```
-
-to obtain Admin privileges.
-
-Server-side RBAC is authoritative.
-
-## Repository Reconciliation Rule
-
-The documentation describes the intended architecture.
-
-The actual repository determines what is already implemented.
-
-Before making changes Gemini must inspect:
-
-```text
-Repository
-Git branch
-Phase 1
-Phase 2
-Backend
-Frontend
-Configuration
-Tests
-Docker
-Documentation
-```
-
-Then classify every major requirement as:
+Classify requirements as:
 
 ```text
 COMPLETED
@@ -418,46 +371,9 @@ BROKEN
 NEEDS VERIFICATION
 ```
 
-Gemini must not assume that a feature is missing merely because it is described in the documentation.
+Do not modify code during the first inspection unless required to safely run verification.
 
-## Change-Control Rule
-
-For every proposed modification to an existing completed component, Gemini must provide:
-
-```text
-Component:
-Current implementation:
-Problem found:
-Evidence:
-Why change is required:
-Files affected:
-Compatibility impact:
-Tests required:
-```
-
-Only after this analysis should the change be implemented.
-
-## Final Architecture Statement
-
-> **The system consists of two frontend applications sharing a backend: a completely separate User Website and a Management Website. The Management Website contains role-specific Expert and Admin areas. The User Website never exposes or navigates to Management functionality. User-to-Expert/Admin interaction occurs only through actual product features and shared backend workflows, such as expert-review escalation. Server-side RBAC strictly separates USER, EXPERT and ADMIN permissions. Existing verified Agentic RAG components remain frozen unless a genuine defect, security issue, integration problem, or requirement gap is demonstrated.**
-
-## 3. Phase 0 — Repository Baseline
-
-Inspect:
-- Git branch
-- repository tree
-- Phase 1
-- Phase 2
-- backend
-- frontend
-- deployment
-- configuration
-- tests
-- existing documentation.
-
-Done when actual state and genuine gaps are documented without unnecessary code changes.
-
-## 4. Phase 1 — RAG Foundation
+## Stage 1 — RAG Foundation Verification
 
 Verify:
 - ingestion,
@@ -470,99 +386,15 @@ Verify:
 - hybrid retrieval,
 - source/page preservation.
 
-Done when approved documents can be indexed and relevant evidence retrieved with provenance.
+## Stage 2 — Agent Pipeline Verification
 
-## 5. Phase 2 — Query Agent
+Verify Parts 1–8 as frozen components.
 
-Verify:
-- normalization,
-- intent,
-- entities,
-- ambiguity,
-- QueryContext,
-- LLM abstraction,
-- fallback,
-- configuration.
+Run their existing tests.
 
-Done when structured QueryContext is reliably produced.
+Do not rewrite them simply to change frameworks.
 
-## 6. Phase 3 — Retrieval Agent
-
-Verify:
-- Phase 1 adapter,
-- hybrid retrieval,
-- ranking,
-- deduplication,
-- RetrievalResult,
-- configuration,
-- exception handling.
-
-Done when evidence reaches downstream agents without duplicate retrieval logic.
-
-## 7. Phase 4 — Verification Agent
-
-Verify:
-- evidence relevance,
-- validity,
-- grounding,
-- ambiguity,
-- VerificationResult,
-- exception handling.
-
-Done when verified evidence is available to reasoning.
-
-## 8. Phase 5 — Reasoning Agent
-
-Verify:
-- clause interpretation,
-- evidence linking,
-- reasoning chain,
-- assumptions,
-- explanation,
-- metrics,
-- externalized prompts.
-
-Done when reasoning is explainable and based on verified evidence.
-
-## 9. Phase 6 — Risk Agent
-
-Verify:
-- ambiguity,
-- legal sensitivity,
-- exclusions,
-- regulatory concerns,
-- escalation,
-- unified LLM analysis,
-- configured thresholds.
-
-Done when RiskAssessmentResult identifies risk and escalation appropriately.
-
-## 10. Phase 7 — Contradiction Agent
-
-Verify:
-- policy context,
-- evidence alignment,
-- classification,
-- explanation,
-- resolution routing,
-- ContradictionResult.
-
-Done when contradictions are explicitly represented.
-
-## 11. Phase 8 — Response Builder
-
-Verify:
-- answer,
-- explanation,
-- citations,
-- warnings,
-- confidence,
-- fallback,
-- safe serialization.
-
-Done when FinalResponse is stable and user-safe.
-
-## 12. Phase 9 — Agent Orchestrator
+## Stage 3 — Orchestrator Verification
 
 Verify:
 - configured sequence,
@@ -573,26 +405,7 @@ Verify:
 - metrics,
 - failure handling.
 
-Expected logical sequence:
-```text
-Query
- ↓
-Retrieval
- ↓
-Verification
- ↓
-Reasoning
- ↓
-Risk
- ↓
-Contradiction
- ↓
-Response
-```
-
-Done when the complete sequence executes through one orchestration boundary.
-
-## 13. Phase 10 — Observability
+## Stage 4 — Observability Verification
 
 Verify:
 - structured logs,
@@ -603,11 +416,9 @@ Verify:
 - health,
 - alerts,
 - privacy,
-- thread safety.
+- provider-switch telemetry.
 
-Done when observability is non-invasive and can be disabled without breaking the core pipeline.
-
-## 14. Phase 11 — Validation
+## Stage 5 — Validation Verification
 
 Run:
 - unit,
@@ -621,9 +432,25 @@ Run:
 - recovery,
 - deployment.
 
-Done when the validation suite generates reports and enforces configured quality gates.
+## Stage 6 — LLM Provider Manager
 
-## 15. Phase 12 — FastAPI Integration
+Inspect the existing LLM abstraction first.
+
+Then:
+1. define/confirm provider-neutral interface,
+2. create OpenRouter adapter if missing,
+3. create Grok/xAI adapter if missing,
+4. create Provider Manager,
+5. add configuration,
+6. add environment secret loading,
+7. add failover policy,
+8. add provider health/cooldown,
+9. integrate with existing abstraction,
+10. run all agent tests.
+
+Do not modify every agent individually unless the existing architecture genuinely requires an interface migration.
+
+## Stage 7 — FastAPI Integration
 
 Verify/implement:
 - `/api/v1`,
@@ -637,333 +464,200 @@ Verify/implement:
 - health/readiness,
 - OpenAPI.
 
-FastAPI calls the existing Orchestrator.
+FastAPI must call the existing Orchestrator.
 
-It must not duplicate:
-- retrieval,
-- reasoning,
-- risk,
-- contradiction,
-- response-generation business logic.
+## Stage 8 — User Website
 
-Done when a REST query reaches FinalResponse.
-
-## 16. Phase 13 — User Website
-
-Build/verify the separate User Website.
-
-Required:
+Verify/implement:
 - user login/register where required,
 - user dashboard,
-- insurance query,
-- suggested queries,
+- query interface,
+- New Chat,
+- Chat History,
+- conversation switching,
 - results,
 - citations,
-- explanation,
+- explanations,
 - confidence,
 - warnings,
-- review status,
-- loading/error states.
+- review status.
 
-### Prohibited
-The User Website must not contain:
-- Expert Login,
-- Admin Login,
-- Management Login,
-- Expert Dashboard link,
-- Admin Dashboard link,
-- Management Dashboard navigation.
+Do not expose Management navigation.
 
-Done when a user can complete the full query journey without entering the Management Website.
+## Stage 9 — Management Website
 
-## 17. Phase 14 — Management Website
-
-Build/verify a **separate Management Website**.
-
-Example configurable URL:
-```text
-https://management.example.com
-```
-
-It contains two protected role areas:
+Verify/implement a separate frontend application containing:
 
 ```text
-Management Website
-├── Expert Area
-└── Admin Area
+Management
+├── Expert
+└── Admin
 ```
 
-### Expert Area
-Required:
-- Expert Login
-- review queue
-- review detail
-- evidence
-- reasoning
-- risk
-- contradictions
-- approve
-- correct
+### Expert
+- login,
+- review queue,
+- review detail,
+- evidence,
+- reasoning,
+- risk,
+- contradictions,
+- approve,
+- correct,
 - comment.
 
-### Admin Area
-Required:
-- Admin Login
-- system dashboard
-- health
-- metrics
-- errors
-- users
-- documents
-- audit/operational data.
+### Admin
+- login,
+- dashboard,
+- system health,
+- metrics,
+- errors,
+- users,
+- documents,
+- audit.
 
-### Important
-Expert and Admin are on the same website, but their permissions are separate.
+Use server-side RBAC.
 
-Changing:
-```text
-/management/expert
-```
-to:
-```text
-/management/admin
-```
-must not grant access.
+## Stage 10 — Feature-Based Review Workflow
 
-Done when authorized Experts and Admins can perform their respective workflows.
-
-## 18. Phase 15 — Feature-Based User ↔ Management Connection
-
-This phase is critical.
-
-### Correct architecture
+Verify:
 
 ```text
-USER WEBSITE
-     ↓
+User Website
+ ↓
 Query
-     ↓
+ ↓
 Agentic RAG
-     ↓
-Low confidence/high risk
-     ↓
-ReviewTask created
-     ↓
-User sees review status
-```
-
-Separately:
-
-```text
-MANAGEMENT WEBSITE
-     ↓
-Expert Login
-     ↓
-Expert Review Queue
-     ↓
-ReviewTask
-     ↓
-Approve/Correct
-     ↓
-Backend updates ReviewTask
-```
-
-Then:
-
-```text
-Backend
-     ↓
-Updated status/result
-     ↓
-USER WEBSITE
-```
-
-### Prohibited
-
-```text
-User Website
-     ↓
-Expert Dashboard ❌
-```
-
-```text
-User Website
-     ↓
-Admin Dashboard ❌
-```
-
-```text
-User Website
-     ↓
-Management Login ❌
-```
-
-The connection exists only because a product feature requires shared backend state.
-
-## 19. Phase 16 — Deployment
-
-Verify:
-- User frontend container/build,
-- Management frontend container/build,
-- FastAPI,
-- ChromaDB/vector service,
-- persistent storage,
-- networking,
-- environment variables,
-- health checks,
-- startup ordering.
-
-Done when deployment starts reliably.
-
-## 20. Phase 17 — End-to-End User Test
-
-```text
-Insurance PDF
- ↓
-Ingestion
- ↓
-ChromaDB + BM25
- ↓
-User Website
- ↓
-FastAPI
- ↓
-Agent Orchestrator
- ↓
-Query
- ↓
-Retrieval
- ↓
-Verification
- ↓
-Reasoning
- ↓
-Risk
- ↓
-Contradiction
- ↓
-Response Builder
- ↓
-FinalResponse
- ↓
-User Website
-```
-
-Verify:
-- answer,
-- citations,
-- explanation,
-- confidence,
-- warnings,
-- metadata.
-
-## 21. Phase 18 — End-to-End Expert Review Test
-
-```text
-User Website
- ↓
-Query
- ↓
-Risk/Confidence
  ↓
 Escalation
  ↓
 ReviewTask
  ↓
-User sees:
-"Expert review required"
+User sees review status
 ```
 
-Then independently:
+And independently:
 
 ```text
 Management Website
  ↓
 Expert Login
  ↓
-Expert Area
- ↓
 Review Queue
  ↓
 ReviewTask
  ↓
-Evidence + Reasoning + Risk + Contradictions
- ↓
-Approve / Correct / Comment
+Expert Decision
  ↓
 Backend
  ↓
 User Website
- ↓
-Updated review status/result
 ```
 
-This must work without navigating the user into the Management Website.
+No user redirect to Management.
 
-## 22. Phase 19 — Admin Test
+## Stage 11 — Deployment
+
+Verify:
+- User frontend,
+- Management frontend,
+- FastAPI,
+- ChromaDB,
+- persistent storage,
+- networking,
+- secrets,
+- health checks,
+- startup ordering.
+
+## Stage 12 — Final Security
+
+Test:
+- invalid JWT,
+- expired JWT,
+- User → Expert endpoint,
+- User → Admin endpoint,
+- Expert → Admin endpoint,
+- direct protected URLs,
+- malformed inputs,
+- oversized inputs,
+- prompt injection,
+- path traversal,
+- upload security,
+- secret exposure,
+- provider secret exposure,
+- stack-trace exposure,
+- conversation ownership.
+
+## Stage 13 — Final E2E
+
+### User
+
+```text
+Login
+ ↓
+New Chat
+ ↓
+Ask insurance question
+ ↓
+Agentic RAG
+ ↓
+FinalResponse
+ ↓
+Citation + Explanation + Confidence
+```
+
+### Provider failover
+
+```text
+User Query
+ ↓
+OpenRouter
+ ↓
+Simulated failure
+ ↓
+Grok/xAI
+ ↓
+FinalResponse
+```
+
+### Expert
+
+```text
+Risk escalation
+ ↓
+ReviewTask
+ ↓
+Management Website
+ ↓
+Expert
+ ↓
+Approve/Correct
+ ↓
+User sees updated status
+```
+
+### Admin
 
 ```text
 Management Website
  ↓
-Admin Login
+Admin
  ↓
-Admin Area
- ↓
-System Health
- ↓
-Metrics
- ↓
-Documents
- ↓
-Users
- ↓
-Audit
+Health/Metrics/Documents/Users/Audit
 ```
 
-Verify that an Expert cannot access Admin functionality without explicit authorization.
+# FINAL DEFINITION OF DONE
 
-## 23. Phase 20 — Security Verification
-
-Test:
-- unauthorized access,
-- invalid/expired JWT,
-- User → Expert endpoint,
-- User → Admin endpoint,
-- Expert → Admin endpoint,
-- malformed input,
-- oversized input,
-- prompt injection,
-- path traversal,
-- unsafe upload,
-- secret exposure,
-- stack-trace exposure,
-- direct protected URL access.
-
-## 24. Phase 21 — Final Documentation
-
-Maintain:
-- README,
-- six docs in `docs/`,
-- API documentation,
-- deployment instructions,
-- environment example,
-- architecture diagrams,
-- testing instructions.
-
-## 25. Final Definition of Done
-
-The project is complete only when:
-
-### RAG
+## RAG
 - [ ] documents ingest
 - [ ] OCR works where required
-- [ ] metadata is preserved
+- [ ] metadata preserved
 - [ ] ChromaDB works
 - [ ] BM25 works
 - [ ] hybrid retrieval works
 - [ ] citations preserve provenance
 
-### Agents
+## Agents
 - [ ] Query Agent
 - [ ] Retrieval Agent
 - [ ] Verification Agent
@@ -973,25 +667,40 @@ The project is complete only when:
 - [ ] Response Builder
 - [ ] Orchestrator
 
-### Reliability
-- [ ] verification
-- [ ] confidence
-- [ ] risk
-- [ ] contradiction
-- [ ] expert escalation
-- [ ] fallback
-- [ ] observability
+## LLM Provider Resilience
+- [ ] OpenRouter adapter
+- [ ] Grok/xAI adapter
+- [ ] provider-neutral abstraction
+- [ ] automatic failover
+- [ ] rate-limit handling
+- [ ] timeout handling
+- [ ] transient-error handling
+- [ ] provider health/cooldown
+- [ ] optional failback
+- [ ] no provider logic in agents
+- [ ] no provider selection in User UI
+- [ ] no secrets in Git/logs
+- [ ] provider failover tests
 
-### Applications
+## Conversations
+- [ ] multiple conversations
+- [ ] New Chat
+- [ ] chat history
+- [ ] conversation ownership
+- [ ] isolated messages
+- [ ] follow-up context isolation
+- [ ] provider switch preserves conversation
+
+## Applications
 - [ ] separate User Website
 - [ ] separate Management Website
-- [ ] Expert area inside Management Website
-- [ ] Admin area inside Management Website
+- [ ] Expert area
+- [ ] Admin area
 - [ ] server-side RBAC
 - [ ] no User → Management navigation
 - [ ] feature-based review connection
 
-### Backend
+## Backend
 - [ ] FastAPI
 - [ ] authentication
 - [ ] authorization
@@ -999,7 +708,7 @@ The project is complete only when:
 - [ ] exception handling
 - [ ] health/readiness
 
-### Quality
+## Quality
 - [ ] unit tests
 - [ ] integration tests
 - [ ] system tests
@@ -1007,119 +716,52 @@ The project is complete only when:
 - [ ] performance tests
 - [ ] recovery tests
 - [ ] regression tests
+- [ ] provider failover tests
+- [ ] conversation isolation tests
 
-### Deployment
+## Deployment
 - [ ] Docker
 - [ ] environment configuration
 - [ ] persistent storage
 - [ ] health checks
 
-## 26. Final Architectural Statement
+# FINAL ARCHITECTURAL STATEMENT
 
-> **The system consists of two frontend applications sharing a backend: a completely separate User Website and a Management Website. The Management Website contains role-specific Expert and Admin areas. The User Website never exposes or navigates to Management functionality. User-to-Expert/Admin interaction occurs only through actual product features and shared backend workflows, such as expert-review escalation. Server-side RBAC strictly separates USER, EXPERT and ADMIN permissions.**
+> **The system consists of two frontend applications sharing a backend: a completely separate User Website and a Management Website. The Management Website contains role-specific Expert and Admin areas. The User Website never exposes or navigates to Management functionality. User-to-Expert/Admin interaction occurs only through actual product features and shared backend workflows, such as expert-review escalation. Server-side RBAC strictly separates USER, EXPERT and ADMIN permissions. The Agentic RAG pipeline remains orchestrated through the existing interfaces and Orchestrator. OpenRouter and Grok/xAI are provider implementations behind the LLM abstraction, with automatic background failover, provider health handling, and no provider-selection responsibility exposed to agents or normal users. Multi-conversation chat remains isolated by conversation_id and user ownership.**
 
-## 27. Change-Control Rule
+# FINAL GIT CONTROL
 
-After a phase is marked complete:
-- do not rebuild it casually,
-- do not change contracts without impact analysis,
-- add tests before changing behavior,
-- document breaking changes,
-- create a Git checkpoint before significant changes.
-
-The six documents are the planning/source-of-truth layer; executable code and tests remain the final authority for actual implementation behavior.
-
----
-
-# PROJECT COMPLETION CONTROL
-
-This section is a final control reference and does not introduce another implementation phase.
-
-## Current Baseline
-
-The implementation history identifies the following as completed and requiring verification rather than automatic rebuilding:
-
-- Part 1 — Query Understanding Agent
-- Part 2 — Retrieval Agent
-- Part 3 — Verification Agent
-- Part 4 — Reasoning Agent
-- Part 5 — Risk Agent
-- Part 6 — Contradiction Detection Agent
-- Part 7 — Agent Orchestrator
-- Part 8 — Response Builder
-- Part 9 — Observability Layer
-- Part 10 — Validation & Production Readiness
-
-Part 11 is implemented according to the previous project verification work, but the repository must be inspected before declaring the final application complete.
-
-## Mandatory Repository-First Workflow
-
-Before every significant implementation:
-
-```text
-READ THE SIX DOCS
-       ↓
-INSPECT THE REPOSITORY
-       ↓
-CHECK EXISTING IMPLEMENTATION
-       ↓
-CHECK TESTS
-       ↓
-IDENTIFY THE ACTUAL GAP
-       ↓
-MAKE THE SMALLEST REQUIRED CHANGE
-       ↓
-RUN TESTS
-       ↓
-RUN INTEGRATION/E2E CHECK
-       ↓
-AUDIT THE CHANGE
-       ↓
-REPORT RESULTS
-```
-
-Do not rebuild a component merely because it appears in the plan.
-
-## Final Product Definition
-
-The final product has:
-
-```text
-                    SHARED BACKEND
-                         │
-          ┌──────────────┴──────────────┐
-          │                             │
-          ▼                             ▼
-   USER WEBSITE                 MANAGEMENT WEBSITE
-   USER role                    EXPERT + ADMIN roles
-          │                             │
-          └──── feature/backend ────────┘
-                interaction only
-```
-
-There are exactly two frontend applications:
-
-1. User Website.
-2. Management Website.
-
-Expert and Admin are separate role areas within the Management Website.
-
-The User Website does not expose Management navigation or Management login.
-
-User ↔ Expert/Admin interaction happens through backend features such as review escalation and status/result updates.
-
-## Final Git Rule
-
-Before and after meaningful changes:
+Before meaningful changes:
 
 ```text
 git status
+git branch --show-current
 git diff
+```
+
+After meaningful changes:
+
+```text
 pytest
+git diff
+git status
 git add <intended files>
 git commit
 ```
 
-Do not commit secrets, real credentials, `.env` files containing secrets, generated runtime databases, caches, or unnecessary logs.
+Never commit:
+- `.env`,
+- real API keys,
+- access tokens,
+- credentials,
+- private certificates,
+- generated secrets,
+- unnecessary runtime logs/databases.
 
-The six documents in `docs/` form the planning and requirements layer. The executable repository, tests, and verified runtime behavior remain the final authority for actual implementation state.
+Use an example environment file for documentation, for example:
+
+```text
+.env.example
+```
+
+with placeholders only.

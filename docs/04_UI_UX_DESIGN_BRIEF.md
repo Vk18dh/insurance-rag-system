@@ -27,7 +27,8 @@ Focused only on:
 - explanations,
 - confidence,
 - warnings,
-- review status.
+- review status,
+- multiple conversations.
 
 ### Management Website
 Focused on:
@@ -47,15 +48,31 @@ Brand
 User Profile / Settings
 ────────────────────────────
 
-Ask your insurance question
+Chat History       Main Chat Area
 
-[....................................]
-[ Ask ]
+[New Chat]         Ask your insurance question
 
-Suggested Questions
+Conversation A     [....................................]
+Conversation B     [ Ask ]
+
+Conversation C     Suggested Questions
 ```
 
-### Result
+The conversation list must be visually separate from the main chat content.
+
+### Multi-Conversation Requirements
+
+Provide:
+- New Chat,
+- conversation list,
+- active conversation indicator,
+- recent conversations,
+- rename where supported,
+- archive/delete where supported.
+
+Selecting a conversation loads only that conversation.
+
+## 4. User Result
 
 ```text
 Answer
@@ -74,22 +91,23 @@ Sources
 Document | Page | Section
 ```
 
-## 4. User Navigation
+## 5. User Navigation
 
 Keep it simple:
 - Home
-- Ask
-- Results/History if required
-- Profile/Settings if required
+- Chat / Ask
+- Chat History
+- Profile/Settings if required.
 
 Do not include:
 - Expert Login
 - Admin Login
 - Management Login
 - Expert Dashboard
-- Admin Dashboard.
+- Admin Dashboard
+- Management Dashboard.
 
-## 5. Expert Review UX
+## 6. Expert Review UX
 
 Management Website → Expert area.
 
@@ -119,11 +137,12 @@ Main
 
 Evidence must be easy to inspect before approval.
 
-## 6. Admin UX
+## 7. Admin UX
 
 Management Website → Admin area.
 
 Recommended:
+
 ```text
 Sidebar
   Dashboard
@@ -143,7 +162,7 @@ Main
 
 Admin UI should prioritize operational information.
 
-## 7. Management Navigation
+## 8. Management Navigation
 
 The Management Website can have role-aware navigation.
 
@@ -170,7 +189,7 @@ Management
 
 Do not expose unauthorized menu items merely as a security measure; backend RBAC remains authoritative.
 
-## 8. Citation UX
+## 9. Citation UX
 
 Citation cards should show, where available:
 - document name,
@@ -180,7 +199,7 @@ Citation cards should show, where available:
 
 Do not display raw JSON.
 
-## 9. Confidence UX
+## 10. Confidence UX
 
 Use:
 - High confidence
@@ -190,7 +209,7 @@ Use:
 
 Confidence must never be presented as legal certainty.
 
-## 10. Warning UX
+## 11. Warning UX
 
 Example:
 
@@ -199,7 +218,7 @@ Example:
 
 The warning should be clear but not alarmist.
 
-## 11. Review Status UX
+## 12. Review Status UX
 
 Possible states:
 - No review required
@@ -208,7 +227,30 @@ Possible states:
 - Expert approved
 - Expert corrected
 
-## 12. Theme
+## 13. LLM Provider UX
+
+The LLM provider mechanism is an infrastructure concern and must remain invisible to normal users.
+
+Do not add:
+- OpenRouter selector,
+- Grok selector,
+- model selector,
+- API key field,
+- "switch API" button,
+- provider status controls for ordinary users.
+
+If OpenRouter fails and Grok handles the request, the UI should continue normally.
+
+Internal Management/Admin observability may show non-secret provider telemetry such as:
+- provider currently preferred,
+- provider switch count,
+- provider availability,
+- latency,
+- failure category.
+
+Do not expose API keys or raw provider error payloads.
+
+## 14. Theme
 
 Use a professional, restrained palette. Centralize theme values in MUI.
 
@@ -221,7 +263,7 @@ Semantic colors:
 
 Do not hardcode colors throughout individual components.
 
-## 13. Typography
+## 15. Typography
 
 Use Inter or an equivalent readable sans-serif.
 
@@ -232,11 +274,14 @@ Clear hierarchy:
 - body,
 - metadata/caption.
 
-## 14. Reusable Components
+## 16. Reusable Components
 
 ### User
 - QueryInput
-- SuggestedQuery
+- ChatSidebar
+- NewChatButton
+- ConversationList
+- ConversationItem
 - AnswerCard
 - ConfidenceIndicator
 - CitationCard
@@ -261,8 +306,9 @@ Clear hierarchy:
 - AlertPanel
 - AuditTable
 - DocumentManager
+- ProviderHealthPanel
 
-## 15. Responsiveness
+## 17. Responsiveness
 
 User Website:
 - desktop,
@@ -274,7 +320,7 @@ Management Website:
 - tablet support,
 - usable on smaller screens.
 
-## 16. Accessibility
+## 18. Accessibility
 
 - sufficient contrast,
 - keyboard navigation,
@@ -283,7 +329,7 @@ Management Website:
 - screen-reader status,
 - no color-only meaning.
 
-## 17. Critical UX Rule
+## 19. Critical UX Rule
 
 The User Website must communicate expert review as a feature state.
 
@@ -295,8 +341,14 @@ Incorrect:
 
 The user does not need access to the Management Website to interact with the expert-review feature.
 
-## 18. Critical Architecture Rule
+## 20. Critical Architecture Rule
 
 > **Two websites, not one. User is separate. Expert + Admin share the Management Website.**
 
 The shared backend connects them functionally, while frontend navigation remains separated.
+
+## 21. Provider Resilience UX Rule
+
+> **Automatic provider switching must be invisible to the normal user.**
+
+OpenRouter and Grok are implementation providers, not user-facing product choices.
