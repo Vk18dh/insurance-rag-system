@@ -1,17 +1,17 @@
 "use client"
 
 import useSWR from "swr"
-import { fetchHealth } from "@/lib/api"
+import { apiClient } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
 
 export function BackendStatus() {
-  const { data, isLoading } = useSWR("health", fetchHealth, {
+  const { data, isLoading } = useSWR("health", apiClient.getHealth, {
     refreshInterval: 30_000,
     revalidateOnFocus: false,
   })
 
-  const live = data?.live === true
-  const label = isLoading ? "Connecting" : live ? "Backend live" : "Demo mode"
+  const live = data?.status === 'ok' || data?.status === 'healthy';
+  const label = isLoading ? "Connecting" : live ? "Backend live" : "Offline";
 
   return (
     <div className="glass flex items-center gap-2 rounded-full border border-border/60 px-3 py-1.5">

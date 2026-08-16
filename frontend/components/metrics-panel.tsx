@@ -4,7 +4,7 @@ import { motion } from "motion/react"
 import { Clock, ShieldAlert, ShieldCheck, Gauge } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
-import type { QueryResponse } from "@/lib/types"
+import type { QueryResponse } from "@/lib/api-client"
 
 function ConfidenceRing({ score }: { score: number }) {
   const pct = Math.round(score * 100)

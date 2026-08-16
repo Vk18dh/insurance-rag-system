@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Sparkles, ShieldAlert } from "lucide-react"
 import { SafetyPill } from "@/components/metrics-panel"
-import type { QueryResponse } from "@/lib/types"
+import type { QueryResponse } from "@/lib/api-client"
 
 export function AnswerDisplay({ result }: { result: QueryResponse }) {
   return (

@@ -3,7 +3,7 @@
 import { motion } from "motion/react"
 import { FileText, Quote } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import type { Source } from "@/lib/types"
+import type { RetrievedSource as Source } from "@/lib/api-client"
 
 function confidenceTone(confidence: number) {
   if (confidence >= 0.9) return "text-success"
