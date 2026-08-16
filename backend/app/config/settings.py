@@ -15,6 +15,7 @@ class AppConfig(BaseModel):
     port: int = 8000
     host: str = "0.0.0.0"
     database_url_env_var: str = "DATABASE_URL"
+    escalation_confidence_threshold: float = 0.70
 
 class BackendSettings(BaseModel):
     """Configuration loader for the FastAPI Layer (Part 11) using backend_config.yaml"""

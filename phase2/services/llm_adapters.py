@@ -36,14 +36,18 @@ class OpenRouterProvider(BaseProviderAdapter):
         
         req = urllib.request.Request(url, data=json.dumps(data).encode("utf-8"), headers=headers, method="POST")
         try:
+            print("OPENROUTER CALLING:", url)
             with urllib.request.urlopen(req, timeout=self.timeout) as response:
                 resp_body = response.read().decode("utf-8")
+                print("OPENROUTER SUCCESS:", resp_body[:100])
                 resp_json = json.loads(resp_body)
                 if "choices" in resp_json and len(resp_json["choices"]) > 0:
                     return resp_json["choices"][0]["message"]["content"]
                 else:
                     raise QueryProcessingException("Invalid response format from OpenRouter", step="api_call")
         except urllib.error.HTTPError as e:
+            err_body = e.read().decode("utf-8")
+            print("OPENROUTER HTTP ERROR:", e.code, err_body)
             if e.code == 429:
                 raise QueryProcessingException("OpenRouter Rate Limit Exceeded", step="api_call_rate_limit")
             elif e.code >= 500:
@@ -64,7 +68,8 @@ class GroqProvider(BaseProviderAdapter):
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Phase2/1.0"
         }
         data = {
             "model": self.model,
@@ -86,6 +91,8 @@ class GroqProvider(BaseProviderAdapter):
                 else:
                     raise QueryProcessingException("Invalid response format from Groq", step="api_call")
         except urllib.error.HTTPError as e:
+            err_body = e.read().decode("utf-8")
+            print("GROQ HTTP ERROR:", e.code, err_body)
             if e.code == 429:
                 raise QueryProcessingException("Groq Rate Limit Exceeded", step="api_call_rate_limit")
             elif e.code >= 500:

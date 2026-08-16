@@ -10,15 +10,15 @@ services:
     environment:
       - BACKEND_JWT_SECRET=production_super_secret_override_me
       - CHROMA_PORT=8001
+      - DATABASE_URL=postgresql://user:password@postgres:5432/majorcode
       - PHASE2__ENVIRONMENT=testing
-      - PHASE2__LLM__PROVIDER=openrouter
-      - PHASE2__LLM__API_KEY=${OPENROUTER_API_KEY}
     env_file:
       - .env
     volumes:
       - .:/app # Maps codebase for local dev sync mapping
     depends_on:
       - chromadb
+      - postgres
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
@@ -28,7 +28,19 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - HOSTNAME=0.0.0.0
+    depends_on:
+      - backend
+
+  management:
+    build:
+      context: ./management
+      dockerfile: ../deployment/frontend.Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
       - HOSTNAME=0.0.0.0
     depends_on:
       - backend
@@ -42,5 +54,17 @@ services:
     environment:
       - IS_PERSISTENT=TRUE
 
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: majorcode
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
 volumes:
   chroma_data:
+  pg_data:

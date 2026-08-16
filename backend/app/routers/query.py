@@ -11,11 +11,19 @@ from backend.app.dependencies.db import get_db
 from sqlalchemy.orm import Session
 from backend.app.services.conversation_service import ConversationService
 from backend.app.repositories.conversation_repository import ConversationRepository
+from backend.app.services.review_service import ReviewService
+from backend.app.repositories.review_repository import ReviewRepository
+from backend.app.schemas.review_task import ReviewTaskCreate
+from backend.app.config.settings import BackendSettings
 from phase2.orchestrator.orchestrator import AgentOrchestrator
 
 def get_conversation_service(db: Annotated[Session, Depends(get_db)]) -> ConversationService:
     repo = ConversationRepository(db)
     return ConversationService(conversation_repository=repo)
+
+def get_review_service(db: Annotated[Session, Depends(get_db)]) -> ReviewService:
+    repo = ReviewRepository(db)
+    return ReviewService(review_repository=repo)
 
 router = APIRouter(prefix="/query", tags=["query"])
 
@@ -24,7 +32,8 @@ async def process_query(
     request: QueryRequest,
     current_user: Annotated[TokenPayload, Depends(get_current_user)],
     orchestrator: AgentOrchestrator = Depends(get_agent_orchestrator),
-    conversation_service: ConversationService = Depends(get_conversation_service)
+    conversation_service: ConversationService = Depends(get_conversation_service),
+    review_service: ReviewService = Depends(get_review_service)
 ):
     """
     Main entry point for AI analysis mappings. 
@@ -100,6 +109,32 @@ async def process_query(
             else:
                 # Safe attribution pulling metadata bounds natively
                 confidence = getattr(final_resp.metadata, 'confidence', 0.95) if hasattr(final_resp, 'metadata') else 0.95
+
+        # Automated Escalation Logic
+        settings = BackendSettings.load()
+        threshold = settings.app.escalation_confidence_threshold
+        
+        escalation_reason = None
+        if not is_safe:
+            escalation_reason = "System constraints violated (unsafe/warnings present)"
+        elif confidence < threshold:
+            escalation_reason = f"Low confidence detected ({confidence} < {threshold})"
+
+        if escalation_reason:
+            payload_data = {
+                "query": request.query,
+                "generated_answer": final_resp_answer,
+                "citations": [{"document_id": s.document, "page_number": s.page, "text": s.content_snippet} for s in sources],
+                "confidence": confidence,
+                "warnings": getattr(final_resp, 'warnings', []) if hasattr(final_resp, 'warnings') else []
+            }
+            review_task_create = ReviewTaskCreate(
+                conversation_id=conv_id,
+                message_id=None,
+                reason=escalation_reason,
+                payload=payload_data
+            )
+            review_service.create_task(review_task_create)
 
         # Persist the assistant message AFTER execution
         conversation_service.append_message(conv_id, current_user.sub, "assistant", final_resp_answer)

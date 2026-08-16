@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.env*.local
+frontend/node_modules
+__pycache__
+*.pyc
+venv
+.venv
+.pytest_cache

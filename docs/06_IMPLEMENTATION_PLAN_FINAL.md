@@ -1,4 +1,85 @@
-# 06 — Implementation Plan
+# 06 — Stage 9: Management Website Implementation
+
+This plan outlines the implementation of the Management Website required by the authoritative project documentation (Stage 9).
+
+## Stage 9 Scope
+
+The objective is to implement the Management Website, providing interfaces for EXPERT and ADMIN roles, strictly separated from the Customer/User Website.
+
+## User Review Required
+
+> [!WARNING]
+> Please review this implementation plan. It introduces a separate frontend application (`management/`) and updates the FastAPI backend to support ReviewTask workflows and Admin observability metrics.
+
+## Stage 9 Requirements Matrix
+
+| Requirement | Source MD | Backend Implementation | Frontend Implementation | Test | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Separate Management App** | 01_PRD, 03_APP_FLOW | N/A | `management/` Next.js app | Docker test | DEFERRED |
+| **Expert Login** | 03_APP_FLOW, 05_SCHEMA | Reuses `POST /api/v1/auth/login` | `management/app/login/page.tsx` | UI Test | DEFERRED |
+| **Admin Login** | 03_APP_FLOW, 05_SCHEMA | Reuses `POST /api/v1/auth/login` | `management/app/login/page.tsx` | UI Test | DEFERRED |
+| **RBAC / Role Verification** | 02_TRD, 05_SCHEMA | `dependencies/auth.py` (exists) | Next.js Middleware / Layout auth | UI Test | DEFERRED |
+| **ReviewTask Data Model** | 05_SCHEMA | `models/review_task.py` | `management/lib/api-client.ts` | Backend Test | DEFERRED |
+| **Expert Dashboard/Queue** | 01_PRD, 04_UI_UX | `GET /api/v1/expert/reviews` | `management/app/expert/page.tsx` | UI Test | DEFERRED |
+| **ReviewTask Detail** | 04_UI_UX, 05_SCHEMA | `GET /api/v1/expert/reviews/{id}` | `management/app/expert/[id]/page.tsx` | UI Test | DEFERRED |
+| **Expert Actions (Approve/Correct)** | 04_UI_UX, 05_SCHEMA | `POST /api/v1/expert/reviews/{id}/action`| Action panels in Review Detail | UI Test | DEFERRED |
+| **Admin Dashboard** | 01_PRD, 04_UI_UX | N/A (UI layout) | `management/app/admin/page.tsx` | UI Test | DEFERRED |
+| **Admin Metrics & Health** | 05_SCHEMA | `GET /api/v1/admin/metrics`, `health` | Dashboard Metric Cards | UI Test | DEFERRED |
+| **No User ↔ Mgmt Navigation** | 01_PRD, 02_TRD | Backend role enforcement | Separate apps (no links) | UI Test | DEFERRED |
+
+## Proposed Changes
+
+### Backend Missing Contracts
+
+Based on the audit, the backend is missing the ReviewTask contracts and the Admin metrics endpoints.
+
+#### [NEW] backend/app/models/review_task.py
+- SQLAlchemy model for `ReviewTask` representing human-in-the-loop escalation tasks.
+
+#### [NEW] backend/app/schemas/review_task.py
+- Pydantic models for ReviewTask API requests/responses.
+
+#### [MODIFY] backend/app/routers/expert.py
+- Add `GET /reviews`, `GET /reviews/{id}`, and `POST /reviews/{id}/approve`, `POST /reviews/{id}/correct`.
+
+#### [MODIFY] backend/app/routers/admin.py
+- Add `GET /metrics`, `GET /provider-health`, etc., returning mock or basic system metrics for now, relying on actual DB stats where possible.
+
+#### [NEW] backend/app/tests/test_management_api.py
+- Unit tests for the new Expert and Admin endpoints to ensure RBAC enforcement and correct schema serialization.
+
+---
+
+### Management Frontend (New Application)
+
+We will initialize a new Next.js application in `management/` using the same underlying stack (React, Tailwind, Shadcn UI) to allow easy reuse of UI patterns, but completely isolated routing and navigation from `frontend/`.
+
+#### [NEW] management/
+- A new Next.js application directory (e.g., `npx create-next-app management`).
+
+#### [NEW] management/app/login/page.tsx
+- Authentication entry point specifically for Management. Logs in and checks if the role is `EXPERT` or `ADMIN`.
+
+#### [NEW] management/app/expert/*
+- Expert Dashboard, Review Queue, and Review Task Detail pages.
+
+#### [NEW] management/app/admin/*
+- Admin Dashboard, System Health, and Metrics.
+
+#### [MODIFY] docker-compose.yml
+- Add the `management` service, mapping port 3001, to serve the management app in the Docker topology.
+
+## Verification Plan
+
+### Automated Tests
+- `pytest backend/app/tests/test_management_api.py` (Backend APIs & RBAC)
+- `vitest` (Frontend Management UI routing & auth logic)
+
+### Manual Verification
+- Log in as `USER` on Management app → should be denied access.
+- Log in as `EXPERT` on Management app → should see Expert Dashboard, denied Admin Dashboard.
+- Log in as `ADMIN` on Management app → should see Admin Dashboard.
+- Verify Docker integration with `docker-compose up --build`.
 
 ## 1. Purpose
 

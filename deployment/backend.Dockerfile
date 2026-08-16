@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y build-essential curl
 # Assuming the user's workspace contains root `requirements.txt` mapping Phase1+2
 # Then we install FastAPI backend requirements.
 COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt fastapi uvicorn
 
 # Copy Phase 1 and Phase 2 entirely unchanged matching Part 11 Rule

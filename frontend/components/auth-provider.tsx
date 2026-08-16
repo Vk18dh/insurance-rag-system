@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getToken } from '@/lib/api-client';
+import { getToken, apiClient } from '@/lib/api-client';
 import { useRouter, usePathname } from 'next/navigation';
 
 interface AuthContextType {
@@ -42,8 +42,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && pathname !== '/login' && pathname !== '/register') {
-      router.push('/login');
+    if (!isLoading && !isAuthenticated) {
+      apiClient.guestLogin().then(() => {
+        setIsAuthenticated(true);
+        if (pathname === '/login' || pathname === '/register') {
+          router.push('/');
+        }
+      }).catch((e) => {
+        console.error("Failed to auto-login guest", e);
+      });
     }
   }, [isLoading, isAuthenticated, pathname, router]);
 
