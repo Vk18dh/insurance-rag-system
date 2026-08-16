@@ -14,6 +14,7 @@ class AppConfig(BaseModel):
     version: str = "1.0.0"
     port: int = 8000
     host: str = "0.0.0.0"
+    database_url_env_var: str = "DATABASE_URL"
 
 class BackendSettings(BaseModel):
     """Configuration loader for the FastAPI Layer (Part 11) using backend_config.yaml"""
@@ -36,3 +37,9 @@ class BackendSettings(BaseModel):
     def jwt_secret(self) -> str:
         """Fetches the real JWT secret from the environment overriding configs securely."""
         return os.getenv(self.security.jwt_secret_env_var, "unsafe-default-dev-secret-replace-me")
+
+    @property
+    def database_url(self) -> str:
+        """Fetches the database connection string from the environment."""
+        # SQLite used as default fallback during Stage 7 per user approval
+        return os.getenv(self.app.database_url_env_var, "sqlite:///./phase2_app.db")

@@ -17,7 +17,7 @@ Build a trustworthy insurance knowledge assistant that does not depend on an LLM
 The LLM layer must also remain resilient. The system will support two configured LLM API providers:
 
 - **OpenRouter**
-- **Grok / xAI API**
+- **Groq API**
 
 The system must automatically switch providers in the background when the active provider becomes unavailable or encounters a configured failover condition. The user and individual agents must not need to know which provider handled a request.
 
@@ -190,14 +190,14 @@ The system uses a provider abstraction with two configured providers:
 
 ```text
 Provider A → OpenRouter
-Provider B → Grok / xAI
+Provider B → Groq
 ```
 
 Recommended default strategy:
 
 ```text
 Primary: OpenRouter
-Secondary: Grok / xAI
+Secondary: Groq
 ```
 
 The actual primary provider must be configuration-driven.
@@ -238,7 +238,7 @@ Authentication/configuration errors should only trigger failover when explicitly
 
 ### Important rules
 
-- Agents must never contain OpenRouter/Grok switching logic.
+- Agents must never contain OpenRouter/Groq switching logic.
 - Provider SDK/API calls must not be scattered across agents.
 - The provider manager must sit behind the existing LLM abstraction.
 - API keys must come only from environment/secrets.
@@ -355,7 +355,7 @@ The product is successful when:
 - administrators can manage/monitor the system,
 - User and Management applications remain separate,
 - multi-conversation chat is isolated,
-- OpenRouter/Grok failover works automatically,
+- OpenRouter/Groq failover works automatically,
 - users do not need to manually select or switch providers,
 - provider failures are observable,
 - no normal User → Management navigation exists,

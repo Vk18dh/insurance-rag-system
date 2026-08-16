@@ -233,13 +233,13 @@ The LLM provider mechanism is an infrastructure concern and must remain invisibl
 
 Do not add:
 - OpenRouter selector,
-- Grok selector,
+- Groq selector,
 - model selector,
 - API key field,
 - "switch API" button,
 - provider status controls for ordinary users.
 
-If OpenRouter fails and Grok handles the request, the UI should continue normally.
+If OpenRouter fails and Groq handles the request, the UI should continue normally.
 
 Internal Management/Admin observability may show non-secret provider telemetry such as:
 - provider currently preferred,
@@ -351,4 +351,4 @@ The shared backend connects them functionally, while frontend navigation remains
 
 > **Automatic provider switching must be invisible to the normal user.**
 
-OpenRouter and Grok are implementation providers, not user-facing product choices.
+OpenRouter and Groq are implementation providers, not user-facing product choices.

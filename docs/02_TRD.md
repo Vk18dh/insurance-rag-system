@@ -74,7 +74,7 @@ Existing working modules are the baseline. Do not rewrite or move them without a
                               │
                     ┌─────────┴─────────┐
                     ▼                   ▼
-               OpenRouter          Grok / xAI
+               OpenRouter          Groq
                 Provider A          Provider B
                     │                   │
                     └──── Automatic ───┘
@@ -148,14 +148,14 @@ LLM Provider Manager
   ↓
 Provider Adapter Interface
   ├── OpenRouter Adapter
-  └── Grok/xAI Adapter
+  └── Groq Adapter
 ```
 
 ### Provider Requirements
 
 Supported providers:
 - OpenRouter
-- Grok / xAI
+- Groq
 
 The provider names, models, endpoints, timeouts, retry limits, and failover rules must be configuration-driven.
 
@@ -165,7 +165,7 @@ Suggested environment variables:
 
 ```text
 OPENROUTER_API_KEY
-XAI_API_KEY
+GROQ_API_KEY
 ```
 
 Actual names must be reconciled with the existing repository before implementation.
@@ -205,7 +205,7 @@ When configured, the manager may return to the preferred provider after a succes
 
 ```text
 QueryAgent → OpenRouter SDK
-ReasoningAgent → Grok SDK
+ReasoningAgent → Groq SDK
 RiskAgent → OpenRouter SDK
 ```
 
@@ -218,7 +218,7 @@ Existing LLM abstraction
       ↓
 Provider Manager
       ↓
-OpenRouter OR Grok
+OpenRouter OR Groq
 ```
 
 ## 7. LangChain
@@ -381,7 +381,7 @@ Example logical configuration:
 llm:
   strategy: automatic_failover
   primary_provider: openrouter
-  secondary_provider: grok
+  secondary_provider: groq
 
   providers:
     openrouter:
@@ -389,7 +389,7 @@ llm:
       model: configured_value
       timeout_seconds: configured_value
 
-    grok:
+    groq:
       enabled: true
       model: configured_value
       timeout_seconds: configured_value
@@ -502,7 +502,7 @@ LLM credentials are injected as runtime secrets/environment variables.
 8. Do not treat frontend route hiding as authorization.
 9. Do not merge User and Management applications into one frontend navigation.
 10. Preserve existing contracts and backward compatibility.
-11. Do not place OpenRouter/Grok SDK calls inside individual agents.
+11. Do not place OpenRouter/Groq SDK calls inside individual agents.
 12. Do not expose provider-selection controls to normal users.
 13. Do not combine partial responses from multiple providers.
 14. A provider switch must not change conversation_id or user context.

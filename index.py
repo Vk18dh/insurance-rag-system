@@ -147,7 +147,7 @@ def build_vector_index(chunks: list[dict]) -> None:
     from sentence_transformers import SentenceTransformer
 
     logger.info("Loading embedding model: %s", EMBEDDING_MODEL)
-    model = SentenceTransformer(EMBEDDING_MODEL)
+    model = SentenceTransformer(EMBEDDING_MODEL, trust_remote_code=True)
 
     client = chromadb.PersistentClient(path=CHROMA_DIR)
 

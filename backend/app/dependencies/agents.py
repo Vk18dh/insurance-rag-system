@@ -44,12 +44,9 @@ def get_agent_orchestrator() -> AgentOrchestrator:
     # Wait, usually the factory doesn't need an explicit 'analyzer' if it creates it.
     # The E2E test passed FallbackQueryAnalyzer manually. Let's use it for the LLM based agents to ensure it loads natively.
     # Use GenericOpenRouterExecutor for reasoning if openrouter provider is set
-    if settings.llm.provider.lower() == "openrouter":
-        from phase2.services.llm_adapters import GenericOpenRouterExecutor
-        llm_analyzer = GenericOpenRouterExecutor(
-            api_key=settings.llm.api_key,
-            model_name=settings.llm.model_name
-        )
+    if settings.llm.provider.lower() in ("openrouter", "failover") or settings.llm.primary_provider.lower() in ("openrouter", "groq"):
+        from phase2.services.llm_provider_manager import LLMProviderManager
+        llm_analyzer = LLMProviderManager(settings=settings)
     else:
         llm_analyzer = FallbackQueryAnalyzer()
         

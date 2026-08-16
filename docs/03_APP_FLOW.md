@@ -133,7 +133,7 @@ OpenRouter
     │
     └── Configured failure
               ↓
-           Grok/xAI
+           Groq
               ↓
            Success
               ↓
@@ -169,7 +169,7 @@ Rate limit
    ↓
 Provider Manager
    ↓
-Grok/xAI
+Groq
    ↓
 Success
    ↓
@@ -187,7 +187,7 @@ Configured retry
    ↓
 Still failing
    ↓
-Grok/xAI
+Groq
 ```
 
 ### Scenario D — Both fail
@@ -197,7 +197,7 @@ OpenRouter
    ↓
 Fail
    ↓
-Grok/xAI
+Groq
    ↓
 Fail
    ↓
@@ -482,4 +482,4 @@ If provider failover causes increased latency, the UI may show a generic process
 
 The User Website is completely separate from the Management Website. Expert and Admin share the Management Website but remain strictly separated by server-side authorization.
 
-The LLM provider layer is independent of this application separation and silently provides OpenRouter/Grok failover behind the existing LLM abstraction.
+The LLM provider layer is independent of this application separation and silently provides OpenRouter/Groq failover behind the existing LLM abstraction.

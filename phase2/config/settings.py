@@ -51,9 +51,17 @@ _CONFIG_FILE = _PROJECT_ROOT / "phase2_config.yaml"
 class LLMSettings(BaseModel):
     """LLM provider and model configuration."""
 
-    provider: str = Field(default="gemini", description="LLM provider: gemini | offline")
-    model_name: str = Field(default="gemma-3-27b-it", description="LLM model identifier")
-    api_key: Optional[str] = Field(default=None, description="Loaded from GOOGLE_API_KEY env var")
+    provider: str = Field(default="failover", description="LLM provider strategy")
+    model_name: str = Field(default="", description="Legacy model name")
+    primary_provider: str = Field(default="openrouter", description="Primary LLM provider")
+    secondary_provider: str = Field(default="groq", description="Secondary LLM provider")
+    openrouter_model: str = Field(default="google/gemma-3-27b-it:free", description="OpenRouter model")
+    groq_model: str = Field(default="llama-3.3-70b-versatile", description="Groq model")
+    api_key: Optional[str] = Field(default=None, description="Legacy fallback key")
+    openrouter_api_key: Optional[str] = Field(default=None, description="OpenRouter API Key")
+    groq_api_key: Optional[str] = Field(default=None, description="Groq API Key")
+    failover_enabled: bool = Field(default=True, description="Enable automatic failover")
+    retry_backoff_seconds: float = Field(default=1.0, gt=0, description="Backoff between retries")
     timeout_seconds: float = Field(default=30.0, gt=0, description="Per-request timeout")
     max_retries: int = Field(default=3, ge=1, le=10, description="Retry count for transient failures")
     temperature: float = Field(default=0.0, ge=0.0, le=2.0, description="LLM temperature")
@@ -62,7 +70,7 @@ class LLMSettings(BaseModel):
     @field_validator("provider")
     @classmethod
     def validate_provider(cls, v: str) -> str:
-        allowed = {"gemini", "openai", "anthropic", "local", "offline", "openrouter"}
+        allowed = {"gemini", "openai", "anthropic", "local", "offline", "openrouter", "failover"}
         if v.lower() not in allowed:
             raise ValueError(f"llm.provider must be one of {allowed}, got: {v!r}")
         return v.lower()
@@ -550,7 +558,10 @@ class Phase2Settings(BaseSettings):
     @model_validator(mode="after")
     def _inject_secrets(self) -> "Phase2Settings":
         """Inject secrets from environment variables — never from YAML."""
-        if self.llm.provider.lower() == "openrouter":
+        self.llm.openrouter_api_key = os.environ.get("OPENROUTER_API_KEY")
+        self.llm.groq_api_key = os.environ.get("GROQ_API_KEY")
+        
+        if self.llm.provider.lower() == "openrouter" or self.llm.primary_provider.lower() == "openrouter":
             api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("PHASE2__LLM__API_KEY")
         else:
             api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("PHASE2__LLM__API_KEY")
@@ -702,11 +713,14 @@ def validate_settings(settings: Phase2Settings) -> None:
 
     # LLM API key is required unless running in offline mode
     resolved_provider = (settings.llm.provider or "").lower()
-    if resolved_provider != "offline" and not settings.llm.api_key:
+    if resolved_provider not in ["offline", "failover"] and not settings.llm.api_key:
         errors.append(
             "GOOGLE_API_KEY is required when llm.provider is not 'offline'. "
             "Set it in your .env file or set PHASE2__LLM__PROVIDER=offline for offline mode."
         )
+    elif resolved_provider == "failover":
+        if not settings.llm.openrouter_api_key and not settings.llm.groq_api_key:
+            errors.append("Failover provider requires at least one API key (OPENROUTER_API_KEY or GROQ_API_KEY)")
 
     # Prompt template must exist on disk
     prompt_path = _PROJECT_ROOT / settings.query_agent.prompt_template_path
@@ -732,7 +746,7 @@ def validate_settings(settings: Phase2Settings) -> None:
         )
 
     # LLM model name must not be empty
-    if not settings.llm.model_name or not settings.llm.model_name.strip():
+    if resolved_provider not in ["failover", "openrouter", "offline"] and (not settings.llm.model_name or not settings.llm.model_name.strip()):
         errors.append(
             "llm.model_name must not be empty. Set it in phase2_config.yaml or via "
             "PHASE2__LLM__MODEL_NAME env var."

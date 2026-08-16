@@ -32,9 +32,9 @@ class AgentOrchestrator(IAgentOrchestrator):
         self._agents_map = agents_map
         self._obs: IObservabilityFacade = observability if observability is not None else NullObservabilityFacade()
 
-    def orchestrate(self, query: str) -> OrchestrationResult:
+    def orchestrate(self, query: str, conversation_id: str | None = None) -> OrchestrationResult:
         request_id = str(uuid.uuid4())
-        logger.info(f"Orchestration initiated safely securely resolving natively [{request_id}]")
+        logger.info(f"Orchestration initiated safely securely resolving natively [{request_id}] (Conversation: {conversation_id})")
         
         sequence = self._workflow.get_execution_sequence()
         overall_status = ExecutionStatus.SUCCESS
@@ -43,6 +43,8 @@ class AgentOrchestrator(IAgentOrchestrator):
         
         # --- Observability: pipeline start ---
         trace = self._obs.on_pipeline_start(request_id, query)
+        if hasattr(trace, 'set_attribute'):
+            trace.set_attribute("conversation_id", conversation_id or "none")
         
         for agent_name in sequence:
             agent = self._agents_map.get(agent_name)

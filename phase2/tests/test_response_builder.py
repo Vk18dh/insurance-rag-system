@@ -32,18 +32,17 @@ def test_warnings_generated():
     
     from unittest.mock import MagicMock
     risk = MagicMock()
-    risk.risk_level.value = "high"
-    risk.explanation = "Explicit critical risk mapped"
+    risk.overall_risk_level.value = "high"
     
     contra = MagicMock()
-    contra.overall_contradiction = True
-    contra.requires_escalation = True
-    contra.explanation = "Severe logic gap."
+    contra.contradictions = [MagicMock()]
+    contra.has_critical_conflict = True
+    contra.recommendation = "Severe logic gap."
     
     resp = agent.build_response(None, None, risk, contra)
     
     assert len(resp.warnings) == 2
     
     warning_msgs = [w.message for w in resp.warnings]
-    assert "Explicit critical risk mapped" in warning_msgs
+    assert "Risk threshold breached" in warning_msgs[0] or "Risk threshold breached" in warning_msgs[1]
     assert any("Severe logic gap" in x for x in warning_msgs)

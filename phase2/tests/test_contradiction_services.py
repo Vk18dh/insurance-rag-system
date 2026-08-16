@@ -42,7 +42,7 @@ def test_evidence_alignment_traces_logic():
     step.step_number = 1
     ev = MagicMock()
     ev.chunk_id = "chk1"
-    step.supporting_evidence = [ev]
+    step.evidence_used = [ev]
     res.reasoning_chain.steps = [step]
     
     alignment = svc.align_evidence(res)

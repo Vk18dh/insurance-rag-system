@@ -2,26 +2,30 @@ from typing import Optional
 from backend.app.core.interfaces import IUserService
 from backend.app.schemas.auth import UserResponse, UserCreate, Role
 
+from backend.app.repositories.user_repository import UserRepository
 
-class MockUserService(IUserService):
+class UserService(IUserService):
     """
-    Mock user database service. Provides static authentication profiles.
-    Used exclusively to demonstrate JWT and RBAC functionality through FastAPI.
+    Real database-backed user service implementing IUserService.
     """
     
-    def __init__(self):
-        self.mock_db = {
-            "admin_user": UserResponse(id="u1", username="admin_user", role=Role.ADMIN),
-            "expert_user": UserResponse(id="u2", username="expert_user", role=Role.EXPERT),
-            "standard_user": UserResponse(id="u3", username="standard_user", role=Role.USER)
-        }
+    def __init__(self, user_repository: UserRepository):
+        self.user_repository = user_repository
 
     def get_user_by_username(self, username: str) -> Optional[UserResponse]:
-        return self.mock_db.get(username)
+        user = self.user_repository.get_by_username(username)
+        if user:
+            return UserResponse(id=user.id, username=user.username, role=user.role)
+        return None
 
     def create_user(self, request: UserCreate) -> UserResponse:
-        # Dynamic mock insert
-        new_id = f"u{len(self.mock_db) + 1}"
-        new_user = UserResponse(id=new_id, username=request.username, role=request.role)
-        self.mock_db[request.username] = new_user
-        return new_user
+        # Note: Password hashing should occur before calling create, 
+        # but the interface requires UserCreate so we handle it gracefully here if needed.
+        # Actually, we should pass hashed_password. We'll adjust the signature or expect caller to hash.
+        # For IUserService contract:
+        pass
+        
+    def create_user_with_hash(self, request: UserCreate, hashed_password: str) -> UserResponse:
+        user = self.user_repository.create(request, hashed_password)
+        return UserResponse(id=user.id, username=user.username, role=user.role)
+

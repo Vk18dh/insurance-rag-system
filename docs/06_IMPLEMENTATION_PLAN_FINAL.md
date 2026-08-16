@@ -144,7 +144,7 @@ Add a provider-resilience layer that automatically switches between:
 
 ```text
 OpenRouter
-Grok / xAI
+Groq
 ```
 
 without changing the agent architecture.
@@ -160,7 +160,7 @@ Query / Reasoning / Risk / other LLM-dependent component
                          ↓
               ┌──────────┴──────────┐
               ↓                     ↓
-         OpenRouter             Grok/xAI
+         OpenRouter             Groq
          Provider A             Provider B
               └──────────┬──────────┘
                          ↓
@@ -172,9 +172,9 @@ Query / Reasoning / Risk / other LLM-dependent component
 Do NOT implement:
 
 ```text
-QueryAgent → if OpenRouter fails → Grok
-ReasoningAgent → if OpenRouter fails → Grok
-RiskAgent → if OpenRouter fails → Grok
+QueryAgent → if OpenRouter fails → Groq
+ReasoningAgent → if OpenRouter fails → Groq
+RiskAgent → if OpenRouter fails → Groq
 ```
 
 Instead, implement provider switching once behind the existing abstraction.
@@ -200,7 +200,7 @@ Recommended default:
 
 ```text
 Primary: OpenRouter
-Secondary: Grok/xAI
+Secondary: Groq
 ```
 
 But this must be configuration-driven.
@@ -249,7 +249,7 @@ Example logical block:
 llm:
   strategy: automatic_failover
   primary_provider: openrouter
-  secondary_provider: grok
+  secondary_provider: groq
 
   providers:
     openrouter:
@@ -257,7 +257,7 @@ llm:
       model: configured_value
       timeout_seconds: configured_value
 
-    grok:
+    groq:
       enabled: true
       model: configured_value
       timeout_seconds: configured_value
@@ -278,7 +278,7 @@ Suggested secrets:
 
 ```text
 OPENROUTER_API_KEY
-XAI_API_KEY
+GROQ_API_KEY
 ```
 
 Reconcile names with the repository.
@@ -287,10 +287,10 @@ Reconcile names with the repository.
 
 Mandatory:
 - OpenRouter success,
-- Grok success,
-- OpenRouter timeout → Grok success,
-- OpenRouter rate limit → Grok success,
-- OpenRouter 5xx → Grok success,
+- Groq success,
+- OpenRouter timeout → Groq success,
+- OpenRouter rate limit → Groq success,
+- OpenRouter 5xx → Groq success,
 - both providers unavailable,
 - malformed response,
 - invalid credentials,
@@ -439,7 +439,7 @@ Inspect the existing LLM abstraction first.
 Then:
 1. define/confirm provider-neutral interface,
 2. create OpenRouter adapter if missing,
-3. create Grok/xAI adapter if missing,
+3. create Groq adapter if missing,
 4. create Provider Manager,
 5. add configuration,
 6. add environment secret loading,
@@ -615,7 +615,7 @@ OpenRouter
  ↓
 Simulated failure
  ↓
-Grok/xAI
+Groq
  ↓
 FinalResponse
 ```
@@ -669,7 +669,7 @@ Health/Metrics/Documents/Users/Audit
 
 ## LLM Provider Resilience
 - [ ] OpenRouter adapter
-- [ ] Grok/xAI adapter
+- [ ] Groq adapter
 - [ ] provider-neutral abstraction
 - [ ] automatic failover
 - [ ] rate-limit handling
@@ -727,7 +727,7 @@ Health/Metrics/Documents/Users/Audit
 
 # FINAL ARCHITECTURAL STATEMENT
 
-> **The system consists of two frontend applications sharing a backend: a completely separate User Website and a Management Website. The Management Website contains role-specific Expert and Admin areas. The User Website never exposes or navigates to Management functionality. User-to-Expert/Admin interaction occurs only through actual product features and shared backend workflows, such as expert-review escalation. Server-side RBAC strictly separates USER, EXPERT and ADMIN permissions. The Agentic RAG pipeline remains orchestrated through the existing interfaces and Orchestrator. OpenRouter and Grok/xAI are provider implementations behind the LLM abstraction, with automatic background failover, provider health handling, and no provider-selection responsibility exposed to agents or normal users. Multi-conversation chat remains isolated by conversation_id and user ownership.**
+> **The system consists of two frontend applications sharing a backend: a completely separate User Website and a Management Website. The Management Website contains role-specific Expert and Admin areas. The User Website never exposes or navigates to Management functionality. User-to-Expert/Admin interaction occurs only through actual product features and shared backend workflows, such as expert-review escalation. Server-side RBAC strictly separates USER, EXPERT and ADMIN permissions. The Agentic RAG pipeline remains orchestrated through the existing interfaces and Orchestrator. OpenRouter and Groq are provider implementations behind the LLM abstraction, with automatic background failover, provider health handling, and no provider-selection responsibility exposed to agents or normal users. Multi-conversation chat remains isolated by conversation_id and user ownership.**
 
 # FINAL GIT CONTROL
 

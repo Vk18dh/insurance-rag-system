@@ -346,7 +346,7 @@ Supported provider adapters:
 
 ```text
 OPENROUTER
-GROK_XAI
+GROQ
 ```
 
 The actual provider names/enums in executable code must be reconciled with the repository.
@@ -392,7 +392,7 @@ request
   ↓
 LLM Provider Manager
   ↓
-OpenRouter OR Grok
+OpenRouter OR Groq
   ↓
 validated response
 ```

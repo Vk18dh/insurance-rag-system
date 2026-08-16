@@ -56,15 +56,25 @@ ANSWER (with citations):"""
 #  BM25 Search
 # ═══════════════════════════════════════════════════════════════════════════
 
+_bm25_cache = None
+_bm25_chunks_cache = None
+
 def _load_bm25():
     """Load the persisted BM25 index and chunk list."""
+    global _bm25_cache, _bm25_chunks_cache
+    if _bm25_cache is not None:
+        return _bm25_cache, _bm25_chunks_cache
+
     if not os.path.isfile(BM25_INDEX_PATH):
         logger.error("BM25 index not found at %s. Run index.py first.", BM25_INDEX_PATH)
         return None, None
 
     with open(BM25_INDEX_PATH, "rb") as fh:
         data = pickle.load(fh)
-    return data["bm25"], data["chunks"]
+        
+    _bm25_cache = data["bm25"]
+    _bm25_chunks_cache = data["chunks"]
+    return _bm25_cache, _bm25_chunks_cache
 
 
 def _tokenize(text: str) -> list[str]:
@@ -119,6 +129,25 @@ def bm25_search(query: str, top_k: int = TOP_K) -> list[dict]:
 #  Vector Search — ChromaDB
 # ═══════════════════════════════════════════════════════════════════════════
 
+_embedding_model_cache = None
+_chroma_client_cache = None
+_chroma_collection_cache = None
+
+def _get_embedding_model():
+    global _embedding_model_cache
+    if _embedding_model_cache is None:
+        from sentence_transformers import SentenceTransformer
+        _embedding_model_cache = SentenceTransformer(EMBEDDING_MODEL, trust_remote_code=True)
+    return _embedding_model_cache
+
+def _get_chroma_collection():
+    global _chroma_client_cache, _chroma_collection_cache
+    if _chroma_collection_cache is None:
+        import chromadb
+        _chroma_client_cache = chromadb.PersistentClient(path=CHROMA_DIR)
+        _chroma_collection_cache = _chroma_client_cache.get_collection(name=CHROMA_COLLECTION_NAME)
+    return _chroma_collection_cache
+
 def vector_search(query: str, top_k: int = TOP_K) -> list[dict]:
     """
     Retrieve top-k chunks via ChromaDB cosine-similarity search.
@@ -126,18 +155,14 @@ def vector_search(query: str, top_k: int = TOP_K) -> list[dict]:
     Returns:
         List of dicts with keys: chunk_id, text, score, metadata
     """
-    import chromadb
-    from sentence_transformers import SentenceTransformer
-
     if not os.path.isdir(CHROMA_DIR):
         logger.error("ChromaDB directory not found: %s. Run index.py first.", CHROMA_DIR)
         return []
 
-    model = SentenceTransformer(EMBEDDING_MODEL)
+    model = _get_embedding_model()
     query_embedding = model.encode(query).tolist()
 
-    client = chromadb.PersistentClient(path=CHROMA_DIR)
-    collection = client.get_collection(name=CHROMA_COLLECTION_NAME)
+    collection = _get_chroma_collection()
 
     response = collection.query(
         query_embeddings=[query_embedding],

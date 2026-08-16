@@ -784,11 +784,10 @@ class QueryProcessingServiceFactory:
                 "Using FallbackQueryAnalyzer (offline mode). LLM results will be UNKNOWN."
             )
             analyzer = FallbackQueryAnalyzer()
-        elif provider == "openrouter":
-            from phase2.services.llm_adapters import OpenRouterQueryAnalyzer
-            analyzer = OpenRouterQueryAnalyzer(
-                api_key=settings.llm.api_key,
-                model_name=settings.llm.model_name,
+        elif provider in ("openrouter", "failover"):
+            from phase2.services.llm_provider_manager import LLMProviderManager
+            analyzer = LLMProviderManager(
+                settings=settings,
                 prompt_template=prompt_template,
                 supported_intents=settings.query_agent.supported_intents
             )

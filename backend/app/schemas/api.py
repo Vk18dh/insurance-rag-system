@@ -6,6 +6,7 @@ class QueryRequest(BaseModel):
     query: str
     language: str = "en"
     customer_id: Optional[str] = None
+    conversation_id: Optional[str] = None
 
 class RetrievedSource(BaseModel):
     """Information regarding a cited document chunk"""
@@ -17,6 +18,7 @@ class RetrievedSource(BaseModel):
 class QueryResponse(BaseModel):
     """Standardized frontend response mapping the ResponseBuilder output"""
     query_id: str
+    conversation_id: Optional[str] = None
     final_answer: str
     confidence_score: float
     is_safe: bool

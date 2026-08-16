@@ -11,11 +11,13 @@ from backend.app.schemas.auth import Token, UserResponse, LoginRequest
 # Using bcrypt for password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+from backend.app.repositories.user_repository import UserRepository
+
 class AuthService(IAuthService):
     """Concrete implementation of IAuthService using python-jose and passlib."""
     
-    def __init__(self, user_service: IUserService):
-        self.user_service = user_service
+    def __init__(self, user_repository: UserRepository):
+        self.user_repository = user_repository
         settings = BackendSettings.load()
         self.secret_key = settings.jwt_secret
         self.algorithm = settings.security.jwt_algorithm
@@ -28,18 +30,14 @@ class AuthService(IAuthService):
         return pwd_context.hash(password)
 
     def authenticate_user(self, credentials: LoginRequest) -> Optional[UserResponse]:
-        user = self.user_service.get_user_by_username(credentials.username)
+        user = self.user_repository.get_by_username(credentials.username)
         if not user:
             return None
             
-        # In a real database, we'd hash check. Mocking validation for Part 11 demonstration:
-        # We assume the user service returns a valid user if they exist and passwords match basic logic
-        
-        # Verify mocked password check
-        if credentials.password != "password":  # Mock check constraint
+        if not self.verify_password(credentials.password, user.hashed_password):
             return None
             
-        return user
+        return UserResponse(id=user.id, username=user.username, role=user.role)
 
     def create_access_token(self, data: dict, expires_delta_minutes: Optional[int] = None) -> Token:
         to_encode = data.copy()
