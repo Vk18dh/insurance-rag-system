@@ -41,8 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(false);
   };
 
+  const hasAttemptedGuestLogin = React.useRef(false);
+
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !hasAttemptedGuestLogin.current) {
+      hasAttemptedGuestLogin.current = true;
       apiClient.guestLogin().then(() => {
         setIsAuthenticated(true);
         if (pathname === '/login' || pathname === '/register') {

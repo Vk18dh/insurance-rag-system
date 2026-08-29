@@ -116,6 +116,7 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 }
 
 export const apiClient = {
+  fetchWithAuth,
   login: async (username: string, password: string): Promise<Token> => {
     const formData = new URLSearchParams();
     formData.append('username', username);

@@ -18,15 +18,15 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [metricsRes, healthRes] = await Promise.all([
+      const [metricsData, healthData] = await Promise.all([
         apiClient.fetchWithAuth('/admin/metrics'),
         apiClient.fetchWithAuth('/admin/provider-health')
       ]);
 
-      if (!metricsRes.ok || !healthRes.ok) throw new Error("Failed to fetch admin data");
+      if (!metricsData || !healthData) throw new Error("Failed to fetch admin data");
       
-      setMetrics(await metricsRes.json());
-      setProviderHealth(await healthRes.json());
+      setMetrics(metricsData);
+      setProviderHealth(healthData);
     } catch (e: any) {
       setError(e.message);
     } finally {

@@ -8,12 +8,19 @@ from backend.app.dependencies.auth import get_current_user
 from backend.app.schemas.auth import TokenPayload
 from backend.app.repositories.conversation_repository import ConversationRepository
 from backend.app.services.conversation_service import ConversationService
+from backend.app.services.review_service import ReviewService
+from backend.app.repositories.review_repository import ReviewRepository
+from backend.app.schemas.review_task import ReviewTaskResponse
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
 def get_conversation_service(db: Annotated[Session, Depends(get_db)]) -> ConversationService:
     repo = ConversationRepository(db)
     return ConversationService(conversation_repository=repo)
+
+def get_review_service(db: Annotated[Session, Depends(get_db)]) -> ReviewService:
+    repo = ReviewRepository(db)
+    return ReviewService(review_repository=repo)
 
 class ConversationResponse(BaseModel):
     id: str
@@ -66,4 +73,19 @@ async def get_messages(
     if messages is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return [MessageResponse(id=m.id, role=m.role, content=m.content) for m in messages]
+
+@router.get("/{conversation_id}/reviews", response_model=List[ReviewTaskResponse])
+async def get_conversation_reviews(
+    conversation_id: str,
+    current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    conversation_service: ConversationService = Depends(get_conversation_service),
+    review_service: ReviewService = Depends(get_review_service)
+):
+    # Verify ownership
+    conv = conversation_service.get_conversation_by_id(conversation_id, current_user.sub)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    tasks = review_service.list_tasks_by_conversation(conversation_id)
+    return tasks
 

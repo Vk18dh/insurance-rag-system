@@ -60,6 +60,10 @@ class LLMSettings(BaseModel):
     api_key: Optional[str] = Field(default=None, description="Legacy fallback key")
     openrouter_api_key: Optional[str] = Field(default=None, description="OpenRouter API Key")
     groq_api_key: Optional[str] = Field(default=None, description="Groq API Key")
+    groq_api_key_2: Optional[str] = Field(default=None, description="Groq API Key 2")
+    local_model: str = Field(default="qwen2.5:3b", description="Local fallback model")
+    local_llm_base_url: str = Field(default="http://ollama:11434/api/chat", description="Local LLM API base URL")
+    provider_cooldown_seconds: float = Field(default=60.0, ge=0.0, description="Seconds to skip a provider after rate limit")
     failover_enabled: bool = Field(default=True, description="Enable automatic failover")
     retry_backoff_seconds: float = Field(default=1.0, gt=0, description="Backoff between retries")
     timeout_seconds: float = Field(default=30.0, gt=0, description="Per-request timeout")
@@ -198,7 +202,7 @@ class RetrievalSettings(BaseModel):
     """
 
     top_k: int = Field(
-        default=1, gt=0,
+        default=8, gt=0,
         description="Default number of evidence chunks to retrieve.",
     )
     timeout_seconds: float = Field(
@@ -215,15 +219,15 @@ class RetrievalSettings(BaseModel):
     )
     strategy_weights: Dict[str, Dict[str, Any]] = Field(
         default_factory=lambda: {
-            "policy_specific": {"bm25": 0.7, "vector": 0.3, "top_k": 1},
-            "factual":         {"bm25": 0.5, "vector": 0.5, "top_k": 1},
-            "regulatory":      {"bm25": 0.4, "vector": 0.6, "top_k": 1},
-            "comparative":     {"bm25": 0.3, "vector": 0.7, "top_k": 1},
-            "risk":            {"bm25": 0.5, "vector": 0.5, "top_k": 1},
-            "multi_document":  {"bm25": 0.4, "vector": 0.6, "top_k": 1},
-            "general":         {"bm25": 0.5, "vector": 0.5, "top_k": 1},
-            "unknown":         {"bm25": 0.5, "vector": 0.5, "top_k": 1},
-            "default":         {"bm25": 0.5, "vector": 0.5, "top_k": 1},
+            "policy_specific": {"bm25": 0.7, "vector": 0.3, "top_k": 8},
+            "factual":         {"bm25": 0.5, "vector": 0.5, "top_k": 8},
+            "regulatory":      {"bm25": 0.4, "vector": 0.6, "top_k": 8},
+            "comparative":     {"bm25": 0.3, "vector": 0.7, "top_k": 8},
+            "risk":            {"bm25": 0.5, "vector": 0.5, "top_k": 8},
+            "multi_document":  {"bm25": 0.4, "vector": 0.6, "top_k": 8},
+            "general":         {"bm25": 0.5, "vector": 0.5, "top_k": 8},
+            "unknown":         {"bm25": 0.5, "vector": 0.5, "top_k": 8},
+            "default":         {"bm25": 0.5, "vector": 0.5, "top_k": 8},
         },
         description="Per-classification retrieval weight map. 'default' is required.",
     )
@@ -560,10 +564,9 @@ class Phase2Settings(BaseSettings):
         """Inject secrets from environment variables — never from YAML."""
         self.llm.openrouter_api_key = os.environ.get("OPENROUTER_API_KEY")
         self.llm.groq_api_key = os.environ.get("GROQ_API_KEY")
+        self.llm.groq_api_key_2 = os.environ.get("GROQ_API_KEY_2")
         
-        if self.llm.model_name:
-            self.llm.openrouter_model = self.llm.model_name
-            self.llm.groq_model = self.llm.model_name
+        # Legacy model override removed to allow separated openrouter/groq models
         
         if self.llm.provider.lower() == "openrouter" or self.llm.primary_provider.lower() == "openrouter":
             api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("PHASE2__LLM__API_KEY")

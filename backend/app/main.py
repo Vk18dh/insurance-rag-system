@@ -37,6 +37,43 @@ add_exception_handlers(app)
 @app.on_event("startup")
 def startup_event():
     init_db()
+    
+    # Dev seed mechanism
+    dev_expert_pwd = os.environ.get("DEV_EXPERT_PASSWORD")
+    dev_admin_pwd = os.environ.get("DEV_ADMIN_PASSWORD")
+    
+    if dev_expert_pwd or dev_admin_pwd:
+        import logging
+        from backend.app.db.database import SessionLocal
+        from backend.app.schemas.auth import Role
+        from backend.app.repositories.user_repository import UserRepository
+        from backend.app.services.auth_service import AuthService
+        from backend.app.schemas.auth import UserCreate
+        
+        logger = logging.getLogger(__name__)
+        db = SessionLocal()
+        try:
+            repo = UserRepository(db)
+            auth_svc = AuthService(repo)
+            
+            if dev_expert_pwd:
+                if not repo.get_by_username("expert"):
+                    logger.info("Seeding DEV expert account...")
+                    hashed = auth_svc.get_password_hash(dev_expert_pwd)
+                    repo.create(UserCreate(username="expert", password=dev_expert_pwd, role=Role.EXPERT), hashed)
+                    
+            if dev_admin_pwd:
+                if not repo.get_by_username("admin"):
+                    logger.info("Seeding DEV admin account...")
+                    hashed = auth_svc.get_password_hash(dev_admin_pwd)
+                    repo.create(UserCreate(username="admin", password=dev_admin_pwd, role=Role.ADMIN), hashed)
+                    
+            db.commit()
+        except Exception as e:
+            logger.error(f"Failed to seed dev accounts: {e}")
+            db.rollback()
+        finally:
+            db.close()
 
 # Routers
 app.include_router(auth.router, prefix="/api/v1")

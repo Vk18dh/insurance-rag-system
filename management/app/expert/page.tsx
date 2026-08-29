@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
@@ -17,10 +17,11 @@ export default function ExpertDashboard() {
 
   const fetchTasks = async () => {
     try {
-      const response = await apiClient.fetchWithAuth('/expert/reviews');
-      const data = await response.json();
+      const data = await apiClient.fetchWithAuth('/expert/reviews');
+      
+      if (!data) throw new Error("Failed to fetch review tasks");
       setTasks(data);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to fetch review tasks", e);
     } finally {
       setLoading(false);
@@ -66,11 +67,9 @@ export default function ExpertDashboard() {
                     Created {new Date(task.created_at).toLocaleString()}
                   </CardDescription>
                 </div>
-                <Button asChild>
-                  <Link href={`/expert/${task.id}`}>
-                    Review Case
-                  </Link>
-                </Button>
+                <Link href={`/expert/${task.id}`} className={buttonVariants({ variant: "default" })}>
+                  Review Case
+                </Link>
               </CardHeader>
               <CardContent className="px-6 pb-6 pt-0">
                 <div className="text-sm bg-muted p-4 rounded-md">

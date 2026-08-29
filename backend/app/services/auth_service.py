@@ -1,16 +1,12 @@
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from passlib.context import CryptContext
+import bcrypt
 from jose import jwt, JWTError
 
 from backend.app.config.settings import BackendSettings
 from backend.app.core.interfaces import IAuthService, IUserService
 from backend.app.schemas.auth import Token, UserResponse, LoginRequest
-
-# Using bcrypt for password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 from backend.app.repositories.user_repository import UserRepository
 
 class AuthService(IAuthService):
@@ -24,10 +20,13 @@ class AuthService(IAuthService):
         self.access_token_expire_minutes = settings.security.access_token_expire_minutes
         
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        return pwd_context.verify(plain_password, hashed_password)
+        try:
+            return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        except ValueError:
+            return False
 
     def get_password_hash(self, password: str) -> str:
-        return pwd_context.hash(password)
+        return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     def authenticate_user(self, credentials: LoginRequest) -> Optional[UserResponse]:
         user = self.user_repository.get_by_username(credentials.username)

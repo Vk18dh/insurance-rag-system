@@ -12,11 +12,11 @@ class BaseProviderAdapter:
         self.model = model
         self.timeout = timeout
 
-    def call_completions(self, prompt: str, temperature: float, max_tokens: int, system_instruction: str) -> str:
+    def call_completions(self, prompt: str, temperature: float, max_tokens: int, system_instruction: str, response_format: str = None) -> str:
         raise NotImplementedError
 
 class OpenRouterProvider(BaseProviderAdapter):
-    def call_completions(self, prompt: str, temperature: float, max_tokens: int, system_instruction: str) -> str:
+    def call_completions(self, prompt: str, temperature: float, max_tokens: int, system_instruction: str, response_format: str = None) -> str:
         url = "https://openrouter.ai/api/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -34,6 +34,7 @@ class OpenRouterProvider(BaseProviderAdapter):
             "max_tokens": max_tokens,
         }
         
+        
         req = urllib.request.Request(url, data=json.dumps(data).encode("utf-8"), headers=headers, method="POST")
         try:
             print("OPENROUTER CALLING:", url)
@@ -48,7 +49,13 @@ class OpenRouterProvider(BaseProviderAdapter):
         except urllib.error.HTTPError as e:
             err_body = e.read().decode("utf-8")
             print("OPENROUTER HTTP ERROR:", e.code, err_body)
-            if e.code == 429:
+            if e.code in (401, 403):
+                raise QueryProcessingException(f"OpenRouter Authentication Error: {e.code}", step="api_call_auth")
+            elif e.code == 402:
+                raise QueryProcessingException(f"OpenRouter Insufficient Credits: {e.code}", step="api_call_payment")
+            elif e.code == 404:
+                raise QueryProcessingException("OpenRouter Model Not Found", step="api_call_not_found")
+            elif e.code == 429:
                 raise QueryProcessingException("OpenRouter Rate Limit Exceeded", step="api_call_rate_limit")
             elif e.code >= 500:
                 raise QueryProcessingException(f"OpenRouter Server Error: {e.code}", step="api_call_5xx")
@@ -64,7 +71,7 @@ class OpenRouterProvider(BaseProviderAdapter):
             raise QueryProcessingException(f"OpenRouter API execution failure: {e}", step="api_call")
 
 class GroqProvider(BaseProviderAdapter):
-    def call_completions(self, prompt: str, temperature: float, max_tokens: int, system_instruction: str) -> str:
+    def call_completions(self, prompt: str, temperature: float, max_tokens: int, system_instruction: str, response_format: str = None) -> str:
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -81,6 +88,7 @@ class GroqProvider(BaseProviderAdapter):
             "max_tokens": max_tokens,
         }
         
+        
         req = urllib.request.Request(url, data=json.dumps(data).encode("utf-8"), headers=headers, method="POST")
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as response:
@@ -93,7 +101,13 @@ class GroqProvider(BaseProviderAdapter):
         except urllib.error.HTTPError as e:
             err_body = e.read().decode("utf-8")
             print("GROQ HTTP ERROR:", e.code, err_body)
-            if e.code == 429:
+            if e.code in (401, 403):
+                raise QueryProcessingException(f"Groq Authentication Error: {e.code}", step="api_call_auth")
+            elif e.code == 402:
+                raise QueryProcessingException(f"Groq Insufficient Credits: {e.code}", step="api_call_payment")
+            elif e.code == 404:
+                raise QueryProcessingException("Groq Model Not Found", step="api_call_not_found")
+            elif e.code == 429:
                 raise QueryProcessingException("Groq Rate Limit Exceeded", step="api_call_rate_limit")
             elif e.code >= 500:
                 raise QueryProcessingException(f"Groq Server Error: {e.code}", step="api_call_5xx")
@@ -107,3 +121,53 @@ class GroqProvider(BaseProviderAdapter):
         except Exception as e:
             logger.error(f"Groq API call failed: {e}")
             raise QueryProcessingException(f"Groq API execution failure: {e}", step="api_call")
+
+class LocalLLMProvider(BaseProviderAdapter):
+    def __init__(self, base_url: str, model: str, timeout: float):
+        # Local LLM uses base_url instead of api_key
+        super().__init__(api_key="", model=model, timeout=timeout)
+        self.base_url = base_url
+
+    def call_completions(self, prompt: str, temperature: float, max_tokens: int, system_instruction: str, response_format: str = None) -> str:
+        url = self.base_url
+        headers = {
+            "Content-Type": "application/json",
+        }
+        data = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": prompt}
+            ],
+            "stream": False
+        }
+        if response_format == "json":
+            data["format"] = "json" # Force structured json for local models
+        
+        req = urllib.request.Request(url, data=json.dumps(data).encode("utf-8"), headers=headers, method="POST")
+        try:
+            print("LOCAL LLM CALLING:", url)
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                resp_body = response.read().decode("utf-8")
+                resp_json = json.loads(resp_body)
+                if "message" in resp_json and "content" in resp_json["message"]:
+                    return resp_json["message"]["content"]
+                else:
+                    raise QueryProcessingException("Invalid response format from Local LLM", step="api_call")
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode("utf-8")
+            print("LOCAL LLM HTTP ERROR:", e.code, err_body)
+            if e.code == 404:
+                raise QueryProcessingException("Local Model Not Found", step="api_call_not_found")
+            elif e.code >= 500:
+                raise QueryProcessingException(f"Local Server Error: {e.code}", step="api_call_5xx")
+            raise QueryProcessingException(f"Local HTTP Error: {e.code}", step="api_call")
+        except urllib.error.URLError as e:
+            if isinstance(e.reason, TimeoutError):
+                raise QueryProcessingException("Local LLM Timeout", step="api_call_timeout")
+            raise QueryProcessingException(f"Local LLM Connection Error: {e.reason}", step="api_call_connection")
+        except TimeoutError:
+            raise QueryProcessingException("Local LLM Timeout", step="api_call_timeout")
+        except Exception as e:
+            logger.error(f"Local LLM call failed: {e}")
+            raise QueryProcessingException(f"Local LLM execution failure: {e}", step="api_call")

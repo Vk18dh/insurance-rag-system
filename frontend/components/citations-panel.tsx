@@ -37,7 +37,9 @@ export function CitationsPanel({ sources }: { sources: Source[] }) {
                     <FileText className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-mono text-sm font-medium">{source.document}</p>
+                    <p className="truncate font-mono text-sm font-medium" title={source.document}>
+                      {source.document.replace(/\.[^/.]+$/, "").replace(/_/g, " - ")}
+                    </p>
                     <p className="text-xs text-muted-foreground">Page {source.page}</p>
                   </div>
                   <span className={`shrink-0 font-mono text-xs font-medium tabular-nums ${confidenceTone(source.confidence)}`}>

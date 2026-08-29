@@ -24,6 +24,10 @@ class ReviewService:
         tasks = self.repo.list_all(status)
         return [ReviewTaskResponse.model_validate(t) for t in tasks]
 
+    def list_tasks_by_conversation(self, conversation_id: str) -> List[ReviewTaskResponse]:
+        tasks = self.repo.list_by_conversation(conversation_id)
+        return [ReviewTaskResponse.model_validate(t) for t in tasks]
+
     def process_action(self, task_id: str, expert_id: str, action: ReviewTaskAction) -> ReviewTaskResponse:
         task = self.repo.get_by_id(task_id)
         if not task:

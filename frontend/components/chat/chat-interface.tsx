@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowUp, CornerDownLeft, Search, TriangleAlert, User, ShieldCheck } from 'lucide-react';
-import { apiClient, QueryResponse, MessageResponse } from '@/lib/api-client';
+import { apiClient, QueryResponse, MessageResponse, ReviewTaskResponse } from '@/lib/api-client';
 import { AnswerDisplay } from '@/components/answer-display';
 import { AnswerSkeleton } from '@/components/answer-skeleton';
 import { MetricsPanel } from '@/components/metrics-panel';
 import { CitationsPanel } from '@/components/citations-panel';
+import { ReviewStatusBanner } from '@/components/review-status-banner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const EXAMPLES = [
@@ -37,11 +38,56 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
   
   const [messages, setMessages] = useState<MessageResponse[]>(initialMessages);
   const [lastResult, setLastResult] = useState<QueryResponse | null>(null);
+  const [reviewTasks, setReviewTasks] = useState<ReviewTaskResponse[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading, lastResult]);
+    try {
+      const tempResult = sessionStorage.getItem('temp_last_result');
+      if (tempResult) {
+        setLastResult(JSON.parse(tempResult));
+        sessionStorage.removeItem('temp_last_result');
+      }
+    } catch (e) { }
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 150);
+    return () => clearTimeout(timeoutId);
+  }, [messages, loading, lastResult, reviewTasks]);
+
+  useEffect(() => {
+    if (!conversationId) {
+      setReviewTasks([]);
+      return;
+    }
+
+    let isMounted = true;
+    const fetchReviews = async () => {
+      try {
+        const data = await apiClient.getConversationReviews(conversationId);
+        if (isMounted) setReviewTasks(data);
+      } catch (e: any) {
+        if (e.message === 'Failed to fetch' || e.name === 'TypeError') return;
+        console.error("Failed to fetch reviews", e);
+      }
+    };
+
+    fetchReviews();
+
+    const intervalId = setInterval(() => {
+      // Always fetch reviews on interval instead of conditionally based on stale state closures
+      // This is safer and avoids needing to include state in the dependency array
+      fetchReviews();
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [conversationId]);
 
   async function submit(value: string) {
     const q = value.trim();
@@ -64,12 +110,14 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
       // If it's a new conversation, redirect to its URL
       if (!conversationId && data.conversation_id) {
         // We push to the new URL, but we also want to display the result immediately so it doesn't flicker.
+        try { sessionStorage.setItem('temp_last_result', JSON.stringify(data)); } catch(e) {}
         router.push(`/c/${data.conversation_id}`);
+      } else {
+        setLastResult(data);
       }
 
-      setLastResult(data);
       // Backend automatically appends the assistant message, we will fetch it when the page reloads, but for now we append optimistically
-      setMessages(prev => [...prev, { id: data.query_id, role: 'assistant', content: data.final_answer }]);
+      setMessages(prev => [...prev, { id: data.message_id || data.query_id, role: 'assistant', content: data.final_answer }]);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -91,7 +139,7 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 flex-col overflow-hidden min-h-0 relative">
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 pb-32">
         <div className="mx-auto max-w-4xl space-y-8">
           {messages.length === 0 && !loading && !lastResult && (
@@ -132,6 +180,13 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
           {messages.map((msg, idx) => {
             const isLastMessage = idx === messages.length - 1;
             const isAssistant = msg.role === 'assistant';
+            const reviewTask = reviewTasks.find(r => r.message_id === msg.id) || 
+                               (isLastMessage && lastResult?.review_task_id && (lastResult.message_id === msg.id || lastResult.query_id === msg.id) 
+                                ? { status: lastResult.review_status || 'PENDING' } as ReviewTaskResponse : null);
+            
+            const displayContent = (reviewTask?.status === 'CORRECTED' && reviewTask.corrected_answer) 
+              ? reviewTask.corrected_answer 
+              : msg.content;
             
             return (
               <div key={msg.id} className={`flex gap-4 ${isAssistant ? '' : 'flex-row-reverse'}`}>
@@ -141,9 +196,13 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
                 <div className={`flex flex-col gap-2 max-w-[85%] ${isAssistant ? '' : 'items-end'}`}>
                   <div className={`rounded-2xl px-4 py-3 ${isAssistant ? 'glass border border-border/50' : 'bg-primary text-primary-foreground'}`}>
                     <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                      {msg.content}
+                      {displayContent}
                     </div>
                   </div>
+                  
+                  {isAssistant && reviewTask && (
+                    <ReviewStatusBanner status={reviewTask.status} />
+                  )}
                   
                   {isAssistant && isLastMessage && lastResult && (
                     <div className="grid gap-5 lg:grid-cols-[1fr_340px] mt-4 w-full">
@@ -183,9 +242,9 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background to-transparent pt-6 pb-6 px-4 sm:px-6 z-20">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background to-transparent pt-6 pb-6 px-4 sm:px-6 z-20 pointer-events-none">
         <div className="mx-auto w-full max-w-3xl">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="pointer-events-auto">
             <div className="glass group rounded-2xl border border-border/70 p-2 shadow-xl shadow-primary/5 transition-colors focus-within:border-primary/60 bg-background/80 backdrop-blur-xl">
               <div className="flex items-start gap-3 px-3 pt-2.5">
                 <Search className="mt-1 size-5 shrink-0 text-muted-foreground" />

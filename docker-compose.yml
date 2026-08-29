@@ -19,6 +19,7 @@ services:
     depends_on:
       - chromadb
       - postgres
+      - ollama
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
@@ -65,6 +66,14 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
 
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
 volumes:
   chroma_data:
   pg_data:
+  ollama_data:

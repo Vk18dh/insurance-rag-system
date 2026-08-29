@@ -18,12 +18,15 @@ class RetrievedSource(BaseModel):
 class QueryResponse(BaseModel):
     """Standardized frontend response mapping the ResponseBuilder output"""
     query_id: str
+    message_id: Optional[str] = None
     conversation_id: Optional[str] = None
     final_answer: str
     confidence_score: float
     is_safe: bool
     sources: List[RetrievedSource]
     execution_time_ms: float
+    review_task_id: Optional[str] = None
+    review_status: Optional[str] = None
 
 class ComponentHealth(BaseModel):
     status: str

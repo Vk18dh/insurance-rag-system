@@ -45,4 +45,6 @@ async def process_review_action(
     """Process an expert action (APPROVE or CORRECT) on a review task."""
     # current_user.sub is the username, we can use it as expert_id, or we'd need user.id
     # For now, sub is used as expert_id
-    return review_service.process_action(task_id, expert_id=current_user.sub, action=action)
+    result = review_service.process_action(task_id, expert_id=current_user.sub, action=action)
+    review_service.repo.db.commit()
+    return result

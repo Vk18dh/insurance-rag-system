@@ -27,7 +27,7 @@ llm:
   timeout_seconds: 30.0
   max_retries: 3
   temperature: 0.0
-  max_output_tokens: 1024
+  max_output_tokens: 512
 
 # ---------------------------------------------------------------------------
 # Query Understanding Agent settings
@@ -108,7 +108,7 @@ logging:
 # ---------------------------------------------------------------------------
 phase1:
   chroma_collection_name: "insurance_docs"
-  top_k: 8
+  top_k: 2
   bm25_weight: 0.5
   vector_weight: 0.5
   similarity_threshold: 0.4
@@ -136,7 +136,7 @@ phase1:
 # All weights are configuration-driven. No hardcoded values in the codebase.
 # ---------------------------------------------------------------------------
 retrieval:
-  top_k: 4                          # default chunks to retrieve
+  top_k: 2                          # default chunks to retrieve
   timeout_seconds: 10.0             # max seconds before RetrievalTimeoutException
   max_retries: 2                    # retries for transient index failures
   similarity_threshold: 0.3         # minimum combined_score to avoid LOW_SIMILARITY warning
@@ -147,15 +147,15 @@ retrieval:
   # vector: weight for semantic retrieval    [0, 1]
   # top_k : classification-specific top_k override
   strategy_weights:
-    policy_specific: { bm25: 0.7, vector: 0.3, top_k: 4 }   # policy name → BM25 wins
-    factual:         { bm25: 0.5, vector: 0.5, top_k: 4 }   # balanced
-    regulatory:      { bm25: 0.4, vector: 0.6, top_k: 4 }   # concept → vector wins
-    comparative:     { bm25: 0.3, vector: 0.7, top_k: 4 }  # semantic comparison
-    risk:            { bm25: 0.5, vector: 0.5, top_k: 4 }   # balanced
-    multi_document:  { bm25: 0.4, vector: 0.6, top_k: 4 }  # broad retrieval
-    general:         { bm25: 0.5, vector: 0.5, top_k: 4 }   # default balanced
-    unknown:         { bm25: 0.5, vector: 0.5, top_k: 4 }   # safe default
-    default:         { bm25: 0.5, vector: 0.5, top_k: 4 }   # fallback (required)
+    policy_specific: { bm25: 0.7, vector: 0.3, top_k: 2 }   # policy name → BM25 wins
+    factual:         { bm25: 0.5, vector: 0.5, top_k: 2 }   # balanced
+    regulatory:      { bm25: 0.4, vector: 0.6, top_k: 2 }   # concept → vector wins
+    comparative:     { bm25: 0.3, vector: 0.7, top_k: 2 }  # semantic comparison
+    risk:            { bm25: 0.5, vector: 0.5, top_k: 2 }   # balanced
+    multi_document:  { bm25: 0.4, vector: 0.6, top_k: 2 }  # broad retrieval
+    general:         { bm25: 0.5, vector: 0.5, top_k: 2 }   # default balanced
+    unknown:         { bm25: 0.5, vector: 0.5, top_k: 2 }   # safe default
+    default:         { bm25: 0.5, vector: 0.5, top_k: 2 }   # fallback (required)
 
 # ---------------------------------------------------------------------------
 # Part 2 — Evidence ranking weights
@@ -183,7 +183,7 @@ validation:
 # Quality and Structural checks
 # ---------------------------------------------------------------------------
 verification:
-  min_relevance_score: 0.0
+  min_relevance_score: 0.3
   min_evidence_count: 1
   timeout_seconds: 5.0
   max_retries: 2

@@ -17,12 +17,15 @@ export interface RetrievedSource {
 
 export interface QueryResponse {
   query_id: string;
+  message_id?: string | null;
   conversation_id?: string | null;
   final_answer: string;
   confidence_score: number;
   is_safe: boolean;
   sources: RetrievedSource[];
   execution_time_ms: number;
+  review_task_id?: string | null;
+  review_status?: string | null;
 }
 
 export interface QueryRequest {
@@ -53,6 +56,20 @@ export interface MessageResponse {
   id: string;
   role: string;
   content: string;
+}
+
+export interface ReviewTaskResponse {
+  id: string;
+  conversation_id: string;
+  message_id?: string | null;
+  reason: string;
+  status: string; // "PENDING", "IN_REVIEW", "APPROVED", "CORRECTED", "CANCELLED"
+  created_at: string;
+  assigned_expert_id?: string | null;
+  completed_at?: string | null;
+  expert_decision?: string | null; // "APPROVE", "CORRECT"
+  corrected_answer?: string | null;
+  expert_comment?: string | null;
 }
 
 export class ApiError extends Error {
@@ -181,6 +198,10 @@ export const apiClient = {
 
   getMessages: async (conversationId: string): Promise<MessageResponse[]> => {
     return fetchWithAuth(`/conversations/${conversationId}/messages`);
+  },
+
+  getConversationReviews: async (conversationId: string): Promise<ReviewTaskResponse[]> => {
+    return fetchWithAuth(`/conversations/${conversationId}/reviews`);
   },
 
   postQuery: async (request: QueryRequest): Promise<QueryResponse> => {

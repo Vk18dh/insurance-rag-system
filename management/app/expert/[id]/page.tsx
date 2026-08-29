@@ -26,11 +26,10 @@ export default function ReviewTaskDetail({ params }: { params: Promise<{ id: str
 
   const fetchTask = async () => {
     try {
-      const response = await apiClient.fetchWithAuth(`/expert/reviews/${taskId}`);
-      if (!response.ok) {
+      const data = await apiClient.fetchWithAuth(`/expert/reviews/${taskId}`);
+      if (!data) {
         throw new Error("Failed to fetch task");
       }
-      const data = await response.json();
       setTask(data);
       if (data.payload?.generated_answer) {
         setCorrectedAnswer(data.payload.generated_answer);
@@ -51,13 +50,13 @@ export default function ReviewTaskDetail({ params }: { params: Promise<{ id: str
         comment: comment || null
       };
       
-      const response = await apiClient.fetchWithAuth(`/expert/reviews/${taskId}/action`, {
+      const data = await apiClient.fetchWithAuth(`/expert/reviews/${taskId}/action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       
-      if (!response.ok) throw new Error("Action failed");
+      if (!data) throw new Error("Action failed");
       router.push('/expert');
     } catch (e: any) {
       setError(e.message);

@@ -28,6 +28,9 @@ class ReviewRepository:
             query = query.filter(ReviewTask.status == status)
         return query.order_by(ReviewTask.created_at.desc()).all()
 
+    def list_by_conversation(self, conversation_id: str) -> List[ReviewTask]:
+        return self.db.query(ReviewTask).filter(ReviewTask.conversation_id == conversation_id).order_by(ReviewTask.created_at.desc()).all()
+
     def update(self, task: ReviewTask, update_data: ReviewTaskUpdate) -> ReviewTask:
         for key, value in update_data.model_dump(exclude_unset=True).items():
             setattr(task, key, value)

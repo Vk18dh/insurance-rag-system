@@ -52,12 +52,9 @@ async def process_query(
         conv = conversation_service.create_conversation(user_id=current_user.sub, title=title)
         conv_id = conv.id
         
-    # Load history to provide context adapter to Phase 2 (which only accepts strings natively)
-    history_msgs = conversation_service.get_messages(conv_id, current_user.sub)
+    # We pass the raw query directly to the frozen Phase 2 orchestrator. 
+    # Injecting the entire history into the query string corrupts the dense embeddings in the RetrievalAgent.
     enriched_query = request.query
-    if history_msgs and len(history_msgs) > 0:
-        history_context = "\\n".join([f"{m.role.capitalize()}: {m.content}" for m in history_msgs[-5:]])
-        enriched_query = f"Previous Context:\\n{history_context}\\n\\nCurrent Query: {request.query}"
 
     # Persist the user message BEFORE execution
     conversation_service.append_message(conv_id, current_user.sub, "user", request.query)
@@ -65,13 +62,20 @@ async def process_query(
     try:
         request_id = str(uuid.uuid4())
         
+        from starlette.concurrency import run_in_threadpool
         # Pass enriched query into frozen Phase 2
-        result = orchestrator.orchestrate(enriched_query, conversation_id=conv_id)
+        result = await run_in_threadpool(orchestrator.orchestrate, enriched_query, conversation_id=conv_id)
         final_resp = result.shared_context.final_response
         
         if final_resp is None:
             # Fallback if pipeline broke cleanly securely
             errs = " | ".join(result.errors) if hasattr(result, 'errors') and result.errors else "Unknown silent failure"
+            
+            # Check for catastrophic provider/API failure and raise 503 instead of ReviewTask
+            if any(term in errs for term in ["Providers exhausted", "HTTP Error", "API execution failure", "Model Not Found", "Connection Error", "Rate Limit Exceeded", "Authentication Error"]):
+                from fastapi import HTTPException
+                raise HTTPException(status_code=503, detail=f"LLM Provider Service Unavailable: {errs}")
+
             if "VerificationResult failed QA upstream constraints" in errs:
                 final_resp_answer = "I could not find related evidence in the insurance documents to answer your query. I am actively refusing to hallucinate an answer outside my domain bounds."
                 sources = []
@@ -102,7 +106,11 @@ async def process_query(
             is_safe = len(final_resp.warnings) == 0
             
             # If the response explicitly hit the grounded refusal, force Low Confidence natively
-            if "I could not find this information in the provided documents" in final_resp_answer:
+            final_lower = final_resp_answer.lower()
+            if ("i could not find" in final_lower or 
+                "not present" in final_lower or 
+                "not explicitly mentioned" in final_lower or 
+                len(sources) == 0):
                 confidence = 0.0
                 is_safe = True
                 sources = []
@@ -120,6 +128,13 @@ async def process_query(
         elif confidence < threshold:
             escalation_reason = f"Low confidence detected ({confidence} < {threshold})"
 
+        review_task_id = None
+        review_status = None
+
+        # Persist the assistant message AFTER execution (but BEFORE creating the ReviewTask to link it)
+        assistant_msg = conversation_service.append_message(conv_id, current_user.sub, "assistant", final_resp_answer)
+        msg_id = assistant_msg.id if assistant_msg else None
+
         if escalation_reason:
             payload_data = {
                 "query": request.query,
@@ -130,23 +145,25 @@ async def process_query(
             }
             review_task_create = ReviewTaskCreate(
                 conversation_id=conv_id,
-                message_id=None,
+                message_id=msg_id,
                 reason=escalation_reason,
                 payload=payload_data
             )
-            review_service.create_task(review_task_create)
-
-        # Persist the assistant message AFTER execution
-        conversation_service.append_message(conv_id, current_user.sub, "assistant", final_resp_answer)
+            created_task = review_service.create_task(review_task_create)
+            review_task_id = created_task.id
+            review_status = created_task.status.value if hasattr(created_task.status, 'value') else str(created_task.status)
 
         response_model = QueryResponse(
             query_id=result.request_id,
+            message_id=msg_id,
             conversation_id=conv_id,
             final_answer=final_resp_answer,
             confidence_score=confidence,
             is_safe=is_safe,
             sources=sources,
-            execution_time_ms=(time.time() - start) * 1000
+            execution_time_ms=(time.time() - start) * 1000,
+            review_task_id=review_task_id,
+            review_status=review_status
         )
         
         conversation_service.commit()

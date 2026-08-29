@@ -27,8 +27,7 @@ Focused only on:
 - explanations,
 - confidence,
 - warnings,
-- review status,
-- multiple conversations.
+- review status.
 
 ### Management Website
 Focused on:
@@ -48,31 +47,15 @@ Brand
 User Profile / Settings
 ────────────────────────────
 
-Chat History       Main Chat Area
+Ask your insurance question
 
-[New Chat]         Ask your insurance question
+[....................................]
+[ Ask ]
 
-Conversation A     [....................................]
-Conversation B     [ Ask ]
-
-Conversation C     Suggested Questions
+Suggested Questions
 ```
 
-The conversation list must be visually separate from the main chat content.
-
-### Multi-Conversation Requirements
-
-Provide:
-- New Chat,
-- conversation list,
-- active conversation indicator,
-- recent conversations,
-- rename where supported,
-- archive/delete where supported.
-
-Selecting a conversation loads only that conversation.
-
-## 4. User Result
+### Result
 
 ```text
 Answer
@@ -91,23 +74,22 @@ Sources
 Document | Page | Section
 ```
 
-## 5. User Navigation
+## 4. User Navigation
 
 Keep it simple:
 - Home
-- Chat / Ask
-- Chat History
-- Profile/Settings if required.
+- Ask
+- Results/History if required
+- Profile/Settings if required
 
 Do not include:
 - Expert Login
 - Admin Login
 - Management Login
 - Expert Dashboard
-- Admin Dashboard
-- Management Dashboard.
+- Admin Dashboard.
 
-## 6. Expert Review UX
+## 5. Expert Review UX
 
 Management Website → Expert area.
 
@@ -137,12 +119,11 @@ Main
 
 Evidence must be easy to inspect before approval.
 
-## 7. Admin UX
+## 6. Admin UX
 
 Management Website → Admin area.
 
 Recommended:
-
 ```text
 Sidebar
   Dashboard
@@ -162,7 +143,7 @@ Main
 
 Admin UI should prioritize operational information.
 
-## 8. Management Navigation
+## 7. Management Navigation
 
 The Management Website can have role-aware navigation.
 
@@ -189,7 +170,7 @@ Management
 
 Do not expose unauthorized menu items merely as a security measure; backend RBAC remains authoritative.
 
-## 9. Citation UX
+## 8. Citation UX
 
 Citation cards should show, where available:
 - document name,
@@ -199,7 +180,7 @@ Citation cards should show, where available:
 
 Do not display raw JSON.
 
-## 10. Confidence UX
+## 9. Confidence UX
 
 Use:
 - High confidence
@@ -209,7 +190,7 @@ Use:
 
 Confidence must never be presented as legal certainty.
 
-## 11. Warning UX
+## 10. Warning UX
 
 Example:
 
@@ -218,7 +199,7 @@ Example:
 
 The warning should be clear but not alarmist.
 
-## 12. Review Status UX
+## 11. Review Status UX
 
 Possible states:
 - No review required
@@ -227,30 +208,7 @@ Possible states:
 - Expert approved
 - Expert corrected
 
-## 13. LLM Provider UX
-
-The LLM provider mechanism is an infrastructure concern and must remain invisible to normal users.
-
-Do not add:
-- OpenRouter selector,
-- Groq selector,
-- model selector,
-- API key field,
-- "switch API" button,
-- provider status controls for ordinary users.
-
-If OpenRouter fails and Groq handles the request, the UI should continue normally.
-
-Internal Management/Admin observability may show non-secret provider telemetry such as:
-- provider currently preferred,
-- provider switch count,
-- provider availability,
-- latency,
-- failure category.
-
-Do not expose API keys or raw provider error payloads.
-
-## 14. Theme
+## 12. Theme
 
 Use a professional, restrained palette. Centralize theme values in MUI.
 
@@ -263,7 +221,7 @@ Semantic colors:
 
 Do not hardcode colors throughout individual components.
 
-## 15. Typography
+## 13. Typography
 
 Use Inter or an equivalent readable sans-serif.
 
@@ -274,14 +232,11 @@ Clear hierarchy:
 - body,
 - metadata/caption.
 
-## 16. Reusable Components
+## 14. Reusable Components
 
 ### User
 - QueryInput
-- ChatSidebar
-- NewChatButton
-- ConversationList
-- ConversationItem
+- SuggestedQuery
 - AnswerCard
 - ConfidenceIndicator
 - CitationCard
@@ -306,9 +261,8 @@ Clear hierarchy:
 - AlertPanel
 - AuditTable
 - DocumentManager
-- ProviderHealthPanel
 
-## 17. Responsiveness
+## 15. Responsiveness
 
 User Website:
 - desktop,
@@ -320,7 +274,7 @@ Management Website:
 - tablet support,
 - usable on smaller screens.
 
-## 18. Accessibility
+## 16. Accessibility
 
 - sufficient contrast,
 - keyboard navigation,
@@ -329,7 +283,7 @@ Management Website:
 - screen-reader status,
 - no color-only meaning.
 
-## 19. Critical UX Rule
+## 17. Critical UX Rule
 
 The User Website must communicate expert review as a feature state.
 
@@ -341,14 +295,30 @@ Incorrect:
 
 The user does not need access to the Management Website to interact with the expert-review feature.
 
-## 20. Critical Architecture Rule
+## 18. Critical Architecture Rule
 
 > **Two websites, not one. User is separate. Expert + Admin share the Management Website.**
 
 The shared backend connects them functionally, while frontend navigation remains separated.
+## Multi-Conversation Chat UI
 
-## 21. Provider Resilience UX Rule
+The User Website must provide a persistent conversation history interface.
 
-> **Automatic provider switching must be invisible to the normal user.**
+### Desktop Layout
 
-OpenRouter and Groq are implementation providers, not user-facing product choices.
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ Insurance AI                                                 │
+├────────────────┬─────────────────────────────────────────────┤
+│ + New Chat     │ Current Conversation                        │
+│                │                                             │
+│ Recent Chats   │ User: What are the benefits of Jeevan       │
+│                │ Shagun?                                     │
+│ Jeevan Shagun  │                                             │
+│ Bima Jyoti     │ AI: According to the policy...              │
+│ Digi Term      │                                             │
+│                │ [Citations]                                 │
+│                │ [Confidence]                                │
+│                │                                             │
+│                │ Ask a follow-up...                          │
+└────────────────┴─────────────────────────────────────────────┘
