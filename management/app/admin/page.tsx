@@ -39,11 +39,16 @@ export default function AdminDashboard() {
 
   return (
     <div className="container max-w-6xl py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          System observability and metrics.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            System observability and metrics.
+          </p>
+        </div>
+        <a href="/admin/documents" className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2">
+          Manage Documents
+        </a>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

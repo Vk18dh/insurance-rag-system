@@ -66,3 +66,55 @@ async def get_provider_health(current_user: Annotated[TokenPayload, Depends(requ
         "failover_events_24h": 0
     }
 
+from fastapi import UploadFile, File, Form, BackgroundTasks, HTTPException
+from typing import List
+from backend.app.models.document import Document
+from backend.app.schemas.document import DocumentResponse
+from backend.app.services.ingestion_service import process_document_background
+import os
+import uuid
+import shutil
+
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "data", "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@router.get("/documents", response_model=List[DocumentResponse])
+async def list_documents(
+    current_user: Annotated[TokenPayload, Depends(require_admin_role)],
+    db: Session = Depends(get_db)
+):
+    """List all uploaded policy documents."""
+    return db.query(Document).order_by(Document.ingestion_timestamp.desc().nulls_last()).all()
+
+@router.post("/documents", response_model=DocumentResponse, status_code=202)
+async def upload_document(
+    current_user: Annotated[TokenPayload, Depends(require_admin_role)],
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...),
+    document_name: str = Form(...),
+    document_type: str = Form(None),
+    source: str = Form(None),
+    version: str = Form(None)
+):
+    """Upload a PDF document and trigger background ingestion."""
+    if not file.filename.lower().endswith(".pdf") or file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+
+    new_doc = Document(
+        document_name=document_name,
+        document_type=document_type,
+        source=source,
+        version=version
+    )
+    db.add(new_doc)
+    db.commit()
+    db.refresh(new_doc)
+
+    file_path = os.path.join(UPLOAD_DIR, f"{new_doc.id}.pdf")
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    background_tasks.add_task(process_document_background, new_doc.id, file_path)
+
+    return new_doc

@@ -10,8 +10,8 @@ def mock_settings():
     settings = Phase2Settings()
     settings.llm.primary_provider = "openrouter"
     settings.llm.secondary_provider = "groq"
-    settings.llm.openrouter_api_key = "test-or-key"
-    settings.llm.groq_api_key = "test-groq-key"
+    settings.llm.openrouter_api_key = "MOCK_OPENROUTER_API_KEY_PLACEHOLDER"
+    settings.llm.groq_api_key = "MOCK_GROQ_API_KEY_PLACEHOLDER"
     settings.llm.failover_enabled = True
     settings.llm.retry_backoff_seconds = 0.01
     settings.llm.max_retries = 3

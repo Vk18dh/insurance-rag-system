@@ -25,6 +25,7 @@ def init_db():
         from backend.app.models.conversation import Conversation
         from backend.app.models.message import Message
         from backend.app.models.review_task import ReviewTask
+        from backend.app.models.document import Document
 
         Base.metadata.create_all(bind=engine)
         logger.info("Application database initialized successfully.")

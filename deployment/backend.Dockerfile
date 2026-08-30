@@ -3,7 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install dependencies required for ChromaDB potentially and general bindings
-RUN apt-get update && apt-get install -y build-essential curl
+RUN apt-get update && apt-get install -y build-essential curl libxcb1 libgl1 libglib2.0-0
 
 # We copy the unified root requirements.txt first if Phase 1/Phase 2 exist
 # Assuming the user's workspace contains root `requirements.txt` mapping Phase1+2

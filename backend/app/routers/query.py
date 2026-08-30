@@ -110,6 +110,9 @@ async def process_query(
             if ("i could not find" in final_lower or 
                 "not present" in final_lower or 
                 "not explicitly mentioned" in final_lower or 
+                "could not be found" in final_lower or
+                "absent" in final_lower or
+                "does not appear to exist" in final_lower or
                 len(sources) == 0):
                 confidence = 0.0
                 is_safe = True
