@@ -35,6 +35,8 @@ async def get_review(
     """Get a specific review task by ID."""
     return review_service.get_task(task_id)
 
+from backend.app.services.audit_service import AuditService
+
 @router.post("/reviews/{task_id}/action", response_model=ReviewTaskResponse)
 async def process_review_action(
     task_id: str,
@@ -47,4 +49,15 @@ async def process_review_action(
     # For now, sub is used as expert_id
     result = review_service.process_action(task_id, expert_id=current_user.sub, action=action)
     review_service.repo.db.commit()
+    
+    audit_action = "REVIEW_TASK_APPROVED" if action.decision == "APPROVE" else "REVIEW_TASK_CORRECTED"
+    AuditService.log_event(
+        action=audit_action,
+        actor_id=current_user.sub,
+        role=current_user.role,
+        target_id=task_id,
+        outcome="SUCCESS",
+        db=review_service.repo.db
+    )
+    
     return result

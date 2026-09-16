@@ -10,6 +10,10 @@ from backend.app.models.user import User
 from backend.app.models.message import Message
 from backend.app.models.review_task import ReviewTask
 from backend.app.config.settings import BackendSettings
+from backend.app.services.audit_service import AuditService
+from backend.app.repositories.audit_repository import AuditRepository
+from backend.app.schemas.audit import AuditLogPaginated
+from typing import Optional
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -20,6 +24,20 @@ async def admin_dashboard(current_user: Annotated[TokenPayload, Depends(require_
     Only accessible by ADMIN role.
     """
     return {"message": "Welcome to the admin dashboard", "user": current_user.sub}
+
+@router.get("/audit", response_model=AuditLogPaginated)
+async def list_audit_logs(
+    current_user: Annotated[TokenPayload, Depends(require_admin_role)],
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 50,
+    action: Optional[str] = None,
+    actor_id: Optional[str] = None
+):
+    """Retrieve paginated, filtered audit logs."""
+    repo = AuditRepository(db)
+    items, total = repo.list(skip=skip, limit=limit, action=action, actor_id=actor_id)
+    return AuditLogPaginated(items=items, total=total)
 
 @router.get("/metrics")
 async def get_metrics(
@@ -115,6 +133,15 @@ async def upload_document(
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    background_tasks.add_task(process_document_background, new_doc.id, file_path)
+    AuditService.log_event(
+        action="DOCUMENT_UPLOADED",
+        actor_id=current_user.sub,
+        role=current_user.role,
+        target_id=new_doc.id,
+        outcome="SUCCESS",
+        safe_metadata={"filename": file.filename, "document_name": document_name}
+    )
+
+    background_tasks.add_task(process_document_background, new_doc.id, file_path, current_user.sub)
 
     return new_doc

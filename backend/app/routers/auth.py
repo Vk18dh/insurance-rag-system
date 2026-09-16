@@ -9,6 +9,7 @@ from backend.app.dependencies.db import get_db
 from sqlalchemy.orm import Session
 from backend.app.services.user_service import UserService
 from backend.app.repositories.user_repository import UserRepository
+from backend.app.services.audit_service import AuditService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -19,13 +20,20 @@ def get_user_service(db: Annotated[Session, Depends(get_db)]) -> UserService:
 @router.post("/login", response_model=Token)
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
-    auth_service: IAuthService = Depends(get_auth_service)
+    auth_service: IAuthService = Depends(get_auth_service),
+    db: Session = Depends(get_db)
 ):
     """OAuth2 compatible token login, required for Swagger UI integration."""
     creds = LoginRequest(username=form_data.username, password=form_data.password)
     user = auth_service.authenticate_user(creds)
     
     if not user:
+        AuditService.log_event(
+            action="LOGIN_FAILURE",
+            outcome="FAILURE",
+            safe_metadata={"username": form_data.username},
+            db=db
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -35,6 +43,16 @@ async def login(
     access_token = auth_service.create_access_token(
         data={"sub": user.id, "role": user.role.value}
     )
+    
+    AuditService.log_event(
+        action="LOGIN_SUCCESS",
+        actor_id=user.id,
+        role=user.role.value,
+        outcome="SUCCESS",
+        safe_metadata={"username": user.username},
+        db=db
+    )
+    
     return access_token
 
 @router.post("/register", response_model=UserResponse)
@@ -52,5 +70,15 @@ async def register(
     hashed_password = auth_service.get_password_hash(request.password)
     user = user_service.create_user_with_hash(request, hashed_password)
     user_service.user_repository.db.commit()
+    
+    AuditService.log_event(
+        action="REGISTER",
+        actor_id=user.id,
+        role=user.role.value,
+        outcome="SUCCESS",
+        safe_metadata={"username": user.username},
+        db=user_service.user_repository.db
+    )
+    
     return user
 

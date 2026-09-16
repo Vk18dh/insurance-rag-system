@@ -121,8 +121,13 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
   if (!response.ok) {
     if (response.status === 401) {
       removeToken();
-      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
-        window.location.href = '/';
+      if (typeof window !== 'undefined') {
+        if (window.location.pathname !== '/') {
+          window.location.href = '/';
+        } else {
+          // If already on '/', reload the page so AuthProvider re-authenticates as guest
+          window.location.reload();
+        }
       }
     }
     const errorData = await response.json().catch(() => null);

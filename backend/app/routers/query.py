@@ -14,6 +14,7 @@ from backend.app.repositories.conversation_repository import ConversationReposit
 from backend.app.services.review_service import ReviewService
 from backend.app.repositories.review_repository import ReviewRepository
 from backend.app.schemas.review_task import ReviewTaskCreate
+from backend.app.services.audit_service import AuditService
 from backend.app.config.settings import BackendSettings
 from phase2.orchestrator.orchestrator import AgentOrchestrator
 
@@ -31,17 +32,40 @@ router = APIRouter(prefix="/query", tags=["query"])
 async def process_query(
     request: QueryRequest,
     current_user: Annotated[TokenPayload, Depends(get_current_user)],
-    orchestrator: AgentOrchestrator = Depends(get_agent_orchestrator),
+    db: Session = Depends(get_db),
     conversation_service: ConversationService = Depends(get_conversation_service),
-    review_service: ReviewService = Depends(get_review_service)
+    review_service: ReviewService = Depends(get_review_service),
+    orchestrator: AgentOrchestrator = Depends(get_agent_orchestrator)
 ):
     """
     Main entry point for AI analysis mappings. 
     Strictly intercepts REST and passes control downward to the Phase 2 AgentOrchestrator.
     """
     start = time.time()
+    from backend.app.services.guardrail_service import GuardrailService
     
-    # 1. Manage Conversation Persistence
+    # --- 1. INPUT GUARDRAILS ---
+    is_safe_input, input_block_reason = GuardrailService.check_input(request.query)
+    if not is_safe_input:
+        AuditService.log_event(
+            action="GUARDRAIL_INPUT_BLOCKED",
+            actor_id=current_user.sub,
+            role=current_user.role,
+            outcome="FAILURE",
+            safe_metadata={"reason": input_block_reason},
+            db=db
+        )
+        return QueryResponse(
+            query_id=str(uuid.uuid4()),
+            message_id=None,
+            conversation_id=None,
+            final_answer="I cannot fulfill this request. " + input_block_reason,
+            confidence_score=0.0,
+            is_safe=False,
+            sources=[],
+            execution_time_ms=(time.time() - start) * 1000
+        )
+    
     if request.conversation_id:
         conv = conversation_service.get_conversation_by_id(request.conversation_id, current_user.sub)
         if not conv:
@@ -52,18 +76,30 @@ async def process_query(
         conv = conversation_service.create_conversation(user_id=current_user.sub, title=title)
         conv_id = conv.id
         
-    # We pass the raw query directly to the frozen Phase 2 orchestrator. 
-    # Injecting the entire history into the query string corrupts the dense embeddings in the RetrievalAgent.
-    enriched_query = request.query
-
     # Persist the user message BEFORE execution
     conversation_service.append_message(conv_id, current_user.sub, "user", request.query)
+    
+    enriched_query = request.query
+    
+    conversation_service.commit()
+    AuditService.log_event(
+        action="QUERY_SUBMITTED",
+        actor_id=current_user.sub,
+        role=current_user.role,
+        outcome="SUCCESS",
+        safe_metadata={
+            "query_hash": AuditService.hash_query(request.query),
+            "conversation_id": conv_id
+        },
+        db=db
+    )
 
     try:
         request_id = str(uuid.uuid4())
         
         from starlette.concurrency import run_in_threadpool
         # Pass enriched query into frozen Phase 2
+        # This takes a long time, but we don't hold a DB connection anymore!
         result = await run_in_threadpool(orchestrator.orchestrate, enriched_query, conversation_id=conv_id)
         final_resp = result.shared_context.final_response
         
@@ -121,6 +157,22 @@ async def process_query(
                 # Safe attribution pulling metadata bounds natively
                 confidence = getattr(final_resp.metadata, 'confidence', 0.95) if hasattr(final_resp, 'metadata') else 0.95
 
+        # --- 2. OUTPUT GUARDRAILS ---
+        is_safe_output, output_block_reason = GuardrailService.check_output(final_resp_answer, request.query, len(sources) > 0)
+        if not is_safe_output:
+            AuditService.log_event(
+                action="GUARDRAIL_OUTPUT_BLOCKED",
+                actor_id=current_user.sub,
+                role=current_user.role,
+                outcome="FAILURE",
+                safe_metadata={"reason": output_block_reason, "conversation_id": conv_id},
+                db=db
+            )
+            final_resp_answer = "I cannot fulfill this request. " + output_block_reason
+            confidence = 0.0
+            is_safe = False
+            sources = []
+
         # Automated Escalation Logic
         settings = BackendSettings.load()
         threshold = settings.app.escalation_confidence_threshold
@@ -134,7 +186,7 @@ async def process_query(
         review_task_id = None
         review_status = None
 
-        # Persist the assistant message AFTER execution (but BEFORE creating the ReviewTask to link it)
+        # Persist the assistant message AFTER execution
         assistant_msg = conversation_service.append_message(conv_id, current_user.sub, "assistant", final_resp_answer)
         msg_id = assistant_msg.id if assistant_msg else None
 
@@ -155,6 +207,17 @@ async def process_query(
             created_task = review_service.create_task(review_task_create)
             review_task_id = created_task.id
             review_status = created_task.status.value if hasattr(created_task.status, 'value') else str(created_task.status)
+            
+            conversation_service.commit()
+            AuditService.log_event(
+                action="REVIEW_TASK_CREATED",
+                actor_id=current_user.sub,
+                role=current_user.role,
+                target_id=review_task_id,
+                outcome="SUCCESS",
+                safe_metadata={"conversation_id": conv_id},
+                db=db
+            )
 
         response_model = QueryResponse(
             query_id=result.request_id,

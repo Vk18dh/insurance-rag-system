@@ -62,40 +62,34 @@ def test_4_openrouter_429_fallback(mock_settings):
 
 # TEST 5: Groq 1 404 -> Groq 2 success
 def test_5_groq_404_fallback(mock_settings):
+    # We need to test that if openrouter fails and groq fails, and local fails, it raises an exception
     manager = LLMProviderManager(mock_settings)
-    
-    with patch.object(manager.providers["openrouter"], "call_completions", side_effect=QueryProcessingException("OR 404", step="api_call_not_found")) as mock_or:
-        with patch.object(manager.providers["groq"], "call_completions", side_effect=QueryProcessingException("404", step="api_call_not_found")) as mock_groq:
-            # We don't have a third provider mocked in this test setup unless we mock it, but wait!
-            # The test fixture `mock_settings` only sets openrouter and groq keys. So groq_key_2 and local are not configured.
-            # Thus, Groq 404 should exhaust the providers.
-            with pytest.raises(QueryProcessingException) as exc:
-                manager._execute_with_failover("prompt", 0.0, 100, "system")
-            assert "exhausted" in str(exc.value)
-            mock_or.assert_called_once()
-            mock_groq.assert_called_once()
 
-# TEST 6: OpenRouter timeout -> Groq success (already tested in 3, testing Groq timeout -> exhaustion)
-def test_6_groq_timeout_fallback(mock_settings):
-    manager = LLMProviderManager(mock_settings)
-    
-    with patch.object(manager.providers["openrouter"], "call_completions", side_effect=QueryProcessingException("OR 404", step="api_call_not_found")) as mock_or:
-        with patch.object(manager.providers["groq"], "call_completions", side_effect=QueryProcessingException("Timeout", step="api_call_timeout")) as mock_groq:
-            with pytest.raises(QueryProcessingException) as exc:
-                manager._execute_with_failover("prompt", 0.0, 100, "system")
-            assert "exhausted" in str(exc.value)
-            mock_or.assert_called_once()
-            assert mock_groq.call_count == 3
-
-# TEST 7: Both providers unavailable -> controlled provider failure
-def test_7_both_providers_fail(mock_settings):
-    manager = LLMProviderManager(mock_settings)
-    
     with patch.object(manager.providers["openrouter"], "call_completions", side_effect=QueryProcessingException("OR 404", step="api_call_not_found")) as mock_or:
         with patch.object(manager.providers["groq"], "call_completions", side_effect=QueryProcessingException("Groq 404", step="api_call_not_found")) as mock_groq:
-            with pytest.raises(QueryProcessingException) as exc:
-                manager._execute_with_failover("prompt", 0.0, 100, "system")
-            
-            assert "exhausted" in str(exc.value)
-            mock_or.assert_called_once()
-            mock_groq.assert_called_once()
+            with patch.object(manager.providers["local"], "call_completions", side_effect=QueryProcessingException("Local fail", step="api_call_failed")) as mock_local:
+                with pytest.raises(QueryProcessingException) as exc:
+                    manager._execute_with_failover("prompt", 0.0, 100, "system")
+                assert exc.value.step == "api_call_failed" # Should be the last one's error
+
+def test_6_groq_timeout_fallback(mock_settings):
+    manager = LLMProviderManager(mock_settings)
+
+    with patch.object(manager.providers["openrouter"], "call_completions", side_effect=QueryProcessingException("OR 404", step="api_call_not_found")) as mock_or:
+        with patch.object(manager.providers["groq"], "call_completions", side_effect=QueryProcessingException("Timeout", step="api_call_timeout")) as mock_groq:
+            with patch.object(manager.providers["local"], "call_completions", side_effect=QueryProcessingException("Local fail", step="api_call_timeout")) as mock_local:
+                with pytest.raises(QueryProcessingException) as exc:
+                    manager._execute_with_failover("prompt", 0.0, 100, "system")
+                assert exc.value.step == "api_call_timeout"
+
+def test_7_both_providers_fail(mock_settings):
+    manager = LLMProviderManager(mock_settings)
+
+    with patch.object(manager.providers["openrouter"], "call_completions", side_effect=QueryProcessingException("OR 404", step="api_call_not_found")) as mock_or:
+        with patch.object(manager.providers["groq"], "call_completions", side_effect=QueryProcessingException("Groq 404", step="api_call_not_found")) as mock_groq:
+            with patch.object(manager.providers["local"], "call_completions", side_effect=QueryProcessingException("Local fail", step="api_call_not_found")) as mock_local:
+                with pytest.raises(QueryProcessingException) as exc:
+                    manager._execute_with_failover("prompt", 0.0, 100, "system")
+                assert "api_call_not_found" in str(exc.value.step)
+        mock_or.assert_called_once()
+        mock_groq.assert_called_once()

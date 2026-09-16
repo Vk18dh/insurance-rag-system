@@ -21,6 +21,7 @@ from ingest import process_pdf, post_process_elements
 from index import chunk_elements, _tokenize
 from backend.app.models.document import Document, DocumentStatus
 from backend.app.db.database import SessionLocal
+from backend.app.services.audit_service import AuditService
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 import threading
 bm25_lock = threading.Lock()
 
-def process_document_background(document_id: str, file_path: str):
+def process_document_background(document_id: str, file_path: str, actor_id: str = None):
     """
     Background task to process a single uploaded PDF.
     Extracts text, chunks, embeds, and updates ChromaDB and BM25.
@@ -76,12 +77,28 @@ def process_document_background(document_id: str, file_path: str):
             document.ingestion_timestamp = datetime.now(timezone.utc)
             db_session.commit()
             logger.info(f"Successfully processed document {document_id}")
+            
+            AuditService.log_event(
+                action="DOCUMENT_INGESTION_SUCCESS",
+                actor_id=actor_id,
+                target_id=document_id,
+                outcome="SUCCESS",
+                safe_metadata={"document_name": document.document_name, "chunk_count": len(chunks)}
+            )
 
         except Exception as e:
             logger.error(f"Failed to process document {document_id}: {e}", exc_info=True)
             document.status = DocumentStatus.FAILED
             document.error_message = str(e)
             db_session.commit()
+            
+            AuditService.log_event(
+                action="DOCUMENT_INGESTION_FAILED",
+                actor_id=actor_id,
+                target_id=document_id,
+                outcome="FAILURE",
+                safe_metadata={"error": str(e)}
+            )
 
 
 def _append_to_chromadb(chunks: list[dict], document_id: str):

@@ -52,11 +52,8 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
   }, []);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 150);
-    return () => clearTimeout(timeoutId);
-  }, [messages, loading, lastResult, reviewTasks]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+  }, [messages.length, loading, lastResult]);
 
   useEffect(() => {
     if (!conversationId) {
@@ -140,7 +137,7 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden min-h-0 relative">
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 pb-32">
+      <div className="flex-1 overflow-y-auto overscroll-y-none px-4 sm:px-6 py-6 pb-32" style={{ overflowAnchor: 'none' }}>
         <div className="mx-auto max-w-4xl space-y-8">
           {messages.length === 0 && !loading && !lastResult && (
             <motion.div

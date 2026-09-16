@@ -18,6 +18,7 @@ export default function DocumentManagerPage() {
   const fetchDocuments = async () => {
     try {
       setLoading(true);
+      setError('');
       const data = await apiClient.fetchWithAuth('/admin/documents');
       if (Array.isArray(data)) {
         setDocuments(data);

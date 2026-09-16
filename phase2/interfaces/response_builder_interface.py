@@ -20,7 +20,7 @@ from phase2.models.contradiction_result import ContradictionResult
 class ICitationService(ABC):
     """Generates structural citations mapping directly back to Verification boundaries natively cleanly."""
     @abstractmethod
-    def build_citations(self, reasoning_result: ReasoningResult) -> List[Citation]:
+    def build_citations(self, reasoning_result: ReasoningResult, verification_result: VerificationResult) -> List[Citation]:
         """Extract citations enforcing traceability smoothly scaling bounds explicitly safely natively."""
         pass
 
@@ -48,7 +48,7 @@ class IExplanationFormatter(ABC):
 class IResponseFormatter(ABC):
     """Extracts direct answers seamlessly tracking grammar boundaries dynamically matching defaults natively."""
     @abstractmethod
-    def format_answer(self, reasoning_result: ReasoningResult) -> str:
+    def format_answer(self, reasoning_result: ReasoningResult, citations: List[Citation] = None) -> str:
         """Constructs explicitly tracked natural answers handling fallbacks smoothly exactly dynamically."""
         pass
 

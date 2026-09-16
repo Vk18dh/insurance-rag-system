@@ -4,15 +4,10 @@ from backend.app.main import app
 from backend.app.dependencies.auth import get_current_user, require_admin_role
 import io
 
-def test_user_cannot_access_documents():
-    # Override auth to simulate standard user
-    app.dependency_overrides[require_admin_role] = lambda: None # This will fail dependency validation since require_admin_role actually throws 403, but here we can just mock the 403 or use a client with user token.
-    # Actually, a better way is to test the actual endpoint with a user token.
-
-    client = TestClient(app)
-    
-    # login as user
-    response = client.post("/api/v1/auth/login", data={"username": "user", "password": "user"})
+def test_user_cannot_access_documents(client):
+    # register and login as user
+    client.post("/api/v1/auth/register", json={"username": "testuser_doc", "password": "userpass", "role": "user"})
+    response = client.post("/api/v1/auth/login", data={"username": "testuser_doc", "password": "userpass"})
     assert response.status_code == 200
     token = response.json()["access_token"]
     
@@ -24,11 +19,10 @@ def test_user_cannot_access_documents():
     post_res = client.post("/api/v1/admin/documents", headers=headers, files={"file": ("test.pdf", b"pdf data", "application/pdf")})
     assert post_res.status_code == 403
 
-def test_admin_can_access_documents():
-    client = TestClient(app)
-    
-    # login as admin
-    response = client.post("/api/v1/auth/login", data={"username": "admin", "password": "admin"})
+def test_admin_can_access_documents(client):
+    # register and login as admin
+    client.post("/api/v1/auth/register", json={"username": "test_admin_doc", "password": "adminpass", "role": "admin"})
+    response = client.post("/api/v1/auth/login", data={"username": "test_admin_doc", "password": "adminpass"})
     assert response.status_code == 200
     token = response.json()["access_token"]
     
@@ -38,10 +32,11 @@ def test_admin_can_access_documents():
     assert get_res.status_code == 200
     assert isinstance(get_res.json(), list)
 
-def test_upload_invalid_file_extension():
-    client = TestClient(app)
-    
-    response = client.post("/api/v1/auth/login", data={"username": "admin", "password": "admin"})
+def test_upload_invalid_file_extension(client):
+    # register and login as admin
+    client.post("/api/v1/auth/register", json={"username": "test_admin_doc2", "password": "adminpass2", "role": "admin"})
+    response = client.post("/api/v1/auth/login", data={"username": "test_admin_doc2", "password": "adminpass2"})
+    assert response.status_code == 200
     token = response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
     

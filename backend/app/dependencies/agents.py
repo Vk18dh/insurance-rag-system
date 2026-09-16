@@ -4,18 +4,9 @@ from phase2.orchestrator.orchestrator import AgentOrchestrator
 
 
 @functools.lru_cache()
-def get_agent_orchestrator() -> AgentOrchestrator:
-    """
-    Dependency generating or returning the singleton Agent Orchestrator.
-    This guarantees that the heavy AI initialization doesn't occur blocking the event loop on every request.
-    
-    Since Part 11 mandates strict zero modifications to Phase 2, we initialize it using Phase 2's native structure.
-    """
+def _get_cached_agents_map():
     settings = get_settings()
     
-    # In a full deployment, these agents would be wired via absolute imports directly from Phase 2.
-    # To keep this testable and avoid circular/missing imports if Phase 2 parts are detached,
-    # we instantiate it gracefully here using Phase 2's expected signature.
     from phase2.agents.query_agent import QueryUnderstandingAgentFactory
     from phase2.services import QueryProcessingServiceFactory, RetrievalServiceFactory
     from phase2.agents.retrieval_agent import RetrievalAgentFactory
@@ -25,12 +16,6 @@ def get_agent_orchestrator() -> AgentOrchestrator:
     from phase2.agents.contradiction_agent import ContradictionAgentFactory
     from phase2.agents.response_builder import ResponseBuilderFactory
     from phase2.services.query_processing_service import FallbackQueryAnalyzer
-    from phase2.orchestrator.workflow_engine import WorkflowEngine
-    from phase2.orchestrator.execution_manager import ExecutionManager
-    from phase2.orchestrator.context_manager import ContextManager
-    from phase2.orchestrator.retry_manager import RetryManager
-    from phase2.orchestrator.timeout_manager import TimeoutManager
-    from phase2.orchestrator.metrics_collector import MetricsCollector
 
     query_service = QueryProcessingServiceFactory.create(settings)
     query_agent = QueryUnderstandingAgentFactory.create(settings, query_service)
@@ -39,11 +24,6 @@ def get_agent_orchestrator() -> AgentOrchestrator:
     retrieval_agent = RetrievalAgentFactory.create(settings, retrieval_service)
     verification_agent = VerificationAgentFactory.create(settings)
     
-    # We load the real analyzer or fallback depending on what factory chooses, but
-    # for simplicity if a generic analyzer interface is needed, FallbackQueryAnalyzer is a stand-in
-    # Wait, usually the factory doesn't need an explicit 'analyzer' if it creates it.
-    # The E2E test passed FallbackQueryAnalyzer manually. Let's use it for the LLM based agents to ensure it loads natively.
-    # Use GenericOpenRouterExecutor for reasoning if openrouter provider is set
     if settings.llm.provider.lower() in ("openrouter", "failover") or settings.llm.primary_provider.lower() in ("openrouter", "groq"):
         from phase2.services.llm_provider_manager import LLMProviderManager
         llm_analyzer = LLMProviderManager(settings=settings)
@@ -64,7 +44,24 @@ def get_agent_orchestrator() -> AgentOrchestrator:
         "ContradictionAgent": contradiction_agent,
         "ResponseBuilder": response_builder
     }
+    return agents_map
+
+def get_agent_orchestrator() -> AgentOrchestrator:
+    """
+    Dependency generating a fresh Agent Orchestrator per request.
+    This guarantees that the heavy AI initialization is cached in _get_cached_agents_map,
+    but stateful components like ContextManager and MetricsCollector are isolated per request.
+    """
+    settings = get_settings()
+    agents_map = _get_cached_agents_map()
     
+    from phase2.orchestrator.workflow_engine import WorkflowEngine
+    from phase2.orchestrator.execution_manager import ExecutionManager
+    from phase2.orchestrator.context_manager import ContextManager
+    from phase2.orchestrator.retry_manager import RetryManager
+    from phase2.orchestrator.timeout_manager import TimeoutManager
+    from phase2.orchestrator.metrics_collector import MetricsCollector
+
     workflow_engine = WorkflowEngine(settings.orchestrator.execution_sequence)
     context_manager = ContextManager()
     metrics_collector = MetricsCollector()

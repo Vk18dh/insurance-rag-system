@@ -45,9 +45,9 @@ class ResponseComposer(IResponseComposer):
         
         # 1. Gather mapped UI elements independently safely natively
         warnings = self._warn_svc.build_warnings(risk_result, contradiction_result)
-        citations = self._cit_svc.build_citations(reasoning_result)
+        citations = self._cit_svc.build_citations(reasoning_result, verification_result)
         explanation = self._exp_fmt.format_explanation(reasoning_result)
-        answer = self._resp_fmt.format_answer(reasoning_result)
+        answer = self._resp_fmt.format_answer(reasoning_result, citations)
         
         # 2. Extract telemetry explicitly securely natively safely
         query_ctx = verification_result.retrieval_result.query_context if verification_result and getattr(verification_result, 'retrieval_result', None) else None

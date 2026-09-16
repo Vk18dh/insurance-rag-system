@@ -46,14 +46,30 @@ async def require_user_role(current_user: Annotated[TokenPayload, Depends(get_cu
     # ANY authenticated user can access user endpoints
     return current_user
 
+from backend.app.services.audit_service import AuditService
+
 async def require_expert_role(current_user: Annotated[TokenPayload, Depends(get_current_user)]):
     """RBAC validation dependency for expert."""
     if current_user.role not in [Role.EXPERT.value, Role.ADMIN.value]:
+        AuditService.log_event(
+            action="RBAC_DENIED",
+            actor_id=current_user.sub,
+            role=current_user.role,
+            outcome="FAILURE",
+            safe_metadata={"required_role": "expert_or_admin"}
+        )
         raise HTTPException(status_code=403, detail="Not enough privileges")
     return current_user
 
 async def require_admin_role(current_user: Annotated[TokenPayload, Depends(get_current_user)]):
     """RBAC validation dependency for admin."""
     if current_user.role != Role.ADMIN.value:
+        AuditService.log_event(
+            action="RBAC_DENIED",
+            actor_id=current_user.sub,
+            role=current_user.role,
+            outcome="FAILURE",
+            safe_metadata={"required_role": "admin"}
+        )
         raise HTTPException(status_code=403, detail="Not enough privileges")
     return current_user

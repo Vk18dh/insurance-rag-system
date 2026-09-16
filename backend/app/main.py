@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.config.settings import BackendSettings
-from backend.app.routers import query, auth, conversations, expert, admin
+from backend.app.routers import query, auth, conversations, expert, admin, evaluation
 from backend.app.middleware.logging import HTTPLoggingMiddleware
 from backend.app.core.exceptions import add_exception_handlers
 from backend.app.db.database import init_db
@@ -81,6 +81,7 @@ app.include_router(query.router, prefix="/api/v1")
 app.include_router(conversations.router, prefix="/api/v1")
 app.include_router(expert.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
+app.include_router(evaluation.router, prefix="/api/v1")
 
 @app.get("/api/v1/health")
 async def health_check():

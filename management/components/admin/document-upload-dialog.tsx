@@ -37,7 +37,7 @@ export default function DocumentUploadDialog({ onUploadSuccess }: { onUploadSucc
       if (source) formData.append('source', source);
       if (version) formData.append('version', version);
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       if (!token) throw new Error("Not authenticated");
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/documents`, {

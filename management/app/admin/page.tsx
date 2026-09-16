@@ -46,9 +46,17 @@ export default function AdminDashboard() {
             System observability and metrics.
           </p>
         </div>
-        <a href="/admin/documents" className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2">
-          Manage Documents
-        </a>
+        <div className="space-x-2">
+          <a href="/admin/evaluation" className="bg-primary/20 text-primary hover:bg-primary/30 inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2">
+            RAG Evaluations
+          </a>
+          <a href="/admin/audit" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2">
+            Security Audit
+          </a>
+          <a href="/admin/documents" className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2">
+            Manage Documents
+          </a>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

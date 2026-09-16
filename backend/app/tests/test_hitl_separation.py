@@ -19,11 +19,18 @@ class MockMetadata:
     def __init__(self, confidence):
         self.confidence = confidence
 
+class MockCitation:
+    def __init__(self):
+        self.source_document = "dummy.txt"
+        self.page_number = "1"
+        self.snippet = "dummy"
+
 class MockFinalResponse:
-    def __init__(self, answer, citations, warnings, confidence):
+    def __init__(self, answer, sections, citations, confidence):
         self.direct_answer = answer
+        self.sections = sections
         self.citations = citations
-        self.warnings = warnings
+        self.warnings = []
         self.metadata = MockMetadata(confidence)
 
 class MockSharedContext:
@@ -44,7 +51,7 @@ def test_genuine_low_confidence_creates_hitl(client):
         class DummyOrchestrator:
             def orchestrate(self, query, conversation_id=None):
                 return MockOrchestratorResult(
-                    MockFinalResponse("Uncertain answer", [], [], 0.4) # 0.4 is < 0.70 threshold
+                    MockFinalResponse("Uncertain answer", [], [MockCitation()], 0.4) # 0.4 is < 0.70 threshold
                 )
         return DummyOrchestrator()
         

@@ -51,7 +51,7 @@ export function MetricsPanel({ result }: { result: QueryResponse }) {
           <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/40 px-3 py-2">
             <Clock className="size-4 text-accent" />
             <div className="leading-tight">
-              <p className="text-sm font-medium tabular-nums">{result.execution_time_ms.toFixed(1)} ms</p>
+              <p className="text-sm font-medium tabular-nums">{(result.execution_time_ms / 1000).toFixed(2)} s</p>
               <p className="text-xs text-muted-foreground">Execution time</p>
             </div>
           </div>

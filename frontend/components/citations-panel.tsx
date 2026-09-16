@@ -1,62 +1,68 @@
 "use client"
 
 import { motion } from "motion/react"
-import { FileText, Quote } from "lucide-react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { FileText, Quote, FileSearch } from "lucide-react"
 import type { RetrievedSource as Source } from "@/lib/api-client"
 
 function confidenceTone(confidence: number) {
-  if (confidence >= 0.9) return "text-success"
-  if (confidence >= 0.7) return "text-accent"
-  return "text-muted-foreground"
+  if (confidence >= 0.9) return "text-success bg-success/10 border-success/20"
+  if (confidence >= 0.7) return "text-accent bg-accent/10 border-accent/20"
+  return "text-muted-foreground bg-muted/10 border-border"
 }
 
 export function CitationsPanel({ sources }: { sources: Source[] }) {
+  if (!sources || sources.length === 0) return null
+
   return (
-    <div className="glass rounded-2xl border border-border/60 p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Source Citations</h3>
-        <span className="font-mono text-xs text-muted-foreground">{sources.length}</span>
+    <div className="glass rounded-2xl border border-border/60 p-5 mt-4">
+      <div className="mb-4 flex items-center gap-2">
+        <FileSearch className="size-4 text-muted-foreground" />
+        <h3 className="text-sm font-semibold text-foreground/80 tracking-wide">Sources</h3>
       </div>
 
-      <Accordion className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-3">
         {sources.map((source, i) => (
           <motion.div
             key={`${source.document}-${source.page}-${i}`}
+            id={`citation-${i + 1}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: i * 0.08 }}
+            className="flex flex-col gap-2 rounded-xl border border-border/50 bg-secondary/20 p-3.5 transition-colors hover:bg-secondary/40"
           >
-            <AccordionItem
-              value={`${source.document}-${i}`}
-              className="rounded-xl border border-border/60 bg-secondary/30 px-3.5 not-last:border-b"
-            >
-              <AccordionTrigger className="hover:no-underline">
-                <div className="flex flex-1 items-center gap-3 pr-2">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <FileText className="size-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-mono text-sm font-medium" title={source.document}>
-                      {source.document.replace(/\.[^/.]+$/, "").replace(/_/g, " - ")}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Page {source.page}</p>
-                  </div>
-                  <span className={`shrink-0 font-mono text-xs font-medium tabular-nums ${confidenceTone(source.confidence)}`}>
+            <div className="flex items-center gap-3">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
+                {i + 1}
+              </span>
+              <div className="min-w-0 flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4">
+                <p className="truncate text-sm font-medium text-foreground/90" title={source.document}>
+                  {source.document.replace(/\.[^/.]+$/, "").replace(/_/g, " - ")}
+                </p>
+                <div className="flex items-center gap-3 shrink-0">
+                  {source.page > 0 && (
+                    <span className="text-xs text-muted-foreground">Page {source.page}</span>
+                  )}
+                  <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums border ${confidenceTone(source.confidence)}`}>
                     {Math.round(source.confidence * 100)}%
                   </span>
                 </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="flex gap-2.5 rounded-lg border border-border/50 bg-background/60 p-3">
-                  <Quote className="size-4 shrink-0 text-accent" />
-                  <p className="text-sm leading-relaxed text-muted-foreground">{source.content_snippet}</p>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+              </div>
+            </div>
+            
+            <div className="ml-8 rounded-lg border-l-2 border-accent/40 bg-background/40 py-2 pl-3 pr-2">
+              {source.content_snippet && source.content_snippet.length > 0 ? (
+                <p className="text-[13px] leading-relaxed text-muted-foreground/90 italic">
+                  "{source.content_snippet.trim()}"
+                </p>
+              ) : (
+                <p className="text-[13px] text-muted-foreground/60 italic">
+                  Source text unavailable.
+                </p>
+              )}
+            </div>
           </motion.div>
         ))}
-      </Accordion>
+      </div>
     </div>
   )
 }
