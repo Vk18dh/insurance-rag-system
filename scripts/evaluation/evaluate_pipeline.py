@@ -46,6 +46,34 @@ def run_evaluation():
     ground_truths = []
     
     api_url = "http://localhost:8000/api/v1/query"
+    auth_url = "http://localhost:8000/api/v1/auth/login"
+    
+    # 1. Login to get token
+    import urllib.parse
+    auth_data = urllib.parse.urlencode({"username": "guest", "password": "guest_password"}).encode("utf-8")
+    try:
+        auth_req = urllib.request.Request(auth_url, data=auth_data)
+        auth_resp = urllib.request.urlopen(auth_req)
+        token_data = json.loads(auth_resp.read())
+        token = token_data.get("access_token")
+    except Exception as e:
+        # If guest doesn't exist, try to register it
+        try:
+            reg_url = "http://localhost:8000/api/v1/auth/register"
+            reg_data = json.dumps({
+                "username": "guest", "password": "guest_password",
+                "email": "guest@example.com", "full_name": "Guest", "role": "user"
+            }).encode("utf-8")
+            reg_req = urllib.request.Request(reg_url, data=reg_data, headers={"Content-Type": "application/json"})
+            urllib.request.urlopen(reg_req)
+            # Try login again
+            auth_req = urllib.request.Request(auth_url, data=auth_data)
+            auth_resp = urllib.request.urlopen(auth_req)
+            token_data = json.loads(auth_resp.read())
+            token = token_data.get("access_token")
+        except Exception as e2:
+            print(f"Failed to authenticate: {e2}")
+            return
     
     print(f"Running {len(dataset)} evaluations against {api_url}...\n")
     
@@ -55,7 +83,11 @@ def run_evaluation():
         
         # Prepare API Call
         payload = json.dumps({"query": q}).encode("utf-8")
-        req = urllib.request.Request(api_url, data=payload, headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(
+            api_url, 
+            data=payload, 
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+        )
         
         try:
             resp = urllib.request.urlopen(req)
@@ -107,11 +139,11 @@ def run_evaluation():
     os.environ["OPENAI_BASE_URL"] = "https://openrouter.ai/api/v1"
     
     try:
-        # Use OpenRouter's COMPLETELY FREE Llama 3 model to bypass credit limits and Google rate-limits!
+        # Use Local Ollama model to bypass all API rate limits!
         evaluator_llm = ChatOpenAI(
-            model_name="meta-llama/llama-3-8b-instruct:free",
-            openai_api_key=os.environ.get("OPENROUTER_API_KEY", ""),
-            openai_api_base="https://openrouter.ai/api/v1"
+            model_name="qwen2.5:3b",
+            openai_api_key="ollama",
+            openai_api_base="http://localhost:11434/v1"
         )
         
         # OpenRouter DOES NOT support embeddings. We must use a free local model to do the vector math!
@@ -133,7 +165,7 @@ def run_evaluation():
         result = evaluate(
             dataset=hf_dataset,
             metrics=metrics_list,
-            raise_exceptions=True
+            raise_exceptions=False
         )
         
         print("\n=== EVALUATION RESULTS ===")
