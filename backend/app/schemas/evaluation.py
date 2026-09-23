@@ -18,6 +18,9 @@ class EvaluationCaseResultSchema(BaseModel):
     hallucination_score: Optional[float] = None
     citation_score: Optional[float] = None
     
+    corpus_support: Optional[str] = None
+
+    
     hitl_expected: bool
     hitl_actual: bool
     

@@ -35,27 +35,37 @@ Write-Host "Fetching Ubuntu AMI..."
 $amiId = & $aws ec2 describe-images --owners 099720109477 --filters "Name=name,Values=ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*" "Name=state,Values=available" --query "sort_by(Images, &CreationDate)[-1].ImageId" --output text --region $Region
 
 # 4. UserData Script
-$envContent = @"
-GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY
-OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY
-PHASE2_ENVIRONMENT=development
-PHASE2__LLM__PROVIDER=openrouter
-PHASE2__LLM__API_KEY=YOUR_OPENROUTER_API_KEY
-PHASE2__LLM__MODEL_NAME=openai/gpt-4o-mini
-"@
-
+# Note: Ensure the EC2 instance is launched with an IAM Role that has ssm:GetParameter permissions.
+# The IAM instance profile is passed during run-instances (e.g. --iam-instance-profile Name="InsuranceRAGRole").
 $userData = @"
 #!/bin/bash
 apt-get update
-apt-get install -y docker.io docker-compose git
+apt-get install -y docker.io docker-compose git unzip curl jq
+
+# Install AWS CLI v2
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+./aws/install
+
 systemctl start docker
 systemctl enable docker
 usermod -aG docker ubuntu
+
+# Fetch secrets from AWS Systems Manager Parameter Store
+REGION="ap-southeast-2"
+GOOGLE_API_KEY=`$(/usr/local/bin/aws ssm get-parameter --name /insurance-rag/google-api-key --with-decryption --query Parameter.Value --output text --region `$REGION)
+OPENROUTER_API_KEY=`$(/usr/local/bin/aws ssm get-parameter --name /insurance-rag/openrouter-api-key --with-decryption --query Parameter.Value --output text --region `$REGION)
+
 cd /home/ubuntu
 git clone https://github.com/Vk18dh/insurance-rag-system.git
 cd insurance-rag-system
-cat << 'EOF' > .env
-$envContent
+cat << EOF > .env
+GOOGLE_API_KEY=`$GOOGLE_API_KEY
+OPENROUTER_API_KEY=`$OPENROUTER_API_KEY
+PHASE2_ENVIRONMENT=development
+PHASE2__LLM__PROVIDER=openrouter
+PHASE2__LLM__API_KEY=`$OPENROUTER_API_KEY
+PHASE2__LLM__MODEL_NAME=openai/gpt-4o-mini
 EOF
 chown -R ubuntu:ubuntu /home/ubuntu/insurance-rag-system
 docker-compose up -d backend chromadb

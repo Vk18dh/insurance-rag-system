@@ -20,6 +20,7 @@ vi.mock('@/lib/api-client', async () => {
     ...actual as any,
     apiClient: {
       login: vi.fn(),
+      guestLogin: vi.fn().mockResolvedValue({ access_token: 'fake-token' }),
     },
     getToken: vi.fn(),
     setToken: vi.fn(),

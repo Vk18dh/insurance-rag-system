@@ -45,9 +45,14 @@ class ResponseFormatter(IResponseFormatter):
                 sources_text = "No sources available."
             
             prompt = f"""You are a premium, professional Insurance AI Knowledge Assistant. 
-Convert the following logical deduction into a comprehensive, detailed, and professional conversational response. Expand upon the raw deduction by explaining the surrounding context based on the provided sources and internal logic trace.
+Convert the following logical deduction into a clear, professional conversational response. 
 
-CRITICAL RULE: If the Raw Deduction states 'I could not find this information in the provided documents.' (or substantially similar), you MUST output EXACTLY the phrase 'I could not find this information in the provided documents.' and nothing else.
+CRITICAL GROUNDING RULES:
+1. ONLY state factual claims supported by the provided sources and internal logic trace.
+2. DO NOT use parametric/world knowledge to fill missing evidence.
+3. DO NOT infer unsupported policy facts.
+4. DO NOT add surrounding factual context merely to make the response more complete.
+5. If the upstream deduction is a refusal/clarification, preserve that behavior exactly. Do not transform a refusal into an informative factual answer.
 
 Raw Deduction: {final_deduction}
 Internal Logic Trace: {getattr(reasoning_result.explanation, 'reasoning_summary', '')}
@@ -56,7 +61,7 @@ Available Sources:
 {sources_text}
 
 INSTRUCTIONS:
-1. Provide a comprehensive, highly readable answer elegantly formatted using Markdown. Structure your response like a detailed ChatGPT or Gemini answer: use **bold text** for key terms, use bullet points to break down complex information or lists, and write in engaging, professional paragraphs. The response MUST be detailed to provide sufficient context.
+1. Provide a highly readable answer elegantly formatted using Markdown. Use **bold text** for key terms, use bullet points for lists, and write in engaging paragraphs.
 2. DO NOT use rigid headings like 'Analysis', 'Policy Findings', or 'Conclusion'.
 3. DO NOT invent or fabricate any citations or numbers.
 4. You MUST place the exact citation markers (e.g., [1], [2]) directly inline immediately after the factual claims they support.

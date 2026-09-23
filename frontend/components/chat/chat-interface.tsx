@@ -11,6 +11,13 @@ import { MetricsPanel } from '@/components/metrics-panel';
 import { CitationsPanel } from '@/components/citations-panel';
 import { ReviewStatusBanner } from '@/components/review-status-banner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import dynamic from 'next/dynamic';
+import { AssistantState } from '@/components/3d/assistant-orb';
+
+const AssistantScene = dynamic(() => import('@/components/3d/assistant-scene'), {
+  ssr: false,
+  loading: () => <div className="w-full h-full rounded-full bg-primary/20 blur-md animate-pulse" />
+});
 
 const EXAMPLES = [
   "What is the waiting period for the basic health insurance?",
@@ -135,9 +142,32 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
     }
   }
 
+  // Derive AssistantOrb state
+  let orbState: AssistantState = 'IDLE';
+  if (loading) {
+    orbState = 'PROCESSING';
+  } else if (error) {
+    if (error.includes('503') || error.toLowerCase().includes('unavailable')) {
+      orbState = 'PROVIDER_FAILURE';
+    } else {
+      orbState = 'NETWORK_ERROR';
+    }
+  } else if (lastResult) {
+    if (lastResult.is_safe === false) {
+      orbState = 'SAFE_REFUSAL';
+    } else {
+      orbState = 'ANSWER_RECEIVED';
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden min-h-0 relative">
-      <div className="flex-1 overflow-y-auto overscroll-y-none px-4 sm:px-6 py-6 pb-32" style={{ overflowAnchor: 'none' }}>
+      {/* 3D Assistant Orb - Fixed at top right of chat area */}
+      <div className="absolute top-4 right-4 md:top-8 md:right-8 w-16 h-16 md:w-24 md:h-24 z-30 pointer-events-none">
+        <AssistantScene state={orbState} />
+      </div>
+
+      <div className="flex-1 overflow-y-auto overscroll-y-none px-4 sm:px-6 py-6 pb-48" style={{ overflowAnchor: 'none' }}>
         <div className="mx-auto max-w-4xl space-y-8">
           {messages.length === 0 && !loading && !lastResult && (
             <motion.div
@@ -146,13 +176,15 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
               transition={{ duration: 0.5 }}
               className="flex flex-col items-center pt-16 text-center sm:pt-24"
             >
-              <span className="glass mb-5 inline-flex items-center gap-2 rounded-full border border-border/60 px-3 py-1 font-mono text-xs text-muted-foreground">
-                <span className="size-1.5 rounded-full bg-accent" />
-                Agentic RAG · Grounded Citations
+              <span className="glass mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-medium text-xs text-primary backdrop-blur-md">
+                <ShieldCheck className="size-3.5" />
+                Enterprise Grade Intelligence
               </span>
-              <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-6xl">AI Insurance Auditor</h1>
-              <p className="mt-4 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-                Query regulatory policies and insurance rules with guaranteed citations.
+              <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-5xl text-foreground drop-shadow-sm">
+                Trusted Knowledge.
+              </h1>
+              <p className="mt-4 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground">
+                Ask questions about insurance policies and get answers grounded in trusted insurance documents with verifiable citations.
               </p>
               
               <div className="mt-8 flex flex-wrap justify-center gap-2 max-w-2xl">
@@ -165,7 +197,7 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
                       submit(ex);
                     }}
                     disabled={loading}
-                    className="glass rounded-full border border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:opacity-50"
+                    className="glass rounded-full border border-border/40 bg-card/30 px-4 py-2 text-sm text-muted-foreground transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-foreground disabled:opacity-50"
                   >
                     {ex}
                   </button>
@@ -191,8 +223,8 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
                   {isAssistant ? <ShieldCheck className="size-4" /> : <User className="size-4" />}
                 </div>
                 <div className={`flex flex-col gap-2 max-w-[85%] ${isAssistant ? '' : 'items-end'}`}>
-                  <div className={`rounded-2xl px-4 py-3 ${isAssistant ? 'glass border border-border/50' : 'bg-primary text-primary-foreground'}`}>
-                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                  <div className={`rounded-3xl px-6 py-5 ${isAssistant ? 'glass border border-white/5 bg-card/40 backdrop-blur-xl shadow-sm' : 'bg-primary text-primary-foreground shadow-md'}`}>
+                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap leading-relaxed">
                       {displayContent}
                     </div>
                   </div>
@@ -239,10 +271,10 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background to-transparent pt-6 pb-6 px-4 sm:px-6 z-20 pointer-events-none">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/90 to-transparent pt-10 pb-8 px-4 sm:px-6 z-20 pointer-events-none">
         <div className="mx-auto w-full max-w-3xl">
           <form onSubmit={handleSubmit} className="pointer-events-auto">
-            <div className="glass group rounded-2xl border border-border/70 p-2 shadow-xl shadow-primary/5 transition-colors focus-within:border-primary/60 bg-background/80 backdrop-blur-xl">
+            <div className="glass group rounded-3xl border border-white/10 p-2 shadow-2xl shadow-primary/5 transition-colors focus-within:border-primary/40 bg-card/60 backdrop-blur-2xl">
               <div className="flex items-start gap-3 px-3 pt-2.5">
                 <Search className="mt-1 size-5 shrink-0 text-muted-foreground" />
                 <textarea

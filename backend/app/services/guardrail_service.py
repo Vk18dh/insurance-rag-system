@@ -64,15 +64,14 @@ class GuardrailService:
         # We rely on the VerificationAgent primarily, but as a last line of defense:
         answer_lower = generated_answer.lower()
         is_refusal = any(phrase in answer_lower for phrase in [
-            "i could not find", "not present", "not explicitly mentioned", "i am unable to answer"
+            "i could not find", "not present", "not explicitly mentioned", "i am unable to answer", "clarify"
         ])
         
-        # If it's NOT a refusal and it lacks citations, flag it if it uses absolute phrasing.
+        # If it's NOT a refusal/clarification and it lacks citations, flag it.
+        # The contract requires citations for factual responses.
         if not is_refusal and not has_citations:
-            absolute_phrases = ["according to the policy", "the rules state", "must be paid", "guaranteed"]
-            if any(p in answer_lower for p in absolute_phrases):
-                logger.warning("Output Guardrail triggered: Unsupported absolute claim without citations.")
-                return False, "Output blocked due to unsupported claims lacking citations."
+            logger.warning("Output Guardrail triggered: Factual response generated without required citations.")
+            return False, "Output blocked due to unsupported factual claims lacking citations."
                 
         # Basic safety check on output
         for pattern in cls.UNSAFE_PATTERNS:

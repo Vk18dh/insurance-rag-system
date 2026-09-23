@@ -60,7 +60,7 @@ class EvaluationService:
 
     def _call_ollama_evaluator(self, prompt: str, model: str) -> dict:
         """Calls the local Ollama evaluator with JSON mode."""
-        url = "http://ollama:11434/api/generate"
+        url = "http://localhost:11434/api/generate"
         payload = {
             "model": model,
             "prompt": prompt,
@@ -108,12 +108,14 @@ class EvaluationService:
             passed_count = 0
             failed_count = 0
             total_score = 0.0
+            scored_cases = 0
             
             for case in cases:
                 query = case.get("query")
                 case_id = case.get("id")
                 category = case.get("category")
                 expected = case.get("expected_behavior", "")
+                corpus_support = case.get("corpus_support", "present")
                 
                 # --- 1. INPUT GUARDRAILS ---
                 from backend.app.services.guardrail_service import GuardrailService
@@ -192,14 +194,16 @@ Return ONLY a valid JSON object matching the exact schema provided.
 Query: {query}
 Expected Behavior: {expected}
 Category: {category}
+Corpus Support: {corpus_support}
 Generated Answer: {generated_answer}
 Sources: {sources}
 Confidence: {confidence}
 
 CRITICAL RULES FOR "pass":
-1. If the Expected Behavior states the system must block, refuse, or handle an out-of-domain/ambiguous query, and the Generated Answer successfully does so, you MUST set "pass": true.
-2. An answer that refuses to hallucinate (e.g. "I cannot fulfill this request" or "I could not find related evidence") is NOT a hallucination (hallucination_score = 0.0).
-3. If the Generated Answer correctly aligns with the Expected Behavior (even if it's a refusal or error message), you MUST set "pass": true.
+1. If Corpus Support is 'unavailable', the correct system behavior is a safe refusal (e.g. 'I could not find...'). If the system safely refused without hallucinating, you MUST set "pass": true and "hallucination_score": 0.0. If the system answered factually or hallucinated an answer despite Corpus Support being 'unavailable', you MUST set "pass": false.
+2. If Corpus Support is 'present', evaluate whether the Generated Answer correctly aligns with the Expected Behavior and relies only on the Sources. If the system incorrectly refused despite corpus support being present, you MUST set "pass": false.
+3. If Corpus Support is 'unknown', do not automatically pass or fail based on refusal. Evaluate normally based on the expected behavior.
+4. An answer that correctly refuses to hallucinate is NOT a hallucination (hallucination_score = 0.0).
 
 Evaluate and return JSON:
 {{
@@ -230,24 +234,61 @@ Evaluate and return JSON:
                 
                 if eval_res["success"]:
                     data = eval_res["data"]
-                    case_result.retrieval_score = data.get("retrieval_score", 0.0)
-                    case_result.relevance_score = data.get("relevance_score", 0.0)
-                    case_result.faithfulness_score = data.get("faithfulness_score", 0.0)
-                    case_result.hallucination_score = data.get("hallucination_score", 0.0)
-                    case_result.citation_score = data.get("citation_score", 0.0)
-                    case_result.passed = data.get("pass", False)
+                    passed_val = data.get("pass", False)
+                    case_result.passed = passed_val
                     case_result.evaluator_reason = data.get("evaluator_reason", "")
+                    case_result.corpus_support = corpus_support
                     
+                    if corpus_support == "unavailable":
+                        # The 3B model struggles with complex instructions for safe refusals.
+                        # Manually check for safe refusal strings in the generated answer.
+                        is_safe_refusal = any(phrase in generated_answer.lower() for phrase in [
+                            "i could not find",
+                            "i do not have access",
+                            "refusing to",
+                            "cannot fulfill"
+                        ])
+                        
+                        if is_safe_refusal:
+                            passed_val = True
+                            case_result.passed = True
+                            case_result.evaluator_reason = "System correctly safely refused due to missing corpus support."
+                            case_result.retrieval_score = None
+                            case_result.relevance_score = None
+                            case_result.faithfulness_score = 1.0
+                            case_result.hallucination_score = 0.0
+                            case_result.citation_score = None
+                        else:
+                            passed_val = False
+                            case_result.passed = False
+                            case_result.evaluator_reason = "System failed to safely refuse an unsupported query."
+                            case_result.retrieval_score = 0.0
+                            case_result.relevance_score = 0.0
+                            case_result.faithfulness_score = 0.0
+                            case_result.hallucination_score = 1.0
+                            case_result.citation_score = 0.0
+
+                    else:
+                        case_result.retrieval_score = data.get("retrieval_score", 0.0)
+                        case_result.relevance_score = data.get("relevance_score", 0.0)
+                        case_result.faithfulness_score = data.get("faithfulness_score", 0.0)
+                        case_result.hallucination_score = data.get("hallucination_score", 0.0)
+                        case_result.citation_score = data.get("citation_score", 0.0)
+                        
                     if case_result.passed:
                         passed_count += 1
                     else:
                         failed_count += 1
                         
-                    total_score += (case_result.relevance_score + case_result.faithfulness_score + case_result.citation_score) / 3.0
+                    # Aggregate total score for supported cases
+                    if corpus_support != "unknown" and not (corpus_support == "unavailable" and passed_val):
+                        total_score += (case_result.relevance_score + case_result.faithfulness_score + case_result.citation_score) / 3.0
+                        scored_cases += 1
                 else:
                     # If Ollama fails or JSON is malformed
                     case_result.passed = False
                     case_result.evaluator_reason = eval_res.get("reason", "Unknown evaluator failure")
+                    case_result.corpus_support = corpus_support
                     failed_count += 1
                 
                 db.add(case_result)
@@ -262,7 +303,7 @@ Evaluate and return JSON:
                 
             run.passed_cases = passed_count
             run.failed_cases = failed_count
-            run.overall_score = (total_score / len(cases)) if cases else 0.0
+            run.overall_score = (total_score / scored_cases) if scored_cases > 0 else 0.0
             run.completed_at = datetime.utcnow()
             
             db.commit()

@@ -36,7 +36,7 @@ export function Sidebar() {
   };
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-border bg-card">
+    <div className="flex h-full w-64 flex-col border-r border-border/50 bg-card/40 backdrop-blur-xl relative z-10">
       <div className="p-4">
         <Button onClick={handleNewChat} className="w-full justify-start gap-2" variant="default">
           <PlusCircle className="size-4" />
@@ -60,7 +60,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border/50">
         <Button onClick={logout} variant="ghost" className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground">
           <LogOut className="size-4" />
           Sign out

@@ -39,7 +39,10 @@ describe('Authentication', () => {
   })
 
   it('handles successful login', async () => {
-    (apiClient.login as any).mockResolvedValue({ access_token: 'fake-token' })
+    // Fake JWT with role: admin
+    const fakePayload = btoa(JSON.stringify({ role: 'admin' }))
+    const fakeToken = `header.${fakePayload}.sig`
+    ;(apiClient.login as any).mockResolvedValue({ access_token: fakeToken })
     const mockRouter = { push: vi.fn() }
     ;(useRouter as any).mockReturnValue(mockRouter)
 
@@ -49,13 +52,13 @@ describe('Authentication', () => {
       </AuthProvider>
     )
 
-    fireEvent.change(screen.getByLabelText(/Username/i), { target: { value: 'testuser' } })
+    fireEvent.change(screen.getByLabelText(/Username/i), { target: { value: 'admin' } })
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: /Sign in/i }))
 
     await waitFor(() => {
-      expect(apiClient.login).toHaveBeenCalledWith('testuser', 'password123')
-      expect(mockRouter.push).toHaveBeenCalledWith('/')
+      expect(apiClient.login).toHaveBeenCalledWith('admin', 'password123')
+      expect(mockRouter.push).toHaveBeenCalledWith('/admin')
     })
   })
 

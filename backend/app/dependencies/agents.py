@@ -71,7 +71,7 @@ def get_agent_orchestrator() -> AgentOrchestrator:
     execution_manager = ExecutionManager(
         timeout_manager=timeout_manager,
         retry_manager=retry_manager,
-        timeout_ms=settings.orchestrator.max_workflow_timeout_ms,
+        timeout_ms=settings.orchestrator.agent_timeout_ms,
         max_retries=settings.orchestrator.max_retries,
         retry_delay_ms=settings.orchestrator.retry_delay_ms
     )
@@ -82,7 +82,8 @@ def get_agent_orchestrator() -> AgentOrchestrator:
         context_manager=context_manager,
         metrics_collector=metrics_collector,
         agents_map=agents_map,
-        observability=None
+        observability=None,
+        workflow_timeout_ms=settings.orchestrator.max_workflow_timeout_ms
     )
     
     return orchestrator

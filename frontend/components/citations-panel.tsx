@@ -1,7 +1,8 @@
 "use client"
 
-import { motion } from "motion/react"
-import { FileText, Quote, FileSearch } from "lucide-react"
+import { useState } from "react"
+import { motion, AnimatePresence } from "motion/react"
+import { FileText, Quote, FileSearch, ChevronDown } from "lucide-react"
 import type { RetrievedSource as Source } from "@/lib/api-client"
 
 function confidenceTone(confidence: number) {
@@ -11,16 +12,32 @@ function confidenceTone(confidence: number) {
 }
 
 export function CitationsPanel({ sources }: { sources: Source[] }) {
+  const [isOpen, setIsOpen] = useState(false)
+
   if (!sources || sources.length === 0) return null
 
   return (
-    <div className="glass rounded-2xl border border-border/60 p-5 mt-4">
-      <div className="mb-4 flex items-center gap-2">
-        <FileSearch className="size-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold text-foreground/80 tracking-wide">Sources</h3>
-      </div>
+    <div className="glass rounded-2xl border border-white/5 bg-card/40 p-4 mt-2 shadow-sm backdrop-blur-xl">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between group"
+      >
+        <div className="flex items-center gap-2">
+          <FileSearch className="size-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground tracking-wide">Sources ({sources.length})</h3>
+        </div>
+        <ChevronDown className={`size-4 text-muted-foreground transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
 
-      <div className="flex flex-col gap-3">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+            animate={{ height: "auto", opacity: 1, marginTop: 16 }}
+            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-col gap-3">
         {sources.map((source, i) => (
           <motion.div
             key={`${source.document}-${source.page}-${i}`}
@@ -62,7 +79,10 @@ export function CitationsPanel({ sources }: { sources: Source[] }) {
             </div>
           </motion.div>
         ))}
-      </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

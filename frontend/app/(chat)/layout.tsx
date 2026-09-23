@@ -12,7 +12,7 @@ export default function ChatLayout({
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden relative">
         {/* Ambient background */}
-        <div className="pointer-events-none absolute inset-0 grid-bg opacity-60 z-0" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 subtle-grid-bg opacity-100 z-0 mix-blend-screen" aria-hidden="true" />
         <div
           className="animate-aurora pointer-events-none absolute -top-40 left-1/2 z-0 size-[640px] -translate-x-1/2 rounded-full bg-primary/20 blur-[140px]"
           aria-hidden="true"

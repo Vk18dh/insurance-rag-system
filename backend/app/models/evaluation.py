@@ -42,6 +42,9 @@ class EvaluationCaseResult(Base):
     hallucination_score = Column(Float, nullable=True)
     citation_score = Column(Float, nullable=True)
     
+    corpus_support = Column(String(50), nullable=True)
+
+    
     hitl_expected = Column(Boolean, default=False)
     hitl_actual = Column(Boolean, default=False)
     

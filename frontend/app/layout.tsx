@@ -3,6 +3,8 @@ import type { Metadata, Viewport } from "next"
 import { Inter, Geist_Mono } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/components/auth-provider"
+import { InteractiveBackground } from "@/components/interactive-background"
+import AIBotWrapper from "@/components/3d/ai-bot-wrapper"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -41,7 +43,10 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <AuthProvider>
-            {children}
+            <InteractiveBackground>
+              {children}
+              <AIBotWrapper />
+            </InteractiveBackground>
           </AuthProvider>
         </ThemeProvider>
         {process.env.NODE_ENV === "production" && <Analytics />}

@@ -11,8 +11,10 @@ from phase2.services.llm_adapters import OpenRouterProvider, GroqProvider
 
 logger = logging.getLogger(__name__)
 
+import sys
+
 def _parse_llm_json(raw_text: str) -> Dict[str, Any]:
-    print("RAW TEXT FOR JSON PARSING:", repr(raw_text))
+    sys.stdout.buffer.write(f"RAW TEXT FOR JSON PARSING: {repr(raw_text)}\n".encode("utf-8"))
     """Provides resilient JSON parsing, successfully cleaning markdown artifacts."""
     clean = re.sub(r"^```(?:json)?\s*", "", raw_text, flags=re.MULTILINE)
     clean = re.sub(r"\s*```$", "", clean, flags=re.MULTILINE).strip()

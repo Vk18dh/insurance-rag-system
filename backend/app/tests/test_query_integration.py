@@ -16,7 +16,11 @@ def test_query_creates_conversation_and_persists_messages(client, monkeypatch):
             result = MagicMock()
             result.request_id = "mock_request_id"
             result.shared_context.final_response.direct_answer = "Mocked answer"
-            result.shared_context.final_response.citations = []
+            cit = MagicMock()
+            cit.source_document = "Mock doc"
+            cit.page_number = 1
+            cit.snippet = "Mock snippet"
+            result.shared_context.final_response.citations = [cit]
             result.shared_context.final_response.warnings = []
             result.shared_context.final_response.metadata.confidence = 0.99
             return result

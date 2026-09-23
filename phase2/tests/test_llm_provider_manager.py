@@ -12,6 +12,8 @@ def mock_settings():
     settings.llm.secondary_provider = "groq"
     settings.llm.openrouter_api_key = "MOCK_OPENROUTER_API_KEY_PLACEHOLDER"
     settings.llm.groq_api_key = "MOCK_GROQ_API_KEY_PLACEHOLDER"
+    settings.llm.groq_api_key_2 = None
+    settings.llm.local_llm_base_url = "http://localhost"
     settings.llm.failover_enabled = True
     settings.llm.retry_backoff_seconds = 0.01
     settings.llm.max_retries = 3
@@ -60,6 +62,20 @@ def test_4_openrouter_429_fallback(mock_settings):
             assert mock_or.call_count == 1 # Cooldown skips immediately, no retries
             mock_groq.assert_called_once()
 
+from phase2.services.llm_provider_manager import _parse_llm_json
+
+def test_parse_llm_json_unicode_encoding_crash():
+    """
+    Tests that _parse_llm_json handles arbitrary Unicode characters
+    without throwing a charmap/cp1252 UnicodeEncodeError on Windows stdout logging.
+    """
+    # IN-DOMAIN-001 query with non-breaking hyphen U+2011 and normal Unicode text
+    unicode_json = '''{"intent": "policy_details", "explanation": "What is the waiting period for pre-existing conditions in the Arogya Sanjeevani policy? \u2011 normal test"}'''
+    
+    # Must not raise an exception during JSON decode OR stdout printing
+    result = _parse_llm_json(unicode_json)
+    assert result["intent"] == "policy_details"
+
 # TEST 5: Groq 1 404 -> Groq 2 success
 def test_5_groq_404_fallback(mock_settings):
     # We need to test that if openrouter fails and groq fails, and local fails, it raises an exception
@@ -70,7 +86,7 @@ def test_5_groq_404_fallback(mock_settings):
             with patch.object(manager.providers["local"], "call_completions", side_effect=QueryProcessingException("Local fail", step="api_call_failed")) as mock_local:
                 with pytest.raises(QueryProcessingException) as exc:
                     manager._execute_with_failover("prompt", 0.0, 100, "system")
-                assert exc.value.step == "api_call_failed" # Should be the last one's error
+                assert exc.value.step == "api_call_exhausted"
 
 def test_6_groq_timeout_fallback(mock_settings):
     manager = LLMProviderManager(mock_settings)
@@ -80,7 +96,7 @@ def test_6_groq_timeout_fallback(mock_settings):
             with patch.object(manager.providers["local"], "call_completions", side_effect=QueryProcessingException("Local fail", step="api_call_timeout")) as mock_local:
                 with pytest.raises(QueryProcessingException) as exc:
                     manager._execute_with_failover("prompt", 0.0, 100, "system")
-                assert exc.value.step == "api_call_timeout"
+                assert exc.value.step == "api_call_exhausted"
 
 def test_7_both_providers_fail(mock_settings):
     manager = LLMProviderManager(mock_settings)
@@ -90,6 +106,6 @@ def test_7_both_providers_fail(mock_settings):
             with patch.object(manager.providers["local"], "call_completions", side_effect=QueryProcessingException("Local fail", step="api_call_not_found")) as mock_local:
                 with pytest.raises(QueryProcessingException) as exc:
                     manager._execute_with_failover("prompt", 0.0, 100, "system")
-                assert "api_call_not_found" in str(exc.value.step)
+                assert exc.value.step == "api_call_exhausted"
         mock_or.assert_called_once()
         mock_groq.assert_called_once()

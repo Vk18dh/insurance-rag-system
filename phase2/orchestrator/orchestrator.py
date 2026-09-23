@@ -21,7 +21,8 @@ class AgentOrchestrator(IAgentOrchestrator):
                  context_manager: IContextManager,
                  metrics_collector: IMetricsCollector,
                  agents_map: Dict[str, Any],
-                 observability: IObservabilityFacade | None = None):
+                 observability: IObservabilityFacade | None = None,
+                 workflow_timeout_ms: float = 90000.0):
         """
         The Orchestrator defines exactly zero hardcoded models reliably mapping dynamic bounds centrally smoothly natively safely.
         """
@@ -31,6 +32,7 @@ class AgentOrchestrator(IAgentOrchestrator):
         self._metrics_collector = metrics_collector
         self._agents_map = agents_map
         self._obs: IObservabilityFacade = observability if observability is not None else NullObservabilityFacade()
+        self._workflow_timeout_ms = workflow_timeout_ms
 
     def orchestrate(self, query: str, conversation_id: str | None = None) -> OrchestrationResult:
         request_id = str(uuid.uuid4())
@@ -45,8 +47,17 @@ class AgentOrchestrator(IAgentOrchestrator):
         trace = self._obs.on_pipeline_start(request_id, query)
         if hasattr(trace, 'set_attribute'):
             trace.set_attribute("conversation_id", conversation_id or "none")
+            
+        _workflow_start_ms = __import__('time').time() * 1000
         
         for agent_name in sequence:
+            if (__import__('time').time() * 1000 - _workflow_start_ms) > self._workflow_timeout_ms:
+                err_msg = f"Execution bound forcefully terminated securely after {self._workflow_timeout_ms}ms"
+                logger.error(f"Execution bound forcefully terminated securely natively: {err_msg}")
+                errors.append(err_msg)
+                overall_status = ExecutionStatus.FAILURE
+                break
+                
             agent = self._agents_map.get(agent_name)
             if not agent:
                 err_msg = f"Unregistered executing boundary requested securely: {agent_name}"
@@ -71,6 +82,33 @@ class AgentOrchestrator(IAgentOrchestrator):
                 self._context_manager.update_context(agent_name, result)
                 self._metrics_collector.end_agent(agent_name, ExecutionStatus.SUCCESS, 0)
                 _succeeded = True
+                
+                if agent_name == "QueryUnderstandingAgent":
+                    is_amb = False
+                    if hasattr(result, "ambiguity") and result.ambiguity and result.ambiguity.is_ambiguous:
+                        is_amb = True
+                    
+                    if is_amb:
+                        logger.info("Query flagged as ambiguous. Bypassing normal generation path.")
+                        from phase2.models.final_response import FinalResponse
+                        from phase2.models.response_metadata import ResponseMetadata
+                        
+                        final_resp = FinalResponse(
+                            direct_answer="Could you please clarify your request? I need more specific details to find the exact insurance information you're looking for.",
+                            explanation="The query was ambiguous or lacked specific context.",
+                            citations=[],
+                            warnings=[],
+                            metadata=ResponseMetadata(request_id=request_id, total_processing_time_ms=0.0, agent_version="1.0")
+                        )
+                        self._context_manager.update_context("ResponseBuilder", final_resp)
+                        break
+                
+                if (__import__('time').time() * 1000 - _workflow_start_ms) > self._workflow_timeout_ms:
+                    err_msg = f"Execution bound forcefully terminated securely after {self._workflow_timeout_ms}ms"
+                    logger.error(f"Execution bound forcefully terminated securely natively: {err_msg}")
+                    errors.append(err_msg)
+                    overall_status = ExecutionStatus.FAILURE
+                    break
                 
             except TimeoutException as e:
                 logger.error(f"Execution bound forcefully terminated securely natively: {e}")

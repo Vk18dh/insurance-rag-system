@@ -108,9 +108,9 @@ async def process_query(
             errs = " | ".join(result.errors) if hasattr(result, 'errors') and result.errors else "Unknown silent failure"
             
             # Check for catastrophic provider/API failure and raise 503 instead of ReviewTask
-            if any(term in errs for term in ["Providers exhausted", "HTTP Error", "API execution failure", "Model Not Found", "Connection Error", "Rate Limit Exceeded", "Authentication Error"]):
+            if any(term in errs for term in ["Providers exhausted", "HTTP Error", "API execution failure", "Model Not Found", "Connection Error", "Rate Limit Exceeded", "Authentication Error", "Execution bound forcefully"]):
                 from fastapi import HTTPException
-                raise HTTPException(status_code=503, detail=f"LLM Provider Service Unavailable: {errs}")
+                raise HTTPException(status_code=503, detail=f"LLM Provider Service Unavailable or Timed Out: {errs}")
 
             if "VerificationResult failed QA upstream constraints" in errs:
                 final_resp_answer = "I could not find related evidence in the insurance documents to answer your query. I am actively refusing to hallucinate an answer outside my domain bounds."

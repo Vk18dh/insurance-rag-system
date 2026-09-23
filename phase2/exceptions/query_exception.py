@@ -118,6 +118,7 @@ class QueryProcessingException(QueryException):
         context: Optional[Dict[str, Any]] = None,
     ) -> None:
         ctx = context or {}
+        self.step = step
         if step:
             ctx["step"] = step
         super().__init__(message, "QUERY_PROCESSING_ERROR", ctx)

@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { Shield } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -42,10 +44,22 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md space-y-8 rounded-xl border border-border bg-card p-8 shadow-sm">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold tracking-tight">Create an account</h2>
+    <div className="flex min-h-screen items-center justify-center bg-background relative overflow-hidden">
+      {/* Ambient Background */}
+      <div className="pointer-events-none absolute inset-0 grid-bg opacity-60 z-0" aria-hidden="true" />
+      <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 size-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-[120px]" aria-hidden="true" />
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md z-10 space-y-8 rounded-3xl border border-white/10 glass p-8 shadow-2xl relative"
+      >
+        <div className="text-center flex flex-col items-center">
+          <div className="h-12 w-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center mb-6">
+            <Shield className="h-6 w-6" />
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Create an account</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Sign up to access the AI Insurance System
           </p>
@@ -67,7 +81,7 @@ export default function RegisterPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="mt-1"
+                className="mt-1 bg-background/50 border-white/10 focus:border-primary/50 transition-colors"
                 placeholder="Choose a username"
               />
             </div>
@@ -81,12 +95,12 @@ export default function RegisterPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1"
+                className="mt-1 bg-background/50 border-white/10 focus:border-primary/50 transition-colors"
                 placeholder="••••••••"
               />
             </div>
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full rounded-xl py-6 text-base shadow-lg shadow-primary/20" disabled={loading}>
             {loading ? 'Creating account...' : 'Create account'}
           </Button>
           <div className="text-center text-sm">
@@ -96,7 +110,7 @@ export default function RegisterPage() {
             </Link>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }
