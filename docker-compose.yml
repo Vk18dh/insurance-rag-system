@@ -31,6 +31,10 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
       - HOSTNAME=0.0.0.0
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     depends_on:
       - backend
 
@@ -43,6 +47,10 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
       - HOSTNAME=0.0.0.0
+    volumes:
+      - ./management:/app
+      - /app/node_modules
+      - /app/.next
     depends_on:
       - backend
 

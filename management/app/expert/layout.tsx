@@ -3,8 +3,7 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
-import { SiteHeader } from '@/components/site-header';
-import { ShieldCheck } from 'lucide-react';
+import { ManagementLayout } from '@/components/management-layout';
 
 export default function ExpertLayout({
   children,
@@ -33,11 +32,8 @@ export default function ExpertLayout({
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col">
-      <SiteHeader title="Expert Workspace" icon={<ShieldCheck className="h-5 w-5" />} />
-      <div className="flex-1">
-        {children}
-      </div>
-    </div>
+    <ManagementLayout role={role}>
+      {children}
+    </ManagementLayout>
   );
 }

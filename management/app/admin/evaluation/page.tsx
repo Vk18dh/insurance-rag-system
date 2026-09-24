@@ -1,9 +1,11 @@
 "use client"
 
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { apiClient } from '@/lib/api-client';
-import { Loader2, PlayCircle, BarChart3 } from 'lucide-react';
+import { Loader2, PlayCircle, BarChart3, RefreshCcw, ArrowRight } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function EvaluationDashboard() {
   const [runs, setRuns] = useState<any[]>([]);
@@ -41,82 +43,132 @@ export default function EvaluationDashboard() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground"><Loader2 className="animate-spin inline mr-2"/>Loading evaluations...</div>;
-
   return (
-    <div className="container max-w-6xl py-8 space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="container max-w-[1400px] py-8 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">RAG Evaluation</h1>
-          <p className="text-muted-foreground mt-1">
-            Offline evaluation using local Ollama model.
+          <h1 className="text-2xl font-bold tracking-tight">RAG Evaluation</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Offline evaluation using local Ollama model
           </p>
         </div>
-        <button 
-          onClick={triggerEvaluation}
-          disabled={triggering}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 disabled:opacity-50"
-        >
-          {triggering ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-          Run Evaluation
-        </button>
       </div>
 
-      <div className="space-y-4">
-        {runs.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg">
-            <BarChart3 className="mx-auto h-12 w-12 opacity-20 mb-4" />
-            <p>No evaluation runs yet.</p>
+      <Card className="border shadow-sm">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-b gap-4 bg-card/50">
+          <div className="text-sm text-muted-foreground font-medium flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Evaluation Runs
           </div>
-        ) : (
-          runs.map(run => (
-            <Card key={run.id} className="overflow-hidden">
-              <div className={`h-1 w-full ${run.status === 'COMPLETED' ? 'bg-green-500' : run.status === 'FAILED' ? 'bg-red-500' : 'bg-blue-500 animate-pulse'}`} />
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-lg flex items-center">
-                      Run {run.id.split('-')[0]}
-                      <span className="ml-3 text-xs px-2 py-1 bg-secondary rounded-full font-mono">{run.status}</span>
-                    </h3>
-                    <div className="text-sm text-muted-foreground mt-1 space-x-4">
-                      <span>Started: {new Date(run.started_at).toLocaleString()}</span>
-                      <span>Model: {run.evaluator_model}</span>
-                      <span>Dataset: v{run.dataset_version}</span>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button 
+              onClick={fetchRuns}
+              variant="outline"
+              size="sm"
+              disabled={loading}
+              className="h-9"
+            >
+              <RefreshCcw className={`h-4 w-4 mr-2 ${loading && !triggering ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button 
+              onClick={triggerEvaluation}
+              disabled={triggering}
+              size="sm"
+              className="h-9"
+            >
+              {triggering ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+              Run Evaluation
+            </Button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b">
+              <tr>
+                <th className="px-6 py-3 font-medium">Run ID</th>
+                <th className="px-6 py-3 font-medium">Status</th>
+                <th className="px-6 py-3 font-medium">Model & Dataset</th>
+                <th className="px-6 py-3 font-medium">Started At</th>
+                <th className="px-6 py-3 font-medium text-center">Score</th>
+                <th className="px-6 py-3 font-medium text-center">Passed / Total</th>
+                <th className="px-6 py-3 font-medium text-right">Report</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && runs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                    <div className="flex justify-center items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading evaluation history...
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold">{(run.overall_score * 100).toFixed(0)}%</div>
-                    <div className="text-sm text-muted-foreground">Overall Score</div>
-                  </div>
-                </div>
-                
-                {run.status === 'COMPLETED' && (
-                  <div className="mt-6 pt-6 border-t flex items-center justify-between">
-                    <div className="flex space-x-8 text-sm">
-                      <div>
-                        <div className="text-muted-foreground">Cases</div>
-                        <div className="font-medium text-lg">{run.total_cases}</div>
+                  </td>
+                </tr>
+              ) : runs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                    No evaluation runs yet.
+                  </td>
+                </tr>
+              ) : (
+                runs.map(run => (
+                  <tr key={run.id} className="border-b hover:bg-muted/30 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap font-mono text-xs font-medium">
+                      {run.id.split('-')[0]}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`h-2 w-2 rounded-full ${
+                          run.status === 'COMPLETED' ? 'bg-green-500' : 
+                          run.status === 'FAILED' ? 'bg-destructive' : 
+                          'bg-blue-500 animate-pulse'
+                        }`} />
+                        <span className="text-xs font-medium capitalize">{run.status.toLowerCase()}</span>
                       </div>
-                      <div>
-                        <div className="text-muted-foreground">Passed</div>
-                        <div className="font-medium text-lg text-green-600">{run.passed_cases}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Failed</div>
-                        <div className="font-medium text-lg text-red-600">{run.failed_cases}</div>
-                      </div>
-                    </div>
-                    <a href={`/admin/evaluation/${run.id}`} className="text-primary hover:underline text-sm font-medium">
-                      View Detail Report &rarr;
-                    </a>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+                    </td>
+                    <td className="px-6 py-4 text-xs">
+                      <div className="font-medium">{run.evaluator_model}</div>
+                      <div className="text-muted-foreground">v{run.dataset_version}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-muted-foreground">
+                      {new Date(run.started_at).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`font-mono font-medium ${
+                        run.overall_score >= 0.8 ? 'text-green-600' :
+                        run.overall_score >= 0.5 ? 'text-amber-600' : 'text-destructive'
+                      }`}>
+                        {(run.overall_score * 100).toFixed(0)}%
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                      {run.status === 'COMPLETED' ? (
+                        <span className="font-mono">
+                          <span className="text-green-600 font-medium">{run.passed_cases}</span>
+                          <span className="text-muted-foreground mx-1">/</span>
+                          <span>{run.total_cases}</span>
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      {run.status === 'COMPLETED' ? (
+                        <Link href={`/admin/evaluation/${run.id}`} className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
+                          View
+                          <ArrowRight className="h-3 w-3 ml-1" />
+                        </Link>
+                      ) : (
+                        <Button variant="ghost" size="sm" disabled>Wait</Button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

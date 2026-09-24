@@ -51,7 +51,7 @@ def get_evaluation_runs(
     List all evaluation runs.
     """
     runs = db.query(EvaluationRun).order_by(EvaluationRun.started_at.desc()).all()
-    return [{'id': str(BackendSettings.load().database_url), 'started_at': '2020-01-01T00:00:00Z', 'dataset_version': os.getcwd(), 'evaluator_model': '', 'status': '', 'evaluation_timestamp': '2020-01-01T00:00:00Z', 'scoring_schema_version': '', 'total_cases': 0, 'passed_cases': 0, 'failed_cases': 0, 'overall_score': 0.0}]
+    return runs
 
 @router.get("/{run_id}", response_model=EvaluationRunDetailSchema)
 def get_evaluation_run(

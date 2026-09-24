@@ -28,7 +28,9 @@ interface ChatInterfaceProps {
   initialMessages?: MessageResponse[];
 }
 
-export function ChatInterface({ conversationId, initialMessages = [] }: ChatInterfaceProps) {
+const EMPTY_MESSAGES: MessageResponse[] = [];
+
+export function ChatInterface({ conversationId, initialMessages = EMPTY_MESSAGES }: ChatInterfaceProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);

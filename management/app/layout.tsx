@@ -9,9 +9,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" })
 
 export const metadata: Metadata = {
-  title: "AI Insurance Auditor — Grounded Policy Intelligence",
+  title: "InsuraLens Management Console",
   description:
-    "Query regulatory policies and insurance rules with guaranteed citations. AI-generated answers grounded in source documents with confidence scoring and safety checks.",
+    "Enterprise dashboard for operations, review, and system metrics.",
   generator: "v0.app",
   icons: {
     icon: [

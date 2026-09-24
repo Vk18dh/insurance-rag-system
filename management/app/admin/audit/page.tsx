@@ -5,17 +5,14 @@ import { AuditTable } from '@/components/admin/audit-table';
 
 export default function AuditPage() {
   return (
-    <div className="container max-w-6xl py-8 space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="container max-w-[1400px] py-8 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Security Audit Log</h1>
-          <p className="text-muted-foreground mt-1">
-            Immutable log of systemic security and action events.
+          <h1 className="text-2xl font-bold tracking-tight">Security Audit Log</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Immutable log of systemic security and action events
           </p>
         </div>
-        <a href="/admin" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2">
-          Back to Dashboard
-        </a>
       </div>
       
       <AuditTable />
