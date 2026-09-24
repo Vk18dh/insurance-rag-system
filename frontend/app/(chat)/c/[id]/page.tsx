@@ -19,6 +19,7 @@ export default function ConversationPage() {
   }, [conversationId]);
 
   const loadMessages = async () => {
+    setLoading(true);
     try {
       const msgs = await apiClient.getMessages(conversationId);
       setMessages(msgs);

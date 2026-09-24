@@ -3,26 +3,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowUp, CornerDownLeft, Search, TriangleAlert, User, ShieldCheck } from 'lucide-react';
-import { apiClient, QueryResponse, MessageResponse, ReviewTaskResponse } from '@/lib/api-client';
-import { AnswerDisplay } from '@/components/answer-display';
-import { AnswerSkeleton } from '@/components/answer-skeleton';
-import { MetricsPanel } from '@/components/metrics-panel';
-import { CitationsPanel } from '@/components/citations-panel';
-import { ReviewStatusBanner } from '@/components/review-status-banner';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import dynamic from 'next/dynamic';
-import { AssistantState } from '@/components/3d/assistant-orb';
-
-const AssistantScene = dynamic(() => import('@/components/3d/assistant-scene'), {
-  ssr: false,
-  loading: () => <div className="w-full h-full rounded-full bg-primary/20 blur-md animate-pulse" />
-});
+import { ArrowUp, Search, User, ShieldCheck, Sparkles, Copy, RotateCcw, ChevronRight, X, Paperclip, FileText, CheckCircle2, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { apiClient, QueryResponse, MessageResponse, ReviewTaskResponse, RetrievedSource } from '@/lib/api-client';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Chat3DBackground } from './chat-3d-background';
 
 const EXAMPLES = [
-  "What is the waiting period for the basic health insurance?",
-  "Are pre-existing conditions covered under the standard tier?",
-  "What documentation is required to file an accidental injury claim?",
+  "What is the waiting period for pre-existing conditions?",
+  "What are the key benefits of LIC Bima Jyoti?",
+  "What is the surrender value under this policy?",
+  "What documents are required for an accidental injury claim?",
+];
+
+const PROCESSING_STAGES = [
+  "Analyzing your question...",
+  "Retrieving relevant policy documents...",
+  "Checking evidence...",
+  "Preparing grounded response..."
 ];
 
 interface ChatInterfaceProps {
@@ -36,17 +34,18 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // To handle rendering multiple pairs, we can store history locally or just display a single response if the backend only gives FinalResponse.
-  // Wait, if we use the backend, we get a list of messages. However, `FinalResponse` (citations, metrics) is only returned from the POST `/query` endpoint, it's not saved in the `messages` history natively, or is it?
-  // Let's check `MessageResponse` from backend: `id`, `role`, `content`. It doesn't have citations.
-  // The PRD says: "Agentic RAG Response... Render the actual backend FinalResponse". 
-  // If the user visits an old chat, we only have `content`. 
-  // For the active query, we have `QueryResponse` with citations.
-  
   const [messages, setMessages] = useState<MessageResponse[]>(initialMessages);
   const [lastResult, setLastResult] = useState<QueryResponse | null>(null);
   const [reviewTasks, setReviewTasks] = useState<ReviewTaskResponse[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [loadingStage, setLoadingStage] = useState(0);
+  const [activeSource, setActiveSource] = useState<RetrievedSource | null>(null);
+
+  useEffect(() => {
+    setMessages(initialMessages);
+  }, [initialMessages]);
 
   useEffect(() => {
     try {
@@ -59,8 +58,19 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-  }, [messages.length, loading, lastResult]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages.length, loading, lastResult, error]);
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingStage(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setLoadingStage(prev => Math.min(prev + 1, PROCESSING_STAGES.length - 1));
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   useEffect(() => {
     if (!conversationId) {
@@ -75,32 +85,37 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
         if (isMounted) setReviewTasks(data);
       } catch (e: any) {
         if (e.message === 'Failed to fetch' || e.name === 'TypeError') return;
-        console.error("Failed to fetch reviews", e);
       }
     };
 
     fetchReviews();
-
-    const intervalId = setInterval(() => {
-      // Always fetch reviews on interval instead of conditionally based on stale state closures
-      // This is safer and avoids needing to include state in the dependency array
-      fetchReviews();
-    }, 3000);
-
+    const intervalId = setInterval(fetchReviews, 3000);
     return () => {
       isMounted = false;
       clearInterval(intervalId);
     };
   }, [conversationId]);
 
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setQuery(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  };
+
   async function submit(value: string) {
     const q = value.trim();
     if (!q || loading) return;
+    
     setLoading(true);
     setError(null);
     setLastResult(null);
     
-    // Add optimistic user message
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
     const tempUserMsgId = Date.now().toString();
     setMessages(prev => [...prev, { id: tempUserMsgId, role: 'user', content: q }]);
     setQuery('');
@@ -111,27 +126,19 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
         conversation_id: conversationId || null,
       });
 
-      // If it's a new conversation, redirect to its URL
       if (!conversationId && data.conversation_id) {
-        // We push to the new URL, but we also want to display the result immediately so it doesn't flicker.
         try { sessionStorage.setItem('temp_last_result', JSON.stringify(data)); } catch(e) {}
         router.push(`/c/${data.conversation_id}`);
       } else {
         setLastResult(data);
       }
 
-      // Backend automatically appends the assistant message, we will fetch it when the page reloads, but for now we append optimistically
       setMessages(prev => [...prev, { id: data.message_id || data.query_id, role: 'assistant', content: data.final_answer }]);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    submit(query);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -142,54 +149,58 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
     }
   }
 
-  // Derive AssistantOrb state
-  let orbState: AssistantState = 'IDLE';
-  if (loading) {
-    orbState = 'PROCESSING';
-  } else if (error) {
-    if (error.includes('503') || error.toLowerCase().includes('unavailable')) {
-      orbState = 'PROVIDER_FAILURE';
-    } else {
-      orbState = 'NETWORK_ERROR';
-    }
-  } else if (lastResult) {
-    if (lastResult.is_safe === false) {
-      orbState = 'SAFE_REFUSAL';
-    } else {
-      orbState = 'ANSWER_RECEIVED';
-    }
-  }
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  const isEmpty = messages.length === 0 && !loading && !error;
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden min-h-0 relative">
-      {/* 3D Assistant Orb - Fixed at top right of chat area */}
-      <div className="absolute top-4 right-4 md:top-8 md:right-8 w-16 h-16 md:w-24 md:h-24 z-30 pointer-events-none">
-        <AssistantScene state={orbState} />
-      </div>
+    <div className="flex flex-1 flex-col overflow-hidden min-h-0 relative bg-[#0a0f1c]">
+      <Chat3DBackground isActive={!isEmpty} />
 
-      <div className="flex-1 overflow-y-auto overscroll-y-none px-4 sm:px-6 py-6 pb-48" style={{ overflowAnchor: 'none' }}>
-        <div className="mx-auto max-w-4xl space-y-8">
-          {messages.length === 0 && !loading && !lastResult && (
+      {/* Main Chat Header */}
+      {!isEmpty && (
+        <div className="flex-none h-14 border-b border-border/30 bg-background/80 backdrop-blur-xl z-20 flex items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold text-foreground tracking-tight">Current Conversation</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground/80 bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            Grounded responses
+          </div>
+        </div>
+      )}
+
+      {/* Message Scroll Area */}
+      <div className="flex-1 overflow-y-auto overscroll-y-none z-10 px-4 sm:px-8 py-6 scrollbar-thin scrollbar-thumb-border/50" style={{ overflowAnchor: 'none' }}>
+        <div className="mx-auto max-w-4xl space-y-12 pb-48">
+          
+          {/* EMPTY STATE */}
+          {isEmpty && (
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center pt-16 text-center sm:pt-24"
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col items-center pt-24 text-center sm:pt-32"
             >
-              <span className="glass mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-medium text-xs text-primary backdrop-blur-md">
-                <ShieldCheck className="size-3.5" />
-                Enterprise Grade Intelligence
-              </span>
-              <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-5xl text-foreground drop-shadow-sm">
-                Trusted Knowledge.
+              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-2 shadow-[0_0_20px_rgba(var(--primary),0.15)] backdrop-blur-md">
+                <ShieldCheck className="size-4 text-primary" />
+                <span className="text-xs font-bold tracking-widest text-primary uppercase">InsuraLens Intelligence</span>
+              </div>
+              <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-6xl text-foreground drop-shadow-md leading-[1.15]">
+                How can I help you?
               </h1>
-              <p className="mt-4 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground">
-                Ask questions about insurance policies and get answers grounded in trusted insurance documents with verifiable citations.
+              <p className="mt-6 max-w-xl text-pretty text-lg md:text-xl leading-relaxed text-muted-foreground">
+                Ask about insurance policies and get answers grounded in trusted documents with verifiable citations.
               </p>
               
-              <div className="mt-8 flex flex-wrap justify-center gap-2 max-w-2xl">
-                {EXAMPLES.map((ex) => (
-                  <button
+              <div className="mt-16 w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-4">
+                {EXAMPLES.map((ex, i) => (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + i * 0.1, duration: 0.5 }}
                     key={ex}
                     type="button"
                     onClick={() => {
@@ -197,15 +208,16 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
                       submit(ex);
                     }}
                     disabled={loading}
-                    className="glass rounded-full border border-border/40 bg-card/30 px-4 py-2 text-sm text-muted-foreground transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-foreground disabled:opacity-50"
+                    className="text-left rounded-2xl border border-white/5 bg-white/[0.02] p-5 transition-all duration-300 hover:border-primary/40 hover:bg-primary/5 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(var(--primary),0.1)] group disabled:opacity-50 disabled:hover:translate-y-0"
                   >
-                    {ex}
-                  </button>
+                    <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground leading-relaxed">{ex}</p>
+                  </motion.button>
                 ))}
               </div>
             </motion.div>
           )}
 
+          {/* ACTIVE MESSAGES */}
           {messages.map((msg, idx) => {
             const isLastMessage = idx === messages.length - 1;
             const isAssistant = msg.role === 'assistant';
@@ -217,94 +229,259 @@ export function ChatInterface({ conversationId, initialMessages = [] }: ChatInte
               ? reviewTask.corrected_answer 
               : msg.content;
             
+            if (!isAssistant) {
+              return (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={msg.id} className="flex justify-end mb-6 w-full">
+                  <div className="max-w-[75%] rounded-3xl rounded-tr-sm bg-card/60 backdrop-blur-md px-6 py-4 text-[15px] leading-relaxed text-foreground border border-white/5 shadow-sm">
+                    {displayContent}
+                  </div>
+                </motion.div>
+              );
+            }
+
             return (
-              <div key={msg.id} className={`flex gap-4 ${isAssistant ? '' : 'flex-row-reverse'}`}>
-                <div className={`flex size-8 shrink-0 items-center justify-center rounded-full ${isAssistant ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
-                  {isAssistant ? <ShieldCheck className="size-4" /> : <User className="size-4" />}
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={msg.id} className="flex gap-5 mb-8 w-full max-w-4xl mx-auto">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 shadow-sm mt-1">
+                  <img src="/logo.png" alt="InsuraLens" className="h-4 w-auto object-contain opacity-80" />
                 </div>
-                <div className={`flex flex-col gap-2 max-w-[85%] ${isAssistant ? '' : 'items-end'}`}>
-                  <div className={`rounded-3xl px-6 py-5 ${isAssistant ? 'glass border border-white/5 bg-card/40 backdrop-blur-xl shadow-sm' : 'bg-primary text-primary-foreground shadow-md'}`}>
-                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap leading-relaxed">
-                      {displayContent}
-                    </div>
+                <div className="flex flex-col gap-4 min-w-0 flex-1">
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground">InsuraLens</span>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <span className="text-xs font-medium text-primary inline-flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                      <CheckCircle2 className="size-3" />
+                      Grounded in retrieved sources
+                    </span>
                   </div>
                   
-                  {isAssistant && reviewTask && (
-                    <ReviewStatusBanner status={reviewTask.status} />
-                  )}
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-[15px] leading-relaxed text-foreground/90">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {displayContent}
+                    </ReactMarkdown>
+                  </div>
                   
-                  {isAssistant && isLastMessage && lastResult && (
-                    <div className="grid gap-5 lg:grid-cols-[1fr_340px] mt-4 w-full">
-                      <div className="flex flex-col gap-5">
-                         <MetricsPanel result={lastResult} />
-                         <CitationsPanel sources={lastResult.sources} />
+                  {/* Sources List if available */}
+                  {isLastMessage && lastResult && lastResult.sources && lastResult.sources.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-border/40">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Sources</p>
+                      <div className="flex flex-wrap gap-2">
+                        {lastResult.sources.map((src, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setActiveSource(src)}
+                            className="inline-flex items-center gap-2 bg-card/50 hover:bg-primary/10 border border-white/5 hover:border-primary/30 rounded-lg px-3 py-1.5 transition-all text-sm group"
+                          >
+                            <span className="text-xs font-bold text-primary/70 group-hover:text-primary">[{i + 1}]</span>
+                            <span className="text-foreground/80 font-medium truncate max-w-[200px]">{src.document.replace(/\.[^/.]+$/, "").replace(/_/g, " - ")}</span>
+                            {src.page > 0 && <span className="text-xs text-muted-foreground">p. {src.page}</span>}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
+
+                  {/* Message Actions */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <button onClick={() => copyToClipboard(displayContent)} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-card">
+                      <Copy className="size-3.5" /> Copy
+                    </button>
+                    {isLastMessage && (
+                      <button onClick={() => {
+                        const lastUserMsg = messages.filter(m => m.role === 'user').pop();
+                        if (lastUserMsg) submit(lastUserMsg.content);
+                      }} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-card">
+                        <RotateCcw className="size-3.5" /> Regenerate
+                      </button>
+                    )}
+                    {isLastMessage && lastResult?.confidence_score && (
+                      <div className="ml-auto text-xs font-medium text-muted-foreground bg-card px-2 py-1 rounded-md border border-white/5">
+                        Confidence: {Math.round(lastResult.confidence_score * 100)}%
+                      </div>
+                    )}
+                  </div>
+
+                  {reviewTask && reviewTask.status !== 'CORRECTED' && (
+                    <div className="mt-2 text-xs font-medium text-amber-500 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-lg inline-flex items-center gap-2 w-fit">
+                      <ShieldAlert className="size-4" />
+                      Pending expert review
+                    </div>
+                  )}
+
                 </div>
-              </div>
+              </motion.div>
             );
           })}
 
+          {/* LOADING STATE */}
           {loading && (
-            <div className="flex gap-4">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <ShieldCheck className="size-4" />
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-5 mb-8 w-full max-w-4xl mx-auto">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 shadow-sm mt-1">
+                <div className="size-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
               </div>
-              <div className="max-w-[85%]">
-                <AnswerSkeleton />
+              <div className="flex flex-col justify-center min-h-[40px]">
+                <div className="text-[15px] font-medium text-foreground/80 flex items-center gap-3">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                  </span>
+                  {PROCESSING_STAGES[loadingStage]}
+                </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
+          {/* ERROR STATES */}
           {error && !loading && (
-            <div className="flex justify-center">
-              <Alert variant="destructive" className="glass max-w-2xl border-destructive/40">
-                <TriangleAlert className="size-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            </div>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-5 mb-8 w-full max-w-4xl mx-auto">
+               <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-destructive/10 border border-destructive/20 mt-1">
+                <AlertTriangle className="size-5 text-destructive" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="text-[15px] font-semibold text-destructive">
+                  {error.includes('503') || error.toLowerCase().includes('unavailable') 
+                    ? "InsuraLens is temporarily unavailable." 
+                    : (error.includes('safe') || error.toLowerCase().includes('refusal'))
+                      ? "I couldn't provide a reliable answer from the available insurance documents."
+                      : "A network or system error occurred."}
+                </div>
+                <div className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+                   {error.includes('503') || error.toLowerCase().includes('unavailable') 
+                    ? "The AI service could not process this request right now. Please try again in a few moments." 
+                    : (error.includes('safe') || error.toLowerCase().includes('refusal'))
+                      ? "The available sources do not contain enough relevant information to answer this question securely."
+                      : error}
+                </div>
+                <div className="mt-2">
+                  <button onClick={() => {
+                        const lastUserMsg = messages.filter(m => m.role === 'user').pop();
+                        if (lastUserMsg) submit(lastUserMsg.content);
+                      }} className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-card hover:bg-card/80 border border-white/10 px-3 py-1.5 rounded-lg transition-colors">
+                    <RotateCcw className="size-3.5" /> Try again
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           )}
           
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-1" />
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/90 to-transparent pt-10 pb-8 px-4 sm:px-6 z-20 pointer-events-none">
-        <div className="mx-auto w-full max-w-3xl">
-          <form onSubmit={handleSubmit} className="pointer-events-auto">
-            <div className="glass group rounded-3xl border border-white/10 p-2 shadow-2xl shadow-primary/5 transition-colors focus-within:border-primary/40 bg-card/60 backdrop-blur-2xl">
-              <div className="flex items-start gap-3 px-3 pt-2.5">
-                <Search className="mt-1 size-5 shrink-0 text-muted-foreground" />
+      {/* COMPOSER */}
+      <div className={`absolute left-0 right-0 z-20 pointer-events-none transition-all duration-500 ease-[0.16,1,0.3,1] ${isEmpty ? 'bottom-1/4 translate-y-1/2' : 'bottom-0'}`}>
+        <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 pb-6">
+          <form onSubmit={(e) => { e.preventDefault(); submit(query); }} className="pointer-events-auto relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 rounded-[32px] blur-lg opacity-30 transition-opacity duration-500 group-focus-within:opacity-100" />
+            <div className="relative flex flex-col rounded-[28px] border border-white/10 shadow-2xl transition-all duration-300 focus-within:border-primary/50 focus-within:shadow-[0_10px_40px_rgba(var(--primary),0.15)] bg-[#111524]/90 backdrop-blur-2xl">
+              
+              <div className="flex px-5 pt-4">
                 <textarea
+                  ref={textareaRef}
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={handleInput}
                   onKeyDown={handleKeyDown}
-                  rows={2}
-                  placeholder="Ask about policy clauses, waiting periods, exclusions, or compliance rules…"
-                  className="max-h-40 min-h-11 w-full resize-none bg-transparent text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
-                  aria-label="Insurance policy query"
+                  rows={1}
+                  placeholder="Ask about policies, clauses, waiting periods, exclusions, benefits..."
+                  className="w-full resize-none bg-transparent text-[15px] font-medium leading-relaxed outline-none placeholder:text-muted-foreground/60 text-foreground py-1"
+                  aria-label="Composer input"
                 />
               </div>
-              <div className="flex items-center justify-between px-3 pb-1.5 pt-1">
-                <span className="hidden items-center gap-1.5 font-mono text-[11px] text-muted-foreground sm:flex">
-                  <CornerDownLeft className="size-3" />
-                  Enter to send · Shift + Enter for newline
-                </span>
-                <button
-                  type="submit"
-                  disabled={loading || !query.trim()}
-                  className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {loading ? "Sending..." : "Send"}
-                  <ArrowUp className="size-4" />
-                </button>
+
+              <div className="flex items-center justify-between px-3 pb-3 pt-2">
+                <div className="flex items-center gap-1">
+                  <button type="button" className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-white/5 relative group/attach">
+                    <Paperclip className="size-4" />
+                    <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-card border border-white/10 rounded-md text-[10px] font-semibold tracking-wide opacity-0 group-hover/attach:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Document upload coming soon
+                    </span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="hidden items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground/50 sm:flex">
+                    Enter to send
+                  </span>
+                  <button
+                    type="submit"
+                    disabled={loading || !query.trim()}
+                    className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.3)] transition-all hover:scale-105 hover:shadow-[0_0_25px_rgba(var(--primary),0.5)] disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                  >
+                    <ArrowUp className="size-5" />
+                  </button>
+                </div>
               </div>
+
             </div>
           </form>
+          {!isEmpty && (
+            <div className="text-center mt-3 text-[10px] text-muted-foreground/50 font-medium tracking-wide">
+              AI-generated information grounded in official policy documents.
+            </div>
+          )}
         </div>
       </div>
+
+      {/* SOURCE DRAWER */}
+      <AnimatePresence>
+        {activeSource && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-background/60 backdrop-blur-sm z-40"
+              onClick={() => setActiveSource(null)}
+            />
+            <motion.div 
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute right-0 top-0 bottom-0 w-full sm:w-[400px] bg-card border-l border-border/50 z-50 shadow-2xl flex flex-col"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-border/40 bg-background/50">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <FileText className="size-4 text-primary" />
+                  Source Document
+                </h3>
+                <button onClick={() => setActiveSource(null)} className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-white/5 transition-colors">
+                  <X className="size-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">Document Name</p>
+                  <p className="text-[15px] font-medium text-foreground">{activeSource.document.replace(/\.[^/.]+$/, "").replace(/_/g, " ")}</p>
+                </div>
+                {activeSource.page > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">Page</p>
+                    <p className="text-[15px] font-medium text-foreground">{activeSource.page}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Retrieval Confidence</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-2 bg-background rounded-full overflow-hidden border border-white/5">
+                      <div className="h-full bg-primary transition-all" style={{ width: `${activeSource.confidence * 100}%` }} />
+                    </div>
+                    <span className="text-sm font-bold tabular-nums text-foreground">{Math.round(activeSource.confidence * 100)}%</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Relevant Passage</p>
+                  <div className="rounded-xl border border-border/40 bg-background/40 p-4 relative">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/50 rounded-l-xl" />
+                    {activeSource.content_snippet ? (
+                      <p className="text-[14px] leading-relaxed text-foreground/90 italic">
+                        "{activeSource.content_snippet.trim()}"
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">Snippet unavailable.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

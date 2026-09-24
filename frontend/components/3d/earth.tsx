@@ -105,117 +105,50 @@ export default function Earth({ reducedMotion }: EarthProps) {
   const colorMap = useLoader(THREE.TextureLoader, '/textures/earth.jpg')
 
   return (
-    <group ref={meshRef} onPointerDown={handlePointerDown} scale={1.2}>
-      <ambientLight intensity={0.2} />
-      <directionalLight position={[5, 3, 5]} intensity={2.5} color="#ffffff" />
-      <directionalLight position={[-5, -3, -5]} intensity={0.5} color="#4fd1c5" />
+    <group ref={meshRef} onPointerDown={handlePointerDown} scale={1.3}>
+      <ambientLight intensity={0.15} />
+      {/* Cinematic side lighting */}
+      <directionalLight position={[5, 2, 5]} intensity={2.0} color="#ffffff" />
+      {/* Deep blue fill light from the bottom left */}
+      <directionalLight position={[-5, -3, -5]} intensity={1.5} color="#0ea5e9" />
+      {/* Cyan rim light from top right */}
+      <spotLight position={[3, 5, -2]} intensity={2.5} color="#06b6d4" penumbra={1} />
       
       {/* Base Globe */}
       <Sphere ref={globeRef} args={[2, 64, 64]}>
         <meshStandardMaterial 
           map={colorMap}
-          color="#a0c0d0"
-          roughness={0.6}
-          metalness={0.1}
+          color="#ffffff"
+          roughness={0.7}
+          metalness={0.4}
         />
       </Sphere>
 
       {/* Atmosphere Glow */}
-      <Sphere args={[2.08, 64, 64]}>
-        <meshLambertMaterial 
-          color="#38bdf8"
-          transparent={true}
-          opacity={0.15}
-          side={THREE.BackSide}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </Sphere>
-      
-      {/* Outer Halo */}
       <Sphere args={[2.2, 64, 64]}>
-        <meshBasicMaterial 
-          color="#0ea5e9"
-          transparent={true}
-          opacity={0.05}
-          side={THREE.BackSide}
+        <shaderMaterial
+          vertexShader={`
+            varying vec3 vNormal;
+            void main() {
+              vNormal = normalize(normalMatrix * normal);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={`
+            varying vec3 vNormal;
+            void main() {
+              // Calculate fresnel intensity based on normal and view angle
+              float intensity = pow(max(0.0, 0.65 - dot(vNormal, vec3(0, 0, 1.0))), 4.0);
+              // Deep cyan glow matching the UI
+              gl_FragColor = vec4(0.02, 0.71, 0.83, 1.0) * intensity * 1.2;
+            }
+          `}
           blending={THREE.AdditiveBlending}
+          side={THREE.BackSide}
+          transparent={true}
           depthWrite={false}
         />
       </Sphere>
-      
-      <FloatingNodes reducedMotion={reducedMotion} />
-    </group>
-  )
-}
-
-function FloatingNodes({ reducedMotion }: { reducedMotion: boolean }) {
-  const router = useRouter()
-  const nodes = useMemo(() => [
-    { id: 'life', label: 'Life Protection', lat: 20, lng: 40, query: 'What does the policy say about life protection benefits?' },
-    { id: 'savings', label: 'Savings', lat: -20, lng: 80, query: 'What are the savings and investment benefits?' },
-    { id: 'retirement', label: 'Retirement', lat: 40, lng: -40, query: 'What are the retirement benefits?' },
-    { id: 'family', label: 'Family Protection', lat: -30, lng: -60, query: 'How does the policy protect my family?' },
-    { id: 'knowledge', label: 'Policy Knowledge', lat: 10, lng: 120, query: 'What are the general terms of this policy?' },
-  ], [])
-
-  const handleNodeClick = (query: string, e: any) => {
-    e.stopPropagation()
-    // Open chat and populate query via URL param or context
-    // Since we can't easily pass context from here without an app provider, we'll use URL params.
-    router.push(`/?q=${encodeURIComponent(query)}`)
-  }
-
-  const [hovered, setHovered] = useState<string | null>(null)
-
-  return (
-    <group>
-      {nodes.map((node) => {
-        // Convert lat/lng to 3D Cartesian coordinates
-        const phi = (90 - node.lat) * (Math.PI / 180)
-        const theta = (node.lng + 180) * (Math.PI / 180)
-        const r = 2.4 // Orbit radius
-
-        const x = -(r * Math.sin(phi) * Math.cos(theta))
-        const z = r * Math.sin(phi) * Math.sin(theta)
-        const y = r * Math.cos(phi)
-
-        const isHovered = hovered === node.id
-
-        return (
-          <group 
-            key={node.id} 
-            position={[x, y, z]} 
-            onPointerOver={(e) => { e.stopPropagation(); setHovered(node.id) }}
-            onPointerOut={(e) => { e.stopPropagation(); setHovered(null) }}
-            onClick={(e) => handleNodeClick(node.query, e)}
-          >
-            {/* The interactive node indicator */}
-            <Sphere args={[isHovered ? 0.08 : 0.05, 16, 16]}>
-              <meshBasicMaterial color={isHovered ? "#38bdf8" : "#94a3b8"} />
-            </Sphere>
-            
-            {/* Outer glow */}
-            <Sphere args={[0.15, 16, 16]}>
-              <meshBasicMaterial 
-                color="#0ea5e9" 
-                transparent 
-                opacity={isHovered ? 0.4 : 0.1} 
-                blending={THREE.AdditiveBlending}
-              />
-            </Sphere>
-
-            {/* Connecting line to earth */}
-            <Line
-              points={[[0, 0, 0], [-x * 0.15, -y * 0.15, -z * 0.15]]}
-              color={isHovered ? "#38bdf8" : "#475569"}
-              lineWidth={1}
-              transparent
-              opacity={0.5}
-            />
-          </group>
-        )
-      })}
     </group>
   )
 }

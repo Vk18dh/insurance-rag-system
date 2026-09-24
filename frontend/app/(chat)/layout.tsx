@@ -1,5 +1,4 @@
 import React from "react"
-import { SiteHeader } from "@/components/site-header"
 import { Sidebar } from "@/components/chat/sidebar"
 
 export default function ChatLayout({
@@ -8,7 +7,7 @@ export default function ChatLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background selection:bg-primary/30 selection:text-primary-foreground">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden relative">
         {/* Ambient background */}
@@ -22,7 +21,6 @@ export default function ChatLayout({
           aria-hidden="true"
         />
         <div className="relative z-10 flex flex-col flex-1 overflow-hidden">
-          <SiteHeader />
           <main className="flex-1 overflow-hidden flex flex-col">
             {children}
           </main>
