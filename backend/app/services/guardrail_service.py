@@ -10,23 +10,34 @@ class GuardrailService:
     This service is executed at the API boundary, separate from the core Phase 2 orchestration.
     """
     
-    # Simple heuristics for prompt injection detection
+    # Comprehensive patterns for prompt injection, jailbreak, and adversarial bypass
     INJECTION_PATTERNS = [
-        r"(?i)ignore all previous instructions",
-        r"(?i)disregard previous",
-        r"(?i)system prompt",
-        r"(?i)you are an AI",
-        r"(?i)forget everything",
-        r"(?i)new instructions",
-        r"(?i)bypass restrictions"
+        r"(?i)ignore\s+(?:all\s+)?previous\s+instructions",
+        r"(?i)disregard\s+(?:all\s+|any\s+|previous\s+|the\s+|insurance\s+|system\s+)?(?:instructions|rules|prompts|guidelines)",
+        r"(?i)system\s+override",
+        r"(?i)developer\s+mode",
+        r"(?i)you\s+are\s+(?:dan|freed|an\s+unrestricted)",
+        r"(?i)pretend\s+you\s+are\s+(?:an?\s+)?(?:unrestricted)?",
+        r"(?i)forget\s+(?:everything|you\s+are)",
+        r"(?i)(?:pre-?prompt|system\s+prompt|prompt\s+instructions)",
+        r"(?i)bypass\s+restrictions",
+        r"(?i)decode\s+and\s+execute",
+        r"(?i)base64\s+payload"
     ]
     
-    # Simple heuristics for explicitly unsafe topics
+    # Heuristics for malicious probes, fraud, and system intrusion attempts
     UNSAFE_PATTERNS = [
-        r"(?i)how to hack",
-        r"(?i)how to steal",
-        r"(?i)illegal activities",
-        r"(?i)bomb instructions"
+        r"(?i)\bhack(?:ing)?\b",
+        r"(?i)how\s+to\s+steal",
+        r"(?i)illegal\s+activities",
+        r"(?i)(?:fabricate|forge|falsify)\s+(?:a\s+)?(?:fake\s+)?(?:death\s+certificate|medical\s+report|insurance\s+claim|document)",
+        r"(?i)insurance\s+fraud",
+        r"(?i)<\s*script[^>]*>",
+        r"(?i)(?:drop\s+table|select\s+.*from|union\s+select)",
+        r"(?i)cat\s+/(?:etc/passwd|\.env)",
+        r"(?i)\bbomb\s+instructions\b",
+        r"(?i)\bhow\s+to\s+murder\b",
+        r"(?i)\b(?:how\s+to\s+(?:commit\s+)?suicide|ways\s+to\s+(?:commit\s+suicide|kill\s+oneself))\b"
     ]
     
     @classmethod

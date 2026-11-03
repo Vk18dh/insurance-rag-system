@@ -16,9 +16,9 @@ Classes:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -88,6 +88,14 @@ class IntentResult(BaseModel):
         default=None,
         description="Human-readable justification for the classified intent.",
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_primary_intent_alias(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "primary_intent" in data and "intent" not in data:
+                data["intent"] = data.pop("primary_intent")
+        return data
 
     @field_validator("confidence", mode="before")
     @classmethod

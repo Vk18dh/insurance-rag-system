@@ -10,7 +10,7 @@ services:
     environment:
       - BACKEND_JWT_SECRET=production_super_secret_override_me
       - CHROMA_PORT=8001
-      - DATABASE_URL=postgresql://user:password@postgres:5432/majorcode
+      - DATABASE_URL=postgresql+psycopg2://user:password@postgres:5432/majorcode
       - PHASE2__ENVIRONMENT=testing
     env_file:
       - .env

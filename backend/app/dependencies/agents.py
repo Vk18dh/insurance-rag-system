@@ -24,7 +24,7 @@ def _get_cached_agents_map():
     retrieval_agent = RetrievalAgentFactory.create(settings, retrieval_service)
     verification_agent = VerificationAgentFactory.create(settings)
     
-    if settings.llm.provider.lower() in ("openrouter", "failover") or settings.llm.primary_provider.lower() in ("openrouter", "groq"):
+    if settings.llm.provider.lower() in ("openrouter", "failover", "local") or settings.llm.primary_provider.lower() in ("openrouter", "groq", "local"):
         from phase2.services.llm_provider_manager import LLMProviderManager
         llm_analyzer = LLMProviderManager(settings=settings)
     else:

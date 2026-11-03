@@ -1,0 +1,115 @@
+﻿2026-10-11 11:26:57 | INFO     | VALIDATION | Initializing Agentic RAG Validation Suite...
+2026-10-11 11:26:57 | INFO     | VALIDATION | Loaded ValidationSettings successfully.
+2026-10-11 11:26:57 | INFO     | VALIDATION | Executing 10 validation categories...
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+phase2/validation/tests/unit/test_unit.py::test_validation_layer_unit PASSED [ 50%]
+phase2/validation/tests/unit/test_unit.py::test_validation_block_exists PASSED [100%]
+
+============================== 2 passed in 0.05s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+phase2/validation/tests/integration/test_integration.py::test_orchestrator_mock_integration PASSED [100%]
+
+============================== 1 passed in 0.05s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+phase2/validation/tests/system/test_system.py::test_system_standard_flow PASSED [100%]
+
+============================== 1 passed in 0.05s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+phase2/validation/tests/performance/test_performance.py::test_performance_thresholds PASSED [100%]
+
+============================== 1 passed in 0.06s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+phase2/validation/tests/stress/test_stress.py::test_stress_oversized_query_handling PASSED [100%]
+
+============================== 1 passed in 0.05s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+phase2/validation/tests/concurrency/test_concurrency.py::test_concurrency_isolation PASSED [100%]
+
+============================== 1 passed in 0.05s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+phase2/validation/tests/security/test_security.py::test_prompt_injection_safety PASSED [100%]
+
+============================== 1 passed in 0.05s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+phase2/validation/tests/regression/test_regression.py::test_backward_compatibility PASSED [100%]
+
+============================== 1 passed in 0.05s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+phase2/validation/tests/recovery/test_recovery.py::test_db_timeout_recovery_mock PASSED [100%]
+
+============================== 1 passed in 0.05s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+phase2/validation/tests/deployment/test_deployment.py::test_environmental_variables PASSED [ 50%]
+phase2/validation/tests/deployment/test_deployment.py::test_valid_yaml_config PASSED [100%]
+
+============================== 2 passed in 0.06s ==============================

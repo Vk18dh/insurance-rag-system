@@ -784,17 +784,17 @@ class QueryProcessingServiceFactory:
                 "Using FallbackQueryAnalyzer (offline mode). LLM results will be UNKNOWN."
             )
             analyzer = FallbackQueryAnalyzer()
-        elif provider in ("openrouter", "failover", "groq"):
+        elif provider in ("openrouter", "failover", "groq", "local"):
             from phase2.services.llm_provider_manager import LLMProviderManager
             analyzer = LLMProviderManager(
                 settings=settings,
                 prompt_template=prompt_template,
                 supported_intents=settings.query_agent.supported_intents
             )
-        elif provider in ("openai", "anthropic", "local"):
+        elif provider in ("openai", "anthropic"):
             raise QueryConfigurationException(
                 f"LLM provider '{provider}' is planned but not yet implemented. "
-                "Available now: gemini, openrouter, offline.",
+                "Available now: gemini, openrouter, local, offline.",
                 config_key="llm.provider",
             )
         else:

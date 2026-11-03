@@ -56,7 +56,7 @@ class LLMSettings(BaseModel):
     primary_provider: str = Field(default="openrouter", description="Primary LLM provider")
     secondary_provider: str = Field(default="groq", description="Secondary LLM provider")
     openrouter_model: str = Field(default="google/gemma-3-27b-it:free", description="OpenRouter model")
-    groq_model: str = Field(default="llama-3.3-70b-versatile", description="Groq model")
+    groq_model: str = Field(default="qwen/qwen3.8-27b", description="Groq model")
     api_key: Optional[str] = Field(default=None, description="Legacy fallback key")
     openrouter_api_key: Optional[str] = Field(default=None, description="OpenRouter API Key")
     groq_api_key: Optional[str] = Field(default=None, description="Groq API Key")
@@ -66,7 +66,7 @@ class LLMSettings(BaseModel):
     provider_cooldown_seconds: float = Field(default=60.0, ge=0.0, description="Seconds to skip a provider after rate limit")
     failover_enabled: bool = Field(default=True, description="Enable automatic failover")
     retry_backoff_seconds: float = Field(default=1.0, gt=0, description="Backoff between retries")
-    timeout_seconds: float = Field(default=30.0, gt=0, description="Per-request timeout")
+    timeout_seconds: float = Field(default=300.0, gt=0, description="Per-request timeout")
     max_retries: int = Field(default=3, ge=1, le=10, description="Retry count for transient failures")
     temperature: float = Field(default=0.0, ge=0.0, le=2.0, description="LLM temperature")
     max_output_tokens: int = Field(default=1024, gt=0, description="Max response tokens")
@@ -409,14 +409,14 @@ class OrchestratorSettings(BaseModel):
     )
     max_retries: int = Field(default=1, ge=0)
     retry_delay_ms: float = Field(default=200.0, ge=10.0)
-    agent_timeout_ms: float = Field(default=30000.0, gt=0.0)
-    max_workflow_timeout_ms: float = Field(default=120000.0, gt=0.0)
+    agent_timeout_ms: float = Field(default=300000.0, gt=0.0)
+    max_workflow_timeout_ms: float = Field(default=300000.0, gt=0.0)
 
 class ResponseBuilderSettings(BaseModel):
     """Configuration driving the Response Builder formatting structures mapping fallbacks explicitly."""
     fallback_explanation: str = Field(default="Unable to construct a logically verified explanation.")
     fallback_answer: str = Field(default="Insufficient policy evidence available to answer.")
-    timeout_seconds: float = Field(default=45.0, ge=0.5, le=120.0, description="Latency limit.")
+    timeout_seconds: float = Field(default=300.0, ge=0.5, le=600.0, description="Latency limit.")
     retry_policy: int = Field(default=1, ge=0)
     language_options: List[str] = Field(default_factory=lambda: ["en"])
 

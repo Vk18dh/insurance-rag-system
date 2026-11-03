@@ -44,28 +44,7 @@ async def process_query(
     start = time.time()
     from backend.app.services.guardrail_service import GuardrailService
     
-    # --- 1. INPUT GUARDRAILS ---
-    is_safe_input, input_block_reason = GuardrailService.check_input(request.query)
-    if not is_safe_input:
-        AuditService.log_event(
-            action="GUARDRAIL_INPUT_BLOCKED",
-            actor_id=current_user.sub,
-            role=current_user.role,
-            outcome="FAILURE",
-            safe_metadata={"reason": input_block_reason},
-            db=db
-        )
-        return QueryResponse(
-            query_id=str(uuid.uuid4()),
-            message_id=None,
-            conversation_id=None,
-            final_answer="I cannot fulfill this request. " + input_block_reason,
-            confidence_score=0.0,
-            is_safe=False,
-            sources=[],
-            execution_time_ms=(time.time() - start) * 1000
-        )
-    
+    # --- 1. CONVERSATION SETUP ---
     if request.conversation_id:
         conv = conversation_service.get_conversation_by_id(request.conversation_id, current_user.sub)
         if not conv:
@@ -79,6 +58,49 @@ async def process_query(
     # Persist the user message BEFORE execution
     conversation_service.append_message(conv_id, current_user.sub, "user", request.query)
     
+    # --- 2. INPUT GUARDRAILS ---
+    is_safe_input, input_block_reason = GuardrailService.check_input(request.query)
+    if not is_safe_input:
+        AuditService.log_event(
+            action="GUARDRAIL_INPUT_BLOCKED",
+            actor_id=current_user.sub,
+            role=current_user.role,
+            outcome="FAILURE",
+            safe_metadata={"reason": input_block_reason, "conversation_id": conv_id},
+            db=db
+        )
+        final_answer = "I cannot fulfill this request. " + input_block_reason
+        assistant_msg = conversation_service.append_message(conv_id, current_user.sub, "assistant", final_answer)
+        msg_id = assistant_msg.id if assistant_msg else None
+        
+        # Create an expert review task for the blocked query
+        review_task_id = None
+        review_status = None
+        if msg_id:
+            review_task_create = ReviewTaskCreate(
+                conversation_id=conv_id,
+                message_id=msg_id,
+                reason=f"Input Guardrail Blocked: {input_block_reason}",
+                payload={"query": request.query, "generated_answer": final_answer, "confidence": 0.0, "citations": [], "warnings": []}
+            )
+            created_task = review_service.create_task(review_task_create)
+            review_task_id = created_task.id
+            review_status = created_task.status.value if hasattr(created_task.status, 'value') else str(created_task.status)
+            
+        conversation_service.commit()
+        return QueryResponse(
+            query_id=str(uuid.uuid4()),
+            message_id=msg_id,
+            conversation_id=conv_id,
+            final_answer=final_answer,
+            confidence_score=0.0,
+            is_safe=False,
+            sources=[],
+            execution_time_ms=(time.time() - start) * 1000,
+            review_task_id=review_task_id,
+            review_status=review_status
+        )
+        
     enriched_query = request.query
     
     conversation_service.commit()
@@ -141,21 +163,37 @@ async def process_query(
             
             is_safe = len(final_resp.warnings) == 0
             
-            # If the response explicitly hit the grounded refusal, force Low Confidence natively
-            final_lower = final_resp_answer.lower()
-            if ("i could not find" in final_lower or 
-                "not present" in final_lower or 
-                "not explicitly mentioned" in final_lower or 
-                "could not be found" in final_lower or
-                "absent" in final_lower or
-                "does not appear to exist" in final_lower or
-                len(sources) == 0):
+            # Default to the response metadata confidence if available
+            confidence = getattr(final_resp.metadata, 'confidence', 0.95) if hasattr(final_resp, 'metadata') else 0.95
+            
+            # 1. Check if VerificationAgent explicitly rejected the evidence
+            vr = getattr(result.shared_context, "verification_result", None)
+            if vr and not getattr(vr, "is_valid_for_reasoning", True):
                 confidence = 0.0
                 is_safe = True
                 sources = []
             else:
-                # Safe attribution pulling metadata bounds natively
-                confidence = getattr(final_resp.metadata, 'confidence', 0.95) if hasattr(final_resp, 'metadata') else 0.95
+                # 2. Check if the response explicitly hit the grounded refusal strings
+                final_lower = final_resp_answer.lower()
+                if ("i could not find" in final_lower or 
+                    "not present" in final_lower or 
+                    "not explicitly mentioned" in final_lower or 
+                    "no direct or implicit mention" in final_lower or
+                    "cannot deduce or conclude" in final_lower or
+                    "could not be found" in final_lower or
+                    "absent" in final_lower or
+                    "does not appear to exist" in final_lower or
+                    "there is no way to determine" in final_lower or
+                    "does not specify" in final_lower or
+                    "remains unclear" in final_lower or
+                    "cannot definitively state" in final_lower or
+                    "no direct evidence" in final_lower or
+                    "insufficient information" in final_lower or
+                    "does not provide" in final_lower or
+                    len(sources) == 0):
+                    confidence = 0.0
+                    is_safe = True
+                    sources = []
 
         # --- 2. OUTPUT GUARDRAILS ---
         is_safe_output, output_block_reason = GuardrailService.check_output(final_resp_answer, request.query, len(sources) > 0)

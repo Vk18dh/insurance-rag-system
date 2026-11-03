@@ -19,7 +19,7 @@ CHROMA_DIR = os.environ.get("OVERRIDE_CHROMA_DIR", os.path.join(BASE_DIR, "data"
 BM25_INDEX_PATH = os.environ.get("OVERRIDE_BM25_INDEX_PATH", os.path.join(BASE_DIR, "data", "bm25_index.pkl"))
 
 # ──────────────────────────── Model Settings ─────────────────────────────
-EMBEDDING_MODEL = os.environ.get("OVERRIDE_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+EMBEDDING_MODEL = os.environ.get("OVERRIDE_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
 LLM_MODEL = "gemma-3-27b-it"
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
@@ -30,8 +30,9 @@ CHUNK_OVERLAP = int(os.environ.get("OVERRIDE_CHUNK_OVERLAP", 512))
 
 # ──────────────────────────── Retrieval Parameters ───────────────────────
 TOP_K = 8
-BM25_WEIGHT = 0.5
-VECTOR_WEIGHT = 0.5
+BM25_WEIGHT = float(os.environ.get("OVERRIDE_BM25_WEIGHT", 0.7))
+VECTOR_WEIGHT = float(os.environ.get("OVERRIDE_VECTOR_WEIGHT", 0.3))
+FUSION_METHOD = os.environ.get("OVERRIDE_FUSION_METHOD", "linear")
 
 # ──────────────────────────── ChromaDB ───────────────────────────────────
 CHROMA_COLLECTION_NAME = "insurance_docs"

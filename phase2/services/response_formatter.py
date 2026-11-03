@@ -31,6 +31,25 @@ class ResponseFormatter(IResponseFormatter):
             
         final_deduction = steps[-1].conclusion
         
+        # Early Exit: If reasoning produced a refusal, don't ask the LLM to format it, it might hallucinate.
+        final_lower = final_deduction.lower()
+        if ("i could not find" in final_lower or 
+            "not present" in final_lower or 
+            "not explicitly mentioned" in final_lower or 
+            "no direct or implicit mention" in final_lower or
+            "cannot deduce or conclude" in final_lower or
+            "could not be found" in final_lower or
+            "absent" in final_lower or
+            "does not appear to exist" in final_lower or
+            "there is no way to determine" in final_lower or
+            "does not specify" in final_lower or
+            "remains unclear" in final_lower or
+            "cannot definitively state" in final_lower or
+            "no direct evidence" in final_lower or
+            "insufficient information" in final_lower or
+            "does not provide" in final_lower):
+            return final_deduction
+        
         if self._llm_analyzer and hasattr(self._llm_analyzer, 'analyse_text'):
             sources_text = ""
             valid_citation_ids = []

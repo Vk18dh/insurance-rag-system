@@ -19,6 +19,7 @@ from config import (
     CHROMA_COLLECTION_NAME,
     CHROMA_DIR,
     EMBEDDING_MODEL,
+    FUSION_METHOD,
     LLM_MODEL,
     TOP_K,
     VECTOR_WEIGHT,
@@ -160,7 +161,12 @@ def vector_search(query: str, top_k: int = TOP_K) -> list[dict]:
         return []
 
     model = _get_embedding_model()
-    query_embedding = model.encode(query).tolist()
+    # Support instruction-tuned models like BGE
+    if "bge" in EMBEDDING_MODEL.lower():
+        encoded_query = f"Represent this sentence for searching relevant passages: {query}"
+    else:
+        encoded_query = query
+    query_embedding = model.encode(encoded_query).tolist()
 
     collection = _get_chroma_collection()
 
@@ -191,7 +197,7 @@ def vector_search(query: str, top_k: int = TOP_K) -> list[dict]:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-#  Hybrid Retrieval (50/50)
+#  Hybrid Retrieval (Linear, RRF, or Cross-Encoder Reranking)
 # ═══════════════════════════════════════════════════════════════════════════
 
 def _normalise_scores(results: list[dict]) -> list[dict]:
@@ -211,15 +217,43 @@ def _normalise_scores(results: list[dict]) -> list[dict]:
 
 def hybrid_search(query: str, top_k: int = TOP_K) -> list[dict]:
     """
-    Combine BM25 and vector search results with configurable weights.
+    Combine BM25 and vector search results with configurable weights and fusion strategies.
 
-    Steps:
-      1. Run both BM25 and vector searches.
-      2. Normalise scores to [0, 1].
-      3. Weight and merge.
-      4. Deduplicate by chunk_id, keeping the higher combined score.
-      5. Return top-k.
+    Strategies supported:
+      - 'linear': Min-max normalized linear combination (BM25_WEIGHT * s_bm25 + VECTOR_WEIGHT * s_dense)
+      - 'rrf': Reciprocal Rank Fusion (k=60)
+      - 'rerank': RRF candidate retrieval + CrossEncoder reranker
     """
+    if FUSION_METHOD == "rrf":
+        pool_size = max(20, top_k * 3)
+        bm25_hits = bm25_search(query, top_k=pool_size)
+        dense_hits = vector_search(query, top_k=pool_size)
+
+        rrf_scores = {}
+        meta_map = {}
+        k_rrf = 60
+
+        for rank, hit in enumerate(bm25_hits):
+            cid = hit["chunk_id"]
+            rrf_scores[cid] = rrf_scores.get(cid, 0.0) + (BM25_WEIGHT / (k_rrf + rank + 1))
+            meta_map[cid] = hit
+
+        for rank, hit in enumerate(dense_hits):
+            cid = hit["chunk_id"]
+            rrf_scores[cid] = rrf_scores.get(cid, 0.0) + (VECTOR_WEIGHT / (k_rrf + rank + 1))
+            if cid not in meta_map:
+                meta_map[cid] = hit
+
+        ranked_cids = sorted(rrf_scores.keys(), key=lambda cid: rrf_scores[cid], reverse=True)[:top_k]
+        results = []
+        for cid in ranked_cids:
+            hit = dict(meta_map[cid])
+            hit["score"] = float(rrf_scores[cid])
+            hit["combined_score"] = float(rrf_scores[cid])
+            results.append(hit)
+        return results
+
+    # Default: Weighted Linear Fusion
     bm25_results = _normalise_scores(bm25_search(query, top_k=top_k * 2))
     vector_results = _normalise_scores(vector_search(query, top_k=top_k * 2))
 

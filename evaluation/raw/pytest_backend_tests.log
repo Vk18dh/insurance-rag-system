@@ -1,0 +1,254 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 47 items
+
+backend/app/tests/test_audit.py::test_audit_immutability PASSED          [  2%]
+backend/app/tests/test_audit.py::test_audit_rbac PASSED                  [  4%]
+backend/app/tests/test_audit.py::test_audit_security_no_secrets_stored PASSED [  6%]
+backend/app/tests/test_audit.py::test_audit_integration_login PASSED     [  8%]
+backend/app/tests/test_audit.py::test_audit_integration_rbac_denied PASSED [ 10%]
+backend/app/tests/test_audit.py::test_audit_integration_query PASSED     [ 12%]
+backend/app/tests/test_auth.py::test_register_and_login PASSED           [ 14%]
+backend/app/tests/test_auth.py::test_login_invalid_password PASSED       [ 17%]
+backend/app/tests/test_auth.py::test_login_unknown_user PASSED           [ 19%]
+backend/app/tests/test_auth.py::test_missing_token_auth PASSED           [ 21%]
+backend/app/tests/test_auth.py::test_malformed_token_auth PASSED         [ 23%]
+backend/app/tests/test_conversations.py::test_conversation_isolation PASSED [ 25%]
+backend/app/tests/test_conversations.py::test_invalid_conversation_id PASSED [ 27%]
+backend/app/tests/test_documents.py::test_user_cannot_access_documents PASSED [ 29%]
+backend/app/tests/test_documents.py::test_admin_can_access_documents PASSED [ 31%]
+backend/app/tests/test_documents.py::test_upload_invalid_file_extension PASSED [ 34%]
+backend/app/tests/test_evaluation_api.py::test_evaluation_api_admin_access PASSED [ 36%]
+backend/app/tests/test_evaluation_api.py::test_evaluation_api_user_denied PASSED [ 38%]
+backend/app/tests/test_evaluation_api.py::test_evaluation_api_expert_denied PASSED [ 40%]
+backend/app/tests/test_guardrails.py::test_guardrail_input_valid PASSED  [ 42%]
+backend/app/tests/test_guardrails.py::test_guardrail_input_injection PASSED [ 44%]
+backend/app/tests/test_guardrails.py::test_guardrail_input_unsafe PASSED [ 46%]
+backend/app/tests/test_guardrails.py::test_guardrail_output_valid PASSED [ 48%]
+backend/app/tests/test_guardrails.py::test_guardrail_output_refusal PASSED [ 51%]
+backend/app/tests/test_guardrails.py::test_guardrail_output_unsupported PASSED [ 53%]
+backend/app/tests/test_guardrails.py::test_guardrail_output_unsafe PASSED [ 55%]
+backend/app/tests/test_hitl_e2e.py::test_hitl_workflow_end_to_end FAILED [ 57%]
+backend/app/tests/test_hitl_separation.py::test_genuine_low_confidence_creates_hitl PASSED [ 59%]
+backend/app/tests/test_hitl_separation.py::test_infrastructure_failure_prevents_hitl PASSED [ 61%]
+backend/app/tests/test_management_api.py::test_admin_metrics_access PASSED [ 63%]
+backend/app/tests/test_management_api.py::test_expert_review_workflow PASSED [ 65%]
+backend/app/tests/test_management_api.py::test_user_cannot_access_management_endpoints PASSED [ 68%]
+backend/app/tests/test_provider_failover.py::test_hitl_test_setup PASSED [ 70%]
+backend/app/tests/test_provider_failover.py::test_8_provider_failure_no_review_task PASSED [ 72%]
+backend/app/tests/test_provider_failover.py::test_9_genuine_low_confidence_creates_review_task PASSED [ 74%]
+backend/app/tests/test_query_integration.py::test_query_creates_conversation_and_persists_messages PASSED [ 76%]
+backend/app/tests/test_rag_evaluation.py::test_evaluation_isolation_and_execution PASSED [ 78%]
+backend/app/tests/test_rag_evaluation.py::test_A_supported_retriever_fails_system_refuses PASSED [ 80%]
+backend/app/tests/test_rag_evaluation.py::test_B_unsupported_system_refuses PASSED [ 82%]
+backend/app/tests/test_rag_evaluation.py::test_C_unsupported_system_answers PASSED [ 85%]
+backend/app/tests/test_rag_evaluation.py::test_D_supported_system_answers PASSED [ 87%]
+backend/app/tests/test_rag_evaluation.py::test_E_supported_system_answers_incorrectly PASSED [ 89%]
+backend/app/tests/test_rag_evaluation.py::test_F_unsupported_system_invents_citation PASSED [ 91%]
+backend/app/tests/test_rag_evaluation.py::test_G_unknown_system_refuses PASSED [ 93%]
+backend/app/tests/test_rbac.py::test_user_cannot_access_expert_admin PASSED [ 95%]
+backend/app/tests/test_rbac.py::test_expert_can_access_expert_but_not_admin PASSED [ 97%]
+backend/app/tests/test_rbac.py::test_admin_can_access_all PASSED         [100%]
+
+================================== FAILURES ===================================
+________________________ test_hitl_workflow_end_to_end ________________________
+
+client = <starlette.testclient.TestClient object at 0x0000017E653DDA90>
+
+    def test_hitl_workflow_end_to_end(client):
+        db = SessionLocal()
+    
+        # 1. Create test users via API
+        client.post("/api/v1/auth/register", json={"username": "hitl_user", "password": "pw", "role": "user"})
+        client.post("/api/v1/auth/register", json={"username": "hitl_expert", "password": "pw", "role": "expert"})
+        client.post("/api/v1/auth/register", json={"username": "hitl_admin", "password": "pw", "role": "admin"})
+    
+        user_token = client.post("/api/v1/auth/login", data={"username": "hitl_user", "password": "pw"}).json()["access_token"]
+        expert_token = client.post("/api/v1/auth/login", data={"username": "hitl_expert", "password": "pw"}).json()["access_token"]
+        admin_token = client.post("/api/v1/auth/login", data={"username": "hitl_admin", "password": "pw"}).json()["access_token"]
+    
+        # 2. User submits query (that will trigger low confidence/fallback)
+        query_text = "What is the capital of France?"
+    
+        response = client.post(
+            "/api/v1/query",
+            headers={"Authorization": f"Bearer {user_token}"},
+            json={"query": query_text}
+        )
+>       assert response.status_code == 200
+E       assert 503 == 200
+E        +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+backend\app\tests\test_hitl_e2e.py:35: AssertionError
+---------------------------- Captured stderr setup ----------------------------
+2026-10-11 11:23:58,435 | INFO     | backend.app.db.database | Application database initialized successfully.
+2026-10-11 11:23:58,438 | INFO     | backend.app.main | Seeding DEV expert account...
+2026-10-11 11:23:58,658 | INFO     | backend.app.main | Seeding DEV admin account...
+----------------------------- Captured log setup ------------------------------
+INFO     backend.app.db.database:database.py:33 Application database initialized successfully.
+INFO     backend.app.main:main.py:61 Seeding DEV expert account...
+INFO     backend.app.main:main.py:67 Seeding DEV admin account...
+---------------------------- Captured stdout call -----------------------------
+LOCAL LLM CALLING: http://ollama:11434/api/chat
+LOCAL LLM CALLING: http://ollama:11434/api/chat
+LOCAL LLM CALLING: http://ollama:11434/api/chat
+LOCAL LLM CALLING: http://ollama:11434/api/chat
+LOCAL LLM CALLING: http://ollama:11434/api/chat
+LOCAL LLM CALLING: http://ollama:11434/api/chat
+LOCAL LLM CALLING: http://ollama:11434/api/chat
+LOCAL LLM CALLING: http://ollama:11434/api/chat
+LOCAL LLM CALLING: http://ollama:11434/api/chat
+---------------------------- Captured stderr call -----------------------------
+2026-10-11 11:23:58,882 - FastAPI.HTTP - INFO - Incoming Request: POST /api/v1/auth/register
+2026-10-11 11:23:58,882 | INFO     | FastAPI.HTTP | Incoming Request: POST /api/v1/auth/register
+2026-10-11 11:23:59,103 - FastAPI.HTTP - INFO - Completed Response: POST /api/v1/auth/register - Status: 200 - Duration: 221.01ms
+2026-10-11 11:23:59,103 | INFO     | FastAPI.HTTP | Completed Response: POST /api/v1/auth/register - Status: 200 - Duration: 221.01ms
+2026-10-11 11:23:59,104 | INFO     | httpx | HTTP Request: POST http://testserver/api/v1/auth/register "HTTP/1.1 200 OK"
+2026-10-11 11:23:59,104 - FastAPI.HTTP - INFO - Incoming Request: POST /api/v1/auth/register
+2026-10-11 11:23:59,104 | INFO     | FastAPI.HTTP | Incoming Request: POST /api/v1/auth/register
+2026-10-11 11:23:59,325 - FastAPI.HTTP - INFO - Completed Response: POST /api/v1/auth/register - Status: 200 - Duration: 221.03ms
+2026-10-11 11:23:59,325 | INFO     | FastAPI.HTTP | Completed Response: POST /api/v1/auth/register - Status: 200 - Duration: 221.03ms
+2026-10-11 11:23:59,326 | INFO     | httpx | HTTP Request: POST http://testserver/api/v1/auth/register "HTTP/1.1 200 OK"
+2026-10-11 11:23:59,327 - FastAPI.HTTP - INFO - Incoming Request: POST /api/v1/auth/register
+2026-10-11 11:23:59,327 | INFO     | FastAPI.HTTP | Incoming Request: POST /api/v1/auth/register
+2026-10-11 11:23:59,551 - FastAPI.HTTP - INFO - Completed Response: POST /api/v1/auth/register - Status: 200 - Duration: 224.04ms
+2026-10-11 11:23:59,551 | INFO     | FastAPI.HTTP | Completed Response: POST /api/v1/auth/register - Status: 200 - Duration: 224.04ms
+2026-10-11 11:23:59,551 | INFO     | httpx | HTTP Request: POST http://testserver/api/v1/auth/register "HTTP/1.1 200 OK"
+2026-10-11 11:23:59,552 - FastAPI.HTTP - INFO - Incoming Request: POST /api/v1/auth/login
+2026-10-11 11:23:59,552 | INFO     | FastAPI.HTTP | Incoming Request: POST /api/v1/auth/login
+2026-10-11 11:23:59,762 - FastAPI.HTTP - INFO - Completed Response: POST /api/v1/auth/login - Status: 200 - Duration: 209.70ms
+2026-10-11 11:23:59,762 | INFO     | FastAPI.HTTP | Completed Response: POST /api/v1/auth/login - Status: 200 - Duration: 209.70ms
+2026-10-11 11:23:59,762 | INFO     | httpx | HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-10-11 11:23:59,763 - FastAPI.HTTP - INFO - Incoming Request: POST /api/v1/auth/login
+2026-10-11 11:23:59,763 | INFO     | FastAPI.HTTP | Incoming Request: POST /api/v1/auth/login
+2026-10-11 11:23:59,973 - FastAPI.HTTP - INFO - Completed Response: POST /api/v1/auth/login - Status: 200 - Duration: 209.30ms
+2026-10-11 11:23:59,973 | INFO     | FastAPI.HTTP | Completed Response: POST /api/v1/auth/login - Status: 200 - Duration: 209.30ms
+2026-10-11 11:23:59,973 | INFO     | httpx | HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-10-11 11:23:59,974 - FastAPI.HTTP - INFO - Incoming Request: POST /api/v1/auth/login
+2026-10-11 11:23:59,974 | INFO     | FastAPI.HTTP | Incoming Request: POST /api/v1/auth/login
+2026-10-11 11:24:00,187 - FastAPI.HTTP - INFO - Completed Response: POST /api/v1/auth/login - Status: 200 - Duration: 212.25ms
+2026-10-11 11:24:00,187 | INFO     | FastAPI.HTTP | Completed Response: POST /api/v1/auth/login - Status: 200 - Duration: 212.25ms
+2026-10-11 11:24:00,187 | INFO     | httpx | HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-10-11 11:24:00,188 - FastAPI.HTTP - INFO - Incoming Request: POST /api/v1/query
+2026-10-11 11:24:00,188 | INFO     | FastAPI.HTTP | Incoming Request: POST /api/v1/query
+2026-10-11 11:24:00,203 | INFO     | phase2.orchestrator.orchestrator | Orchestration initiated safely securely resolving natively [1e3a24fc-10c3-4182-8609-1edc39c38f55] (Conversation: 12c4d090-a2a9-4d6d-b322-7eb9871939d2)
+2026-10-11 11:24:00,204 | INFO     | phase2.agents.query_agent | [QueryUnderstandingAgent] Query received | preview='What is the capital of France?' | length=30
+2026-10-11 11:24:00,204 | INFO     | phase2.services.query_processing_service | Processing query (query_id=ef1b4686-24de-458b-b937-ed8f4d5f5162, length=30)
+2026-10-11 11:24:37,517 | WARNING  | phase2.services.llm_provider_manager | Provider local retries exhausted: Local LLM Connection Error: [Errno 11001] getaddrinfo failed. Skipping to next provider.
+2026-10-11 11:24:37,517 | ERROR    | phase2.services.llm_provider_manager | LLMProviderManager: All providers failed or exhausted.
+2026-10-11 11:24:37,517 | ERROR    | phase2.agents.query_agent | [QueryUnderstandingAgent] Processing failure | code=QUERY_PROCESSING_ERROR | step=api_call_exhausted | msg=Providers exhausted | elapsed=37313.0 ms
+2026-10-11 11:24:37,518 | WARNING  | phase2.orchestrator.retry_manager | Transient failure explicitly captured. Retrying (1/2) natively after 0.15s: Providers exhausted
+2026-10-11 11:24:37,669 | INFO     | phase2.agents.query_agent | [QueryUnderstandingAgent] Query received | preview='What is the capital of France?' | length=30
+2026-10-11 11:24:37,669 | INFO     | phase2.services.query_processing_service | Processing query (query_id=d583e554-33a6-4b43-af50-21b9be99860c, length=30)
+2026-10-11 11:25:14,929 | WARNING  | phase2.services.llm_provider_manager | Provider local retries exhausted: Local LLM Connection Error: [Errno 11001] getaddrinfo failed. Skipping to next provider.
+2026-10-11 11:25:14,930 | ERROR    | phase2.services.llm_provider_manager | LLMProviderManager: All providers failed or exhausted.
+2026-10-11 11:25:14,930 | ERROR    | phase2.agents.query_agent | [QueryUnderstandingAgent] Processing failure | code=QUERY_PROCESSING_ERROR | step=api_call_exhausted | msg=Providers exhausted | elapsed=37261.0 ms
+2026-10-11 11:25:14,930 | WARNING  | phase2.orchestrator.retry_manager | Transient failure explicitly captured. Retrying (2/2) natively after 0.3s: Providers exhausted
+2026-10-11 11:25:15,231 | INFO     | phase2.agents.query_agent | [QueryUnderstandingAgent] Query received | preview='What is the capital of France?' | length=30
+2026-10-11 11:25:15,232 | INFO     | phase2.services.query_processing_service | Processing query (query_id=1e646c96-00fc-4a66-9eb5-e56cd1e74748, length=30)
+2026-10-11 11:25:52,506 | WARNING  | phase2.services.llm_provider_manager | Provider local retries exhausted: Local LLM Connection Error: [Errno 11001] getaddrinfo failed. Skipping to next provider.
+2026-10-11 11:25:52,506 | ERROR    | phase2.services.llm_provider_manager | LLMProviderManager: All providers failed or exhausted.
+2026-10-11 11:25:52,506 | ERROR    | phase2.agents.query_agent | [QueryUnderstandingAgent] Processing failure | code=QUERY_PROCESSING_ERROR | step=api_call_exhausted | msg=Providers exhausted | elapsed=37274.9 ms
+2026-10-11 11:25:52,507 | ERROR    | phase2.orchestrator.orchestrator | Execution exception gracefully trapped dynamically securely: Providers exhausted
+2026-10-11 11:25:52,508 - FastAPI.HTTP - INFO - Completed Response: POST /api/v1/query - Status: 503 - Duration: 112319.57ms
+2026-10-11 11:25:52,508 | INFO     | FastAPI.HTTP | Completed Response: POST /api/v1/query - Status: 503 - Duration: 112319.57ms
+2026-10-11 11:25:52,508 | INFO     | httpx | HTTP Request: POST http://testserver/api/v1/query "HTTP/1.1 503 Service Unavailable"
+------------------------------ Captured log call ------------------------------
+INFO     FastAPI.HTTP:logging.py:22 Incoming Request: POST /api/v1/auth/register
+INFO     FastAPI.HTTP:logging.py:30 Completed Response: POST /api/v1/auth/register - Status: 200 - Duration: 221.01ms
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/auth/register "HTTP/1.1 200 OK"
+INFO     FastAPI.HTTP:logging.py:22 Incoming Request: POST /api/v1/auth/register
+INFO     FastAPI.HTTP:logging.py:30 Completed Response: POST /api/v1/auth/register - Status: 200 - Duration: 221.03ms
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/auth/register "HTTP/1.1 200 OK"
+INFO     FastAPI.HTTP:logging.py:22 Incoming Request: POST /api/v1/auth/register
+INFO     FastAPI.HTTP:logging.py:30 Completed Response: POST /api/v1/auth/register - Status: 200 - Duration: 224.04ms
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/auth/register "HTTP/1.1 200 OK"
+INFO     FastAPI.HTTP:logging.py:22 Incoming Request: POST /api/v1/auth/login
+INFO     FastAPI.HTTP:logging.py:30 Completed Response: POST /api/v1/auth/login - Status: 200 - Duration: 209.70ms
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+INFO     FastAPI.HTTP:logging.py:22 Incoming Request: POST /api/v1/auth/login
+INFO     FastAPI.HTTP:logging.py:30 Completed Response: POST /api/v1/auth/login - Status: 200 - Duration: 209.30ms
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+INFO     FastAPI.HTTP:logging.py:22 Incoming Request: POST /api/v1/auth/login
+INFO     FastAPI.HTTP:logging.py:30 Completed Response: POST /api/v1/auth/login - Status: 200 - Duration: 212.25ms
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+INFO     FastAPI.HTTP:logging.py:22 Incoming Request: POST /api/v1/query
+INFO     phase2.orchestrator.orchestrator:orchestrator.py:39 Orchestration initiated safely securely resolving natively [1e3a24fc-10c3-4182-8609-1edc39c38f55] (Conversation: 12c4d090-a2a9-4d6d-b322-7eb9871939d2)
+INFO     phase2.agents.query_agent:query_agent.py:141 [QueryUnderstandingAgent] Query received | preview='What is the capital of France?' | length=30
+INFO     phase2.services.query_processing_service:query_processing_service.py:518 Processing query (query_id=ef1b4686-24de-458b-b937-ed8f4d5f5162, length=30)
+WARNING  phase2.services.llm_provider_manager:llm_provider_manager.py:155 Provider local retries exhausted: Local LLM Connection Error: [Errno 11001] getaddrinfo failed. Skipping to next provider.
+ERROR    phase2.services.llm_provider_manager:llm_provider_manager.py:169 LLMProviderManager: All providers failed or exhausted.
+ERROR    phase2.agents.query_agent:query_agent.py:185 [QueryUnderstandingAgent] Processing failure | code=QUERY_PROCESSING_ERROR | step=api_call_exhausted | msg=Providers exhausted | elapsed=37313.0 ms
+WARNING  phase2.orchestrator.retry_manager:retry_manager.py:32 Transient failure explicitly captured. Retrying (1/2) natively after 0.15s: Providers exhausted
+INFO     phase2.agents.query_agent:query_agent.py:141 [QueryUnderstandingAgent] Query received | preview='What is the capital of France?' | length=30
+INFO     phase2.services.query_processing_service:query_processing_service.py:518 Processing query (query_id=d583e554-33a6-4b43-af50-21b9be99860c, length=30)
+WARNING  phase2.services.llm_provider_manager:llm_provider_manager.py:155 Provider local retries exhausted: Local LLM Connection Error: [Errno 11001] getaddrinfo failed. Skipping to next provider.
+ERROR    phase2.services.llm_provider_manager:llm_provider_manager.py:169 LLMProviderManager: All providers failed or exhausted.
+ERROR    phase2.agents.query_agent:query_agent.py:185 [QueryUnderstandingAgent] Processing failure | code=QUERY_PROCESSING_ERROR | step=api_call_exhausted | msg=Providers exhausted | elapsed=37261.0 ms
+WARNING  phase2.orchestrator.retry_manager:retry_manager.py:32 Transient failure explicitly captured. Retrying (2/2) natively after 0.3s: Providers exhausted
+INFO     phase2.agents.query_agent:query_agent.py:141 [QueryUnderstandingAgent] Query received | preview='What is the capital of France?' | length=30
+INFO     phase2.services.query_processing_service:query_processing_service.py:518 Processing query (query_id=1e646c96-00fc-4a66-9eb5-e56cd1e74748, length=30)
+WARNING  phase2.services.llm_provider_manager:llm_provider_manager.py:155 Provider local retries exhausted: Local LLM Connection Error: [Errno 11001] getaddrinfo failed. Skipping to next provider.
+ERROR    phase2.services.llm_provider_manager:llm_provider_manager.py:169 LLMProviderManager: All providers failed or exhausted.
+ERROR    phase2.agents.query_agent:query_agent.py:185 [QueryUnderstandingAgent] Processing failure | code=QUERY_PROCESSING_ERROR | step=api_call_exhausted | msg=Providers exhausted | elapsed=37274.9 ms
+ERROR    phase2.orchestrator.orchestrator:orchestrator.py:144 Execution exception gracefully trapped dynamically securely: Providers exhausted
+INFO     FastAPI.HTTP:logging.py:30 Completed Response: POST /api/v1/query - Status: 503 - Duration: 112319.57ms
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/query "HTTP/1.1 503 Service Unavailable"
+============================== warnings summary ===============================
+phase2\models\intent.py:57
+  C:\Users\dhyan\Desktop\majorcode\phase2\models\intent.py:57: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class IntentResult(BaseModel):
+
+phase2\models\query_metadata.py:104
+  C:\Users\dhyan\Desktop\majorcode\phase2\models\query_metadata.py:104: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryMetadata(BaseModel):
+
+phase2\models\query_context.py:133
+  C:\Users\dhyan\Desktop\majorcode\phase2\models\query_context.py:133: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryContext(BaseModel):
+
+..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\__init__.py:109
+  C:\Users\dhyan\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\__init__.py:109: RequestsDependencyWarning: urllib3 (1.26.20) or chardet (7.4.3)/charset_normalizer (3.4.7) doesn't match a supported version!
+    warnings.warn(
+
+backend\app\main.py:37
+  C:\Users\dhyan\Desktop\majorcode\backend\app\main.py:37: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py:4598
+  C:\Users\dhyan\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py:4598: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)  # ty: ignore[deprecated]
+
+backend/app/tests/test_rag_evaluation.py: 24 warnings
+  C:\Users\dhyan\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+backend/app/tests/test_rag_evaluation.py::test_evaluation_isolation_and_execution
+backend/app/tests/test_rag_evaluation.py::test_A_supported_retriever_fails_system_refuses
+backend/app/tests/test_rag_evaluation.py::test_B_unsupported_system_refuses
+backend/app/tests/test_rag_evaluation.py::test_C_unsupported_system_answers
+backend/app/tests/test_rag_evaluation.py::test_D_supported_system_answers
+backend/app/tests/test_rag_evaluation.py::test_E_supported_system_answers_incorrectly
+backend/app/tests/test_rag_evaluation.py::test_F_unsupported_system_invents_citation
+backend/app/tests/test_rag_evaluation.py::test_G_unknown_system_refuses
+  C:\Users\dhyan\Desktop\majorcode\backend\app\services\evaluation_service.py:307: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    run.completed_at = datetime.utcnow()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED backend/app/tests/test_hitl_e2e.py::test_hitl_workflow_end_to_end - as...
+============ 1 failed, 46 passed, 38 warnings in 127.82s (0:02:07) ============

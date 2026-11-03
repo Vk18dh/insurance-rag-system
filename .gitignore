@@ -52,3 +52,8 @@ update_yaml.py
 
 # Keys
 *.pem
+
+data/uploads/
+data/clean_indices/
+data/polluted_backup/
+

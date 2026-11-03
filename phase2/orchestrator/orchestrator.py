@@ -22,7 +22,7 @@ class AgentOrchestrator(IAgentOrchestrator):
                  metrics_collector: IMetricsCollector,
                  agents_map: Dict[str, Any],
                  observability: IObservabilityFacade | None = None,
-                 workflow_timeout_ms: float = 90000.0):
+                 workflow_timeout_ms: float = 300000.0):
         """
         The Orchestrator defines exactly zero hardcoded models reliably mapping dynamic bounds centrally smoothly natively safely.
         """
@@ -85,8 +85,15 @@ class AgentOrchestrator(IAgentOrchestrator):
                 
                 if agent_name == "QueryUnderstandingAgent":
                     is_amb = False
+                    is_unknown = False
+                    
                     if hasattr(result, "ambiguity") and result.ambiguity and result.ambiguity.is_ambiguous:
                         is_amb = True
+                        
+                    if hasattr(result, "intent") and result.intent and hasattr(result.intent, "intent"):
+                        intent_val = getattr(result.intent.intent, "value", str(result.intent.intent))
+                        if intent_val == "unknown":
+                            is_unknown = True
                     
                     if is_amb:
                         logger.info("Query flagged as ambiguous. Bypassing normal generation path.")
@@ -96,6 +103,21 @@ class AgentOrchestrator(IAgentOrchestrator):
                         final_resp = FinalResponse(
                             direct_answer="Could you please clarify your request? I need more specific details to find the exact insurance information you're looking for.",
                             explanation="The query was ambiguous or lacked specific context.",
+                            citations=[],
+                            warnings=[],
+                            metadata=ResponseMetadata(request_id=request_id, total_processing_time_ms=0.0, agent_version="1.0")
+                        )
+                        self._context_manager.update_context("ResponseBuilder", final_resp)
+                        break
+                        
+                    if is_unknown:
+                        logger.info("Query intent classified as unknown. Bypassing normal generation path for out-of-domain query.")
+                        from phase2.models.final_response import FinalResponse
+                        from phase2.models.response_metadata import ResponseMetadata
+                        
+                        final_resp = FinalResponse(
+                            direct_answer="I could not find this information in the provided documents.",
+                            explanation="The query falls outside the supported insurance domain.",
                             citations=[],
                             warnings=[],
                             metadata=ResponseMetadata(request_id=request_id, total_processing_time_ms=0.0, agent_version="1.0")

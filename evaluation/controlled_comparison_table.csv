@@ -1,0 +1,9 @@
+Config_ID,Name,Type,Model,Weights,Hit@1,Hit@3,Hit@5,Hit@8,Hit@8_LowerCI,Hit@8_UpperCI,MRR,MRR_LowerCI,MRR_UpperCI,nDCG@8,Median_Lat_ms,P95_Lat_ms,Failures
+1_BM25_Clean,Canonical BM25,Lexical,BM25Okapi,BM25 1.0,71.43,85.71,91.43,97.14,92.86,100.0,0.7996,0.7212,0.8716,0.8243,2.25,3.31,2
+2_Dense_MiniLM_Original,Original Dense (MiniLM),Dense,sentence-transformers/all-MiniLM-L6-v2,Dense 1.0,41.43,57.14,78.57,82.86,74.29,91.43,0.5399,0.4395,0.6365,0.6039,12.69,16.37,12
+3_Hybrid_50_50_MiniLM_Original,Original Hybrid 50/50 (MiniLM),Hybrid Linear,BM25 + MiniLM-L6-v2,50% BM25 / 50% Dense,64.29,72.86,84.29,92.86,87.14,98.57,0.7275,0.6354,0.8117,0.7541,16.87,19.7,5
+4_Hybrid_Verif_0_3_MiniLM_Original,Original Hybrid + Verif 0.3 (MiniLM),Hybrid + Threshold Filter,BM25 + MiniLM-L6-v2 + Verif 0.3,50% BM25 / 50% Dense (score >= 0.3),64.29,72.86,84.29,88.57,80.0,95.71,0.7204,0.6252,0.8069,0.7482,15.54,18.92,8
+5_Dense_BGE_Improved,Improved Dense (BGE-small-v1.5),Dense,BAAI/bge-small-en-v1.5,Dense 1.0 (with query prefix),42.86,71.43,84.29,87.14,80.0,94.29,0.5946,0.509,0.6821,0.6415,20.59,25.94,9
+6_Hybrid_70_30_BGE_Improved,Improved Hybrid 70/30 (BGE-small),Hybrid Linear,BM25 + BGE-small-en-v1.5,70% BM25 / 30% Dense,72.86,80.0,92.86,95.71,91.43,100.0,0.7949,0.7124,0.8759,0.8078,22.44,31.26,3
+7_Hybrid_Verif_Provenance_BGE_Improved,Improved Hybrid + Provenance Verif (BGE-small),Hybrid + Provenance Filter,BM25 + BGE-small-en-v1.5 + Provenance,70% BM25 / 30% Dense (provenance checked),72.86,80.0,92.86,95.71,91.43,100.0,0.7949,0.7124,0.8759,0.8078,22.73,26.27,3
+8_Hybrid_RRF_BGE_Improved,Improved Hybrid Weighted RRF k=60 (BGE-small),Hybrid RRF,BM25 + BGE-small-en-v1.5,"RRF k=60 (w_bm25=0.7, w_dense=0.3)",58.57,84.29,90.0,94.29,88.57,98.57,0.7235,0.6393,0.8086,0.7578,22.78,26.2,4

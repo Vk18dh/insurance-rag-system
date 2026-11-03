@@ -101,7 +101,13 @@ export default function DocumentUploadDialog({ onUploadSuccess }: { onUploadSucc
                 <input 
                   type="file" 
                   accept="application/pdf"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const selectedFile = e.target.files?.[0] || null;
+                    setFile(selectedFile);
+                    if (selectedFile && !documentName) {
+                      setDocumentName(selectedFile.name.replace(/\.[^/.]+$/, ""));
+                    }
+                  }}
                   className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                   disabled={isUploading}
                 />

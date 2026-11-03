@@ -4,13 +4,31 @@ from backend.app.main import app
 from backend.app.db.database import Base, engine, SessionLocal
 from backend.app.models.review_task import ReviewTask, ReviewTaskStatus
 
+from unittest.mock import MagicMock
+from backend.app.dependencies.agents import get_agent_orchestrator
+
 @pytest.fixture(scope="module")
 def client():
     # Reset database for tests
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    
+    class MockFallbackOrchestrator:
+        def orchestrate(self, query, conversation_id=None):
+            result = MagicMock()
+            result.request_id = "mock_request_id"
+            result.errors = []
+            result.shared_context.final_response.direct_answer = "I could not find related evidence in the insurance documents to answer your query."
+            result.shared_context.final_response.citations = []
+            result.shared_context.final_response.warnings = []
+            result.shared_context.final_response.metadata.confidence = 0.0
+            result.shared_context.verification_result.is_valid_for_reasoning = False
+            return result
+
+    app.dependency_overrides[get_agent_orchestrator] = lambda: MockFallbackOrchestrator()
     with TestClient(app) as c:
         yield c
+    app.dependency_overrides.clear()
 
 def test_hitl_workflow_end_to_end(client):
     db = SessionLocal()

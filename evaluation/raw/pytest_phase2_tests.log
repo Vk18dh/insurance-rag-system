@@ -1,0 +1,330 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\dhyan\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dhyan\Desktop\majorcode
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 233 items
+
+phase2/tests/test_ambiguous_001.py::test_guardrail_safe_refusal_without_citations_allowed PASSED [  0%]
+phase2/tests/test_ambiguous_001.py::test_guardrail_factual_response_without_citations_blocked PASSED [  0%]
+phase2/tests/test_ambiguous_001.py::test_response_formatter_receives_refusal_deduction PASSED [  1%]
+phase2/tests/test_ambiguous_001.py::test_ambiguous_query_bypasses_generation PASSED [  1%]
+phase2/tests/test_ambiguous_001.py::test_valid_supported_insurance_query_continues FAILED [  2%]
+phase2/tests/test_contradiction_agent.py::test_contradiction_agent_orchestrates_cleanly PASSED [  2%]
+phase2/tests/test_contradiction_services.py::test_classifier_extracts_cleanly PASSED [  3%]
+phase2/tests/test_contradiction_services.py::test_explainer_extracts_cleanly PASSED [  3%]
+phase2/tests/test_contradiction_services.py::test_resolution_helper_distributes_states PASSED [  3%]
+phase2/tests/test_contradiction_services.py::test_policy_context_validator_bounds PASSED [  4%]
+phase2/tests/test_contradiction_services.py::test_evidence_alignment_traces_logic PASSED [  4%]
+phase2/tests/test_llm_provider_manager.py::test_1_openrouter_success PASSED [  5%]
+phase2/tests/test_llm_provider_manager.py::test_2_openrouter_404_fallback PASSED [  5%]
+phase2/tests/test_llm_provider_manager.py::test_3_openrouter_timeout_fallback PASSED [  6%]
+phase2/tests/test_llm_provider_manager.py::test_4_openrouter_429_fallback PASSED [  6%]
+phase2/tests/test_llm_provider_manager.py::test_parse_llm_json_unicode_encoding_crash PASSED [  6%]
+phase2/tests/test_llm_provider_manager.py::test_5_groq_404_fallback PASSED [  7%]
+phase2/tests/test_llm_provider_manager.py::test_6_groq_timeout_fallback PASSED [  7%]
+phase2/tests/test_llm_provider_manager.py::test_7_both_providers_fail PASSED [  8%]
+phase2/tests/test_llm_resilience.py::test_openrouter_success PASSED      [  8%]
+phase2/tests/test_llm_resilience.py::test_openrouter_402_to_groq_key1 PASSED [  9%]
+phase2/tests/test_llm_resilience.py::test_openrouter_429_to_groq_key1 PASSED [  9%]
+phase2/tests/test_llm_resilience.py::test_groq_key1_429_to_groq_key2 PASSED [  9%]
+phase2/tests/test_llm_resilience.py::test_groq_key1_failure_to_groq_key2 PASSED [ 10%]
+phase2/tests/test_llm_resilience.py::test_all_cloud_fail_to_local PASSED [ 10%]
+phase2/tests/test_llm_resilience.py::test_all_four_providers_fail PASSED [ 11%]
+phase2/tests/test_llm_resilience.py::test_provider_cooldown PASSED       [ 11%]
+phase2/tests/test_llm_resilience.py::test_cooldown_expiration PASSED     [ 12%]
+phase2/tests/test_llm_resilience.py::test_local_model_structured_output_validation PASSED [ 12%]
+phase2/tests/test_orchestrator.py::test_orchestrator_successful_execution PASSED [ 12%]
+phase2/tests/test_orchestrator.py::test_orchestrator_failure_handling PASSED [ 13%]
+phase2/tests/test_query_agent.py::TestQueryUnderstandingAgentInit::test_valid_construction PASSED [ 13%]
+phase2/tests/test_query_agent.py::TestQueryUnderstandingAgentInit::test_rejects_non_service PASSED [ 14%]
+phase2/tests/test_query_agent.py::TestQueryUnderstandingAgentInit::test_rejects_zero_preview_length PASSED [ 14%]
+phase2/tests/test_query_agent.py::TestQueryUnderstandingAgentInit::test_rejects_negative_preview_length PASSED [ 15%]
+phase2/tests/test_query_agent.py::TestQueryUnderstandingAgentInit::test_implements_iquery_agent PASSED [ 15%]
+phase2/tests/test_query_agent.py::TestProcessHappyPath::test_returns_query_context PASSED [ 15%]
+phase2/tests/test_query_agent.py::TestProcessHappyPath::test_context_is_understood PASSED [ 16%]
+phase2/tests/test_query_agent.py::TestProcessHappyPath::test_original_query_preserved PASSED [ 16%]
+phase2/tests/test_query_agent.py::TestProcessHappyPath::test_delegates_to_service PASSED [ 17%]
+phase2/tests/test_query_agent.py::TestProcessHappyPath::test_to_retrieval_input_contract PASSED [ 17%]
+phase2/tests/test_query_agent.py::TestProcessHappyPath::test_metadata_populated PASSED [ 18%]
+phase2/tests/test_query_agent.py::TestProcessValidationErrors::test_empty_string_raises PASSED [ 18%]
+phase2/tests/test_query_agent.py::TestProcessValidationErrors::test_whitespace_only_raises PASSED [ 18%]
+phase2/tests/test_query_agent.py::TestProcessValidationErrors::test_none_raises_security_or_validation PASSED [ 19%]
+phase2/tests/test_query_agent.py::TestProcessValidationErrors::test_oversized_raises PASSED [ 19%]
+phase2/tests/test_query_agent.py::TestProcessSecurity::test_prompt_injection_raises PASSED [ 20%]
+phase2/tests/test_query_agent.py::TestProcessSecurity::test_security_exception_not_retried PASSED [ 20%]
+phase2/tests/test_query_agent.py::TestProcessSecurity::test_safe_preview_truncates PASSED [ 21%]
+phase2/tests/test_query_agent.py::TestProcessSecurity::test_safe_preview_non_string PASSED [ 21%]
+phase2/tests/test_query_agent.py::TestProcessSecurity::test_safe_preview_empty PASSED [ 21%]
+phase2/tests/test_query_agent.py::TestExceptionPropagation::test_query_processing_exception_propagates PASSED [ 22%]
+phase2/tests/test_query_agent.py::TestExceptionPropagation::test_unexpected_exception_wrapped PASSED [ 22%]
+phase2/tests/test_query_agent.py::TestExceptionPropagation::test_error_message_is_user_safe PASSED [ 23%]
+phase2/tests/test_query_agent.py::TestValidateOnly::test_valid_query_returns_true PASSED [ 23%]
+phase2/tests/test_query_agent.py::TestValidateOnly::test_invalid_query_raises PASSED [ 24%]
+phase2/tests/test_query_agent.py::TestValidateOnly::test_validate_delegates_to_service PASSED [ 24%]
+phase2/tests/test_query_agent.py::TestGetAgentInfo::test_returns_dict PASSED [ 24%]
+phase2/tests/test_query_agent.py::TestGetAgentInfo::test_required_keys_present PASSED [ 25%]
+phase2/tests/test_query_agent.py::TestGetAgentInfo::test_status_is_ready PASSED [ 25%]
+phase2/tests/test_query_agent.py::TestGetAgentInfo::test_capabilities_is_list PASSED [ 26%]
+phase2/tests/test_query_agent.py::TestGetAgentInfo::test_integration_contract_present PASSED [ 26%]
+phase2/tests/test_query_agent.py::TestGetAgentInfo::test_version_matches PASSED [ 27%]
+phase2/tests/test_query_agent.py::TestGetAgentInfo::test_name_matches PASSED [ 27%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_trims_leading_trailing_whitespace PASSED [ 27%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_collapses_interior_spaces PASSED [ 28%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_preserves_insurance_terms PASSED [ 28%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_preserves_abbreviations PASSED [ 29%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_preserves_numbers PASSED [ 29%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_preserves_section_references PASSED [ 30%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_rejects_empty_string PASSED [ 30%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_rejects_whitespace_only PASSED [ 30%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_rejects_oversized PASSED [ 31%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_rejects_none PASSED [ 31%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_strips_zero_width_chars PASSED [ 32%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_unicode_nfc_normalisation PASSED [ 32%]
+phase2/tests/test_query_processing.py::TestInsuranceTextNormalizer::test_rejects_invalid_max_length PASSED [ 33%]
+phase2/tests/test_query_processing.py::TestPassthroughNormalizer::test_strips_whitespace PASSED [ 33%]
+phase2/tests/test_query_processing.py::TestPassthroughNormalizer::test_rejects_empty PASSED [ 33%]
+phase2/tests/test_query_processing.py::TestPassthroughNormalizer::test_rejects_oversized PASSED [ 34%]
+phase2/tests/test_query_processing.py::TestFallbackQueryAnalyzer::test_returns_dict PASSED [ 34%]
+phase2/tests/test_query_processing.py::TestFallbackQueryAnalyzer::test_has_required_keys PASSED [ 35%]
+phase2/tests/test_query_processing.py::TestFallbackQueryAnalyzer::test_intent_is_general_inquiry PASSED [ 35%]
+phase2/tests/test_query_processing.py::TestFallbackQueryAnalyzer::test_entities_are_empty_lists PASSED [ 36%]
+phase2/tests/test_query_processing.py::TestFallbackQueryAnalyzer::test_not_ambiguous_by_default PASSED [ 36%]
+phase2/tests/test_query_processing.py::TestFallbackQueryAnalyzer::test_language_is_en PASSED [ 36%]
+phase2/tests/test_query_processing.py::TestFallbackQueryAnalyzer::test_implements_illm_analyzer_interface PASSED [ 37%]
+phase2/tests/test_query_processing.py::TestFallbackQueryAnalyzer::test_analyse_called_with_any_string PASSED [ 37%]
+phase2/tests/test_query_processing.py::TestFallbackQueryAnalyzer::test_shared_cache_prevents_double_llm_call PASSED [ 38%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_standard_query_returns_context PASSED [ 38%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_context_is_understood PASSED [ 39%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_normalized_query_set PASSED [ 39%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_metadata_has_query_id PASSED [ 39%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_metadata_processing_time_set PASSED [ 40%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_to_retrieval_input_structure PASSED [ 40%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_validation_passed_flag PASSED [ 41%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_empty_query_raises PASSED [ 41%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_whitespace_only_raises PASSED [ 42%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_none_raises PASSED [ 42%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_oversized_query_raises PASSED [ 42%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_prompt_injection_rejected PASSED [ 43%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_disregard_instructions_rejected PASSED [ 43%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_you_are_now_rejected PASSED [ 44%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_validate_only_valid PASSED [ 44%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_validate_only_empty_raises PASSED [ 45%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_policy_query PASSED [ 45%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_regulatory_query PASSED [ 45%]
+phase2/tests/test_query_processing.py::TestQueryProcessingService::test_claim_query PASSED [ 46%]
+phase2/tests/test_query_processing.py::TestExceptionHierarchy::test_phase2_base_is_exception PASSED [ 46%]
+phase2/tests/test_query_processing.py::TestExceptionHierarchy::test_to_dict_structure PASSED [ 47%]
+phase2/tests/test_query_processing.py::TestExceptionHierarchy::test_query_security_default_message PASSED [ 47%]
+phase2/tests/test_query_processing.py::TestExceptionHierarchy::test_timeout_includes_operation PASSED [ 48%]
+phase2/tests/test_query_processing.py::TestExceptionHierarchy::test_config_includes_key PASSED [ 48%]
+phase2/tests/test_query_processing.py::TestExceptionHierarchy::test_processing_includes_step PASSED [ 48%]
+phase2/tests/test_query_processing.py::TestExceptionHierarchy::test_all_are_phase2_base PASSED [ 49%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_error_response_to_dict PASSED [ 49%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_build_error_response_validation PASSED [ 50%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_build_error_response_security PASSED [ 50%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_build_error_response_timeout_retryable PASSED [ 51%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_build_error_response_processing_retryable PASSED [ 51%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_build_error_response_config_masked PASSED [ 51%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_build_error_response_unknown_exception PASSED [ 52%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_is_retryable_validation_false PASSED [ 52%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_is_retryable_security_false PASSED [ 53%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_is_retryable_processing_true PASSED [ 53%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_retry_on_transient_succeeds_after_retry PASSED [ 54%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_retry_on_transient_no_retry_for_validation PASSED [ 54%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_safe_agent_call_reraise_true PASSED [ 54%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_safe_agent_call_reraise_false PASSED [ 55%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_safe_agent_call_security_always_raises PASSED [ 55%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_global_handler_surface_security PASSED [ 56%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_global_handler_retry_processing PASSED [ 56%]
+phase2/tests/test_query_processing.py::TestExceptionHandlers::test_global_handler_surface_after_exhaustion PASSED [ 57%]
+phase2/tests/test_query_processing.py::TestConfiguration::test_offline_settings_load PASSED [ 57%]
+phase2/tests/test_query_processing.py::TestConfiguration::test_settings_has_all_sections PASSED [ 57%]
+phase2/tests/test_query_processing.py::TestConfiguration::test_supported_intents_non_empty PASSED [ 58%]
+phase2/tests/test_query_processing.py::TestConfiguration::test_validate_settings_offline_passes PASSED [ 58%]
+phase2/tests/test_query_processing.py::TestPerformance::test_normalizer_latency PASSED [ 59%]
+phase2/tests/test_query_processing.py::TestPerformance::test_offline_pipeline_latency PASSED [ 59%]
+phase2/tests/test_ranking.py::TestWeightedRankingServiceInit::test_valid_weights_accepted PASSED [ 60%]
+phase2/tests/test_ranking.py::TestWeightedRankingServiceInit::test_all_zero_weights_raises PASSED [ 60%]
+phase2/tests/test_ranking.py::TestWeightedRankingServiceInit::test_negative_min_score_raises PASSED [ 60%]
+phase2/tests/test_ranking.py::TestEmptyInput::test_empty_chunks_returns_empty_list PASSED [ 61%]
+phase2/tests/test_ranking.py::TestRankingScoreFormula::test_single_chunk_gets_nonzero_score PASSED [ 61%]
+phase2/tests/test_ranking.py::TestRankingScoreFormula::test_rank_assigned_starting_from_1 PASSED [ 62%]
+phase2/tests/test_ranking.py::TestRankingScoreFormula::test_chunks_sorted_descending_by_ranking_score PASSED [ 62%]
+phase2/tests/test_ranking.py::TestRankingScoreFormula::test_metadata_complete_score_higher PASSED [ 63%]
+phase2/tests/test_ranking.py::TestRankingScoreFormula::test_high_keyword_overlap_boosts_score PASSED [ 63%]
+phase2/tests/test_ranking.py::TestMinRankingScoreFilter::test_chunks_below_threshold_removed PASSED [ 63%]
+phase2/tests/test_ranking.py::TestMinRankingScoreFilter::test_zero_min_score_returns_all PASSED [ 64%]
+phase2/tests/test_ranking.py::TestScoreNormalisation::test_all_same_score_chunks_ranked_by_other_signals PASSED [ 64%]
+phase2/tests/test_ranking.py::TestStrategyContext::test_strategy_context_accepted_without_error PASSED [ 65%]
+phase2/tests/test_reasoning_agent.py::test_reasoning_agent_succesful_flow PASSED [ 65%]
+phase2/tests/test_reasoning_agent.py::test_reasoning_agent_blocks_invalid_verification PASSED [ 66%]
+phase2/tests/test_reasoning_services.py::test_clause_interpreter_basic PASSED [ 66%]
+phase2/tests/test_reasoning_services.py::test_evidence_linker_graphing PASSED [ 66%]
+phase2/tests/test_reasoning_services.py::test_explanation_service_valid PASSED [ 67%]
+phase2/tests/test_response_builder.py::test_missing_data_fallbacks PASSED [ 67%]
+phase2/tests/test_response_builder.py::test_warnings_generated PASSED    [ 68%]
+phase2/tests/test_retrieval_agent.py::TestConfigDrivenRetrievalStrategy::test_policy_specific_uses_high_bm25 PASSED [ 68%]
+phase2/tests/test_retrieval_agent.py::TestConfigDrivenRetrievalStrategy::test_regulatory_uses_higher_vector PASSED [ 69%]
+phase2/tests/test_retrieval_agent.py::TestConfigDrivenRetrievalStrategy::test_comparative_uses_highest_vector PASSED [ 69%]
+phase2/tests/test_retrieval_agent.py::TestConfigDrivenRetrievalStrategy::test_unknown_falls_back_to_default_weights PASSED [ 69%]
+phase2/tests/test_retrieval_agent.py::TestConfigDrivenRetrievalStrategy::test_none_classification_falls_back_to_default PASSED [ 70%]
+phase2/tests/test_retrieval_agent.py::TestConfigDrivenRetrievalStrategy::test_missing_default_key_raises_configuration_exception PASSED [ 70%]
+phase2/tests/test_retrieval_agent.py::TestConfigDrivenRetrievalStrategy::test_top_k_from_strategy PASSED [ 71%]
+phase2/tests/test_retrieval_agent.py::TestPhase1RetrieverAdapterInit::test_empty_bm25_path_raises PASSED [ 71%]
+phase2/tests/test_retrieval_agent.py::TestPhase1RetrieverAdapterInit::test_empty_chroma_dir_raises PASSED [ 72%]
+phase2/tests/test_retrieval_agent.py::TestPhase1RetrieverAdapterInit::test_zero_timeout_raises PASSED [ 72%]
+phase2/tests/test_retrieval_agent.py::TestPhase1RetrieverAdapterInit::test_is_available_returns_false_when_files_missing PASSED [ 72%]
+phase2/tests/test_retrieval_agent.py::TestPhase1RetrieverAdapterInit::test_bm25_search_raises_when_index_missing PASSED [ 73%]
+phase2/tests/test_retrieval_agent.py::TestPhase1RetrieverAdapterInit::test_vector_search_raises_when_chroma_missing PASSED [ 73%]
+phase2/tests/test_retrieval_agent.py::TestPhase1RetrieverAdapterConversion::test_dict_to_chunk_bm25 PASSED [ 74%]
+phase2/tests/test_retrieval_agent.py::TestPhase1RetrieverAdapterConversion::test_dict_to_chunk_vector PASSED [ 74%]
+phase2/tests/test_retrieval_agent.py::TestPhase1RetrieverAdapterConversion::test_dict_to_chunk_missing_metadata_incomplete_flag PASSED [ 75%]
+phase2/tests/test_retrieval_agent.py::TestPhase1RetrieverAdapterConversion::test_raw_metadata_preserved PASSED [ 75%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_retrieve_returns_retrieval_result PASSED [ 75%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_retrieve_none_context_raises PASSED [ 76%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_result_contains_query_context PASSED [ 76%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_result_is_successful_when_chunks_returned PASSED [ 77%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_result_has_ranked_evidence_list PASSED [ 77%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_metrics_populated PASSED [ 78%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_strategy_applied_correctly PASSED [ 78%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_empty_warnings_on_clean_retrieval PASSED [ 78%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_ranking_exception_degrades_gracefully PASSED [ 79%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_validation_exception_returns_empty_result PASSED [ 79%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_index_unavailable_exception_propagates PASSED [ 80%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalAgent::test_get_agent_info_returns_dict PASSED [ 80%]
+phase2/tests/test_retrieval_agent.py::TestQueryContextToRetrievalResultIntegration::test_to_verification_input_has_required_keys PASSED [ 81%]
+phase2/tests/test_retrieval_agent.py::TestQueryContextToRetrievalResultIntegration::test_evidence_items_have_required_fields PASSED [ 81%]
+phase2/tests/test_retrieval_agent.py::TestQueryContextToRetrievalResultIntegration::test_retrieval_confidence_in_zero_to_one PASSED [ 81%]
+phase2/tests/test_retrieval_agent.py::TestQueryContextToRetrievalResultIntegration::test_unique_sources_deduplicated PASSED [ 82%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalSettingsConfiguration::test_default_settings_are_valid PASSED [ 82%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalSettingsConfiguration::test_missing_default_strategy_raises PASSED [ 83%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalSettingsConfiguration::test_ranking_settings_defaults_valid PASSED [ 83%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalSettingsConfiguration::test_validation_settings_defaults_valid PASSED [ 84%]
+phase2/tests/test_retrieval_agent.py::TestRetrievalSettingsConfiguration::test_phase2settings_includes_retrieval_block PASSED [ 84%]
+phase2/tests/test_risk_agent.py::test_risk_agent_integration PASSED      [ 84%]
+phase2/tests/test_risk_services.py::test_ambiguity_detector_happy_path PASSED [ 85%]
+phase2/tests/test_risk_services.py::test_ambiguity_detector_empty_payload PASSED [ 85%]
+phase2/tests/test_risk_services.py::test_legal_sensitivity_checker_happy_path PASSED [ 86%]
+phase2/tests/test_risk_services.py::test_exclusion_checker PASSED        [ 86%]
+phase2/tests/test_risk_services.py::test_regulatory_checker PASSED       [ 87%]
+phase2/tests/test_risk_services.py::test_escalation_service_high_risk PASSED [ 87%]
+phase2/tests/test_risk_services.py::test_escalation_service_low_risk PASSED [ 87%]
+phase2/tests/test_timeout_semantics.py::test_a_individual_agent_timeout PASSED [ 88%]
+phase2/tests/test_timeout_semantics.py::test_b_workflow_timeout PASSED   [ 88%]
+phase2/tests/test_timeout_semantics.py::test_c_normal_fast_execution PASSED [ 89%]
+phase2/tests/test_validation.py::TestEmptyRetrieval::test_empty_chunks_raises_validation_exception PASSED [ 89%]
+phase2/tests/test_validation.py::TestEmptyRetrieval::test_exception_has_correct_validation_check PASSED [ 90%]
+phase2/tests/test_validation.py::TestCleanRetrieval::test_good_chunks_produce_no_warnings PASSED [ 90%]
+phase2/tests/test_validation.py::TestCleanRetrieval::test_returns_list_not_none PASSED [ 90%]
+phase2/tests/test_validation.py::TestLowChunkCount::test_below_min_chunks_produces_medium_warning PASSED [ 91%]
+phase2/tests/test_validation.py::TestLowChunkCount::test_low_chunk_warning_is_medium_severity PASSED [ 91%]
+phase2/tests/test_validation.py::TestLowSimilarity::test_low_top_score_produces_high_warning PASSED [ 92%]
+phase2/tests/test_validation.py::TestLowSimilarity::test_low_similarity_warning_is_high_severity PASSED [ 92%]
+phase2/tests/test_validation.py::TestLowSimilarity::test_score_above_threshold_no_warning PASSED [ 93%]
+phase2/tests/test_validation.py::TestIncompleteMetadata::test_high_incomplete_ratio_produces_low_warning PASSED [ 93%]
+phase2/tests/test_validation.py::TestIncompleteMetadata::test_all_complete_no_warning PASSED [ 93%]
+phase2/tests/test_validation.py::TestMissingPageNumbers::test_all_missing_pages_with_require_true_produces_warning PASSED [ 94%]
+phase2/tests/test_validation.py::TestMissingPageNumbers::test_missing_pages_with_require_false_no_warning PASSED [ 94%]
+phase2/tests/test_validation.py::TestSingleSource::test_all_from_same_source_with_many_chunks_produces_warning PASSED [ 95%]
+phase2/tests/test_validation.py::TestSingleSource::test_multiple_sources_no_single_source_warning PASSED [ 95%]
+phase2/tests/test_validation.py::TestSingleSource::test_single_chunk_does_not_trigger_single_source_warning PASSED [ 96%]
+phase2/tests/test_validation.py::TestMultipleWarnings::test_multiple_issues_produce_multiple_warnings PASSED [ 96%]
+phase2/tests/test_verification_agent.py::test_verification_agent_accepts_retrieval_result PASSED [ 96%]
+phase2/tests/test_verification_agent.py::test_verification_agent_rejects_invalid_inputs PASSED [ 97%]
+phase2/tests/test_verification_agent.py::test_verification_agent_degraded_on_empty PASSED [ 97%]
+phase2/tests/test_verification_services.py::test_citation_validator PASSED [ 98%]
+phase2/tests/test_verification_services.py::test_relevance_checker PASSED [ 98%]
+phase2/tests/test_verification_services.py::test_consistency_checker PASSED [ 99%]
+phase2/tests/test_verification_services.py::test_completeness_checker PASSED [ 99%]
+phase2/tests/test_verification_services.py::test_evidence_validator_full_integration PASSED [100%]
+
+================================== FAILURES ===================================
+_______________ test_valid_supported_insurance_query_continues ________________
+
+    def test_valid_supported_insurance_query_continues():
+        """Test 7: Existing valid supported insurance query -> continues to produce expected grounded response."""
+        # We will use a mock execution manager to track calls
+        calls = []
+    
+        class MockQueryAgent:
+            def process(self, query):
+                return QueryContext(
+                    original_query=query,
+                    intent=IntentResult(primary_intent="policy_information", confidence=0.9),
+                    ambiguity=AmbiguityInfo(is_ambiguous=False, reason="", missing_parameters=[])
+                )
+    
+        mock_workflow = MagicMock()
+        mock_workflow.get_execution_sequence.return_value = ["QueryUnderstandingAgent", "RetrievalAgent"]
+    
+        class MockExecutionManager:
+            def execute_agent(self, agent_name, func, *args):
+                calls.append(agent_name)
+                if agent_name == "QueryUnderstandingAgent":
+                    return MockQueryAgent().process(args[0])
+                # Return dummy result for others to avoid crashing
+                return None
+    
+        exec_manager = MockExecutionManager()
+        ctx_manager = ContextManager()
+    
+        class DummyAgent:
+            def process(self, *args): pass
+            def retrieve(self, *args): pass
+            def verify(self, *args): pass
+            def reason(self, *args): pass
+            def evaluate(self, *args): pass
+            def build_response(self, *args): pass
+    
+        dummy = DummyAgent()
+        agents = {
+            "QueryUnderstandingAgent": dummy,
+            "RetrievalAgent": dummy,
+            "VerificationAgent": dummy,
+            "ReasoningAgent": dummy,
+            "RiskAssessmentAgent": dummy,
+            "ContradictionAgent": dummy,
+            "ResponseBuilder": dummy
+        }
+    
+        mock_obs = MagicMock()
+        mock_metrics = MagicMock()
+        mock_metrics.compile_metrics.return_value = {}
+        mock_metrics.get_execution_history.return_value = []
+    
+        orchestrator = AgentOrchestrator(
+            agents_map=agents,
+            execution_manager=exec_manager,
+            context_manager=ctx_manager,
+            metrics_collector=mock_metrics,
+            observability=mock_obs,
+            workflow_engine=mock_workflow,
+            workflow_timeout_ms=10000
+        )
+    
+        orchestrator.orchestrate("What is the surrender value of Jeevan Anand policy?")
+    
+        # Assert downstream agents were called
+>       assert "RetrievalAgent" in calls
+E       AssertionError: assert 'RetrievalAgent' in ['QueryUnderstandingAgent']
+
+phase2\tests\test_ambiguous_001.py:228: AssertionError
+============================== warnings summary ===============================
+phase2\models\intent.py:57
+  C:\Users\dhyan\Desktop\majorcode\phase2\models\intent.py:57: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class IntentResult(BaseModel):
+
+phase2\models\query_metadata.py:104
+  C:\Users\dhyan\Desktop\majorcode\phase2\models\query_metadata.py:104: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryMetadata(BaseModel):
+
+phase2\models\query_context.py:133
+  C:\Users\dhyan\Desktop\majorcode\phase2\models\query_context.py:133: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryContext(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED phase2/tests/test_ambiguous_001.py::test_valid_supported_insurance_query_continues
+================== 1 failed, 232 passed, 3 warnings in 3.07s ==================

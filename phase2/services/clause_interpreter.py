@@ -17,11 +17,18 @@ class ClauseInterpreter(IClauseInterpreter):
     def interpret(self, chunks: List[RetrievedChunk], context: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Maps raw chunks securely into formatted target boundaries.
-        Optimized to drop arbitrary metadata that confuses logic synthesis.
+        Deduplicates identical or redundant chunks to prevent context window overflow.
         """
         interpreted = []
+        seen_signatures = set()
         for c in chunks:
             text_val = c.text.strip()
+            # Normalize first 120 characters to detect duplicate clauses from overlapping indexing
+            sig = " ".join(text_val.split())[:120].lower()
+            if sig in seen_signatures:
+                continue
+            seen_signatures.add(sig)
+            
             if len(text_val) > self.max_chunk_length:
                 text_val = text_val[:self.max_chunk_length] + "... [TRUNCATED]"
                 

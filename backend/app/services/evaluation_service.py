@@ -60,7 +60,7 @@ class EvaluationService:
 
     def _call_ollama_evaluator(self, prompt: str, model: str) -> dict:
         """Calls the local Ollama evaluator with JSON mode."""
-        url = "http://localhost:11434/api/generate"
+        url = "http://ollama:11434/api/generate"
         payload = {
             "model": model,
             "prompt": prompt,
